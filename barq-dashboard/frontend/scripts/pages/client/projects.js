@@ -1,0 +1,82 @@
+// Client Projects Page Script
+auth.requireRole([USER_ROLES.CLIENT]);
+
+let projects = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadData();
+  setupEventListeners();
+});
+
+async function loadData() {
+  try {
+    utils.showLoading();
+
+    const allProjects = await API.Projects.getAll().catch(() => []);
+
+    // Filter projects for current client only
+    const currentUser = auth.getCurrentUser();
+    projects = allProjects.filter((p) => p.ClientId === currentUser.UserId);
+
+    renderProjects();
+  } catch (error) {
+    console.error("Error loading data:", error);
+    utils.showError("Failed to load projects");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+function renderProjects() {
+  const tbody = document.getElementById("projectsBody");
+
+  if (projects.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center" style="padding: 40px;">
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <h3>No projects found</h3>
+            <p>You don't have any projects yet</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = projects
+    .map(
+      (project) => `
+    <tr>
+      <td><strong>${project.Name || "Untitled"}</strong></td>
+      <td>${utils.truncateText(
+        project.Description || "No description",
+        50
+      )}</td>
+      <td>${utils.formatCurrency(project.Budget || 0)}</td>
+      <td>${utils.formatDate(project.StartDate)}</td>
+      <td>${utils.formatDate(project.EndDate)}</td>
+      <td>${utils.getStatusBadge(project.StatusId || 1)}</td>
+    </tr>
+  `
+    )
+    .join("");
+}
+
+function setupEventListeners() {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", handleSearch);
+  }
+}
+
+function handleSearch(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  const rows = document.querySelectorAll("#projectsBody tr");
+
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? "" : "none";
+  });
+}

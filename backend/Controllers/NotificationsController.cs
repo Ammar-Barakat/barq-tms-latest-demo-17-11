@@ -1,0 +1,333 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using BarqTMS.API.Data;
+using BarqTMS.API.Models;
+using BarqTMS.API.DTOs;
+using BarqTMS.API.Helpers;
+
+namespace BarqTMS.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class NotificationsController : ControllerBase
+    {
+        private readonly BarqTMSDbContext _context;
+        private readonly ILogger<NotificationsController> _logger;
+
+        public NotificationsController(BarqTMSDbContext context, ILogger<NotificationsController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        // GET: api/notifications/user/5
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetUserNotifications(int userId)
+        {
+            if (!await UserExists(userId))
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == userId)
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NotificationDto
+                {
+                    NotifId = n.NotifId,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TaskId = n.TaskId,
+                    TaskTitle = n.Task != null ? n.Task.Title : null,
+                    ProjectId = n.ProjectId,
+                    ProjectName = n.Project != null ? n.Project.ProjectName : null
+                })
+                .ToListAsync();
+
+            return Ok(notifications);
+        }
+
+        // GET: api/notifications/user/5/unread
+        [HttpGet("user/{userId}/unread")]
+        public async Task<ActionResult<IEnumerable<NotificationDto>>> GetUserUnreadNotifications(int userId)
+        {
+            if (!await UserExists(userId))
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NotificationDto
+                {
+                    NotifId = n.NotifId,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TaskId = n.TaskId,
+                    TaskTitle = n.Task != null ? n.Task.Title : null,
+                    ProjectId = n.ProjectId,
+                    ProjectName = n.Project != null ? n.Project.ProjectName : null
+                })
+                .ToListAsync();
+
+            return Ok(notifications);
+        }
+
+        // GET: api/notifications/user/5/count/unread
+        [HttpGet("user/{userId}/count/unread")]
+        public async Task<ActionResult<int>> GetUserUnreadNotificationCount(int userId)
+        {
+            if (!await UserExists(userId))
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            var count = await _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .CountAsync();
+
+            return Ok(count);
+        }
+
+        // PUT: api/notifications/5/read
+        [HttpPut("{id}/read")]
+        public async Task<IActionResult> MarkNotificationAsRead(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+
+            if (notification == null)
+            {
+                return NotFound($"Notification with ID {id} not found.");
+            }
+
+            if (notification.IsRead)
+            {
+                return BadRequest("Notification is already marked as read.");
+            }
+
+            notification.IsRead = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await NotificationExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
+        }
+
+        // PUT: api/notifications/user/5/read-all
+        [HttpPut("user/{userId}/read-all")]
+        public async Task<IActionResult> MarkAllUserNotificationsAsRead(int userId)
+        {
+            if (!await UserExists(userId))
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            var unreadNotifications = await _context.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in unreadNotifications)
+            {
+                notification.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { UpdatedCount = unreadNotifications.Count });
+        }
+
+        // DELETE: api/notifications/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification == null)
+            {
+                return NotFound($"Notification with ID {id} not found.");
+            }
+
+            _context.Notifications.Remove(notification);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/notifications/user/5/read
+        [HttpDelete("user/{userId}/read")]
+        public async Task<IActionResult> DeleteReadNotifications(int userId)
+        {
+            if (!await UserExists(userId))
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            var readNotifications = await _context.Notifications
+                .Where(n => n.UserId == userId && n.IsRead)
+                .ToListAsync();
+
+            _context.Notifications.RemoveRange(readNotifications);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { DeletedCount = readNotifications.Count });
+        }
+
+        // GET: api/notifications/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<NotificationDto>> GetNotification(int id)
+        {
+            var notification = await _context.Notifications
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .Where(n => n.NotifId == id)
+                .Select(n => new NotificationDto
+                {
+                    NotifId = n.NotifId,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TaskId = n.TaskId,
+                    TaskTitle = n.Task != null ? n.Task.Title : null,
+                    ProjectId = n.ProjectId,
+                    ProjectName = n.Project != null ? n.Project.ProjectName : null
+                })
+                .FirstOrDefaultAsync();
+
+            if (notification == null)
+            {
+                return NotFound($"Notification with ID {id} not found.");
+            }
+
+            return Ok(notification);
+        }
+
+        // POST: api/notifications
+        [HttpPost]
+        public async Task<ActionResult<NotificationDto>> CreateNotification(CreateNotificationDto notificationDto)
+        {
+            // Validate user exists
+            if (!await UserExists(notificationDto.UserId))
+            {
+                return BadRequest($"User with ID {notificationDto.UserId} not found.");
+            }
+
+            // Validate task exists if provided
+            if (notificationDto.TaskId.HasValue && !await TaskExists(notificationDto.TaskId.Value))
+            {
+                return BadRequest($"Task with ID {notificationDto.TaskId} not found.");
+            }
+
+            // Validate project exists if provided
+            if (notificationDto.ProjectId.HasValue && !await ProjectExists(notificationDto.ProjectId.Value))
+            {
+                return BadRequest($"Project with ID {notificationDto.ProjectId} not found.");
+            }
+
+            var notification = new Notification
+            {
+                UserId = notificationDto.UserId,
+                Message = notificationDto.Message,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false,
+                TaskId = notificationDto.TaskId,
+                ProjectId = notificationDto.ProjectId
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // Return the created notification with full details
+            var createdNotification = await _context.Notifications
+                .Where(n => n.NotifId == notification.NotifId)
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .Select(n => new NotificationDto
+                {
+                    NotifId = n.NotifId,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TaskId = n.TaskId,
+                    TaskTitle = n.Task != null ? n.Task.Title : null,
+                    ProjectId = n.ProjectId,
+                    ProjectName = n.Project != null ? n.Project.ProjectName : null
+                })
+                .FirstOrDefaultAsync();
+
+            return CreatedAtAction(nameof(GetNotification), new { id = notification.NotifId }, createdNotification);
+        }
+
+        // PUT: api/notifications/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateNotification(int id, UpdateNotificationDto notificationDto)
+        {
+            var notification = await _context.Notifications.FindAsync(id);
+            if (notification == null)
+            {
+                return NotFound($"Notification with ID {id} not found.");
+            }
+
+            notification.Message = notificationDto.Message;
+            notification.IsRead = notificationDto.IsRead;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await NotificationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        private async Task<bool> NotificationExists(int id)
+        {
+            return await _context.Notifications.AnyAsync(e => e.NotifId == id);
+        }
+
+        private async Task<bool> UserExists(int id)
+        {
+            return await _context.Users.AnyAsync(e => e.UserId == id);
+        }
+
+        private async Task<bool> TaskExists(int id)
+        {
+            return await _context.Tasks.AnyAsync(e => e.TaskId == id);
+        }
+
+        private async Task<bool> ProjectExists(int id)
+        {
+            return await _context.Projects.AnyAsync(e => e.ProjectId == id);
+        }
+    }
+}

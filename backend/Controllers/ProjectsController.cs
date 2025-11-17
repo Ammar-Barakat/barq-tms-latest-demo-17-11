@@ -1,0 +1,341 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using BarqTMS.API.Data;
+using BarqTMS.API.Models;
+using BarqTMS.API.DTOs;
+using BarqTMS.API.Helpers;
+
+namespace BarqTMS.API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class ProjectsController : ControllerBase
+    {
+        private readonly BarqTMSDbContext _context;
+        private readonly ILogger<ProjectsController> _logger;
+
+        public ProjectsController(BarqTMSDbContext context, ILogger<ProjectsController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        // GET: api/projects
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
+        {
+            // Get current user from JWT token
+            var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+            
+            if (currentUser == null)
+            {
+                return Unauthorized("User not found.");
+            }
+
+            // If user is Client (Role 6), only show their projects
+            var query = _context.Projects.Include(p => p.Client).AsQueryable();
+            
+            if (currentUser.Role == UserRole.Client)
+            {
+                // Find client record for this user
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == currentUser.Email);
+                if (client != null)
+                {
+                    query = query.Where(p => p.ClientId == client.ClientId);
+                }
+                else
+                {
+                    // If no client record found, return empty list
+                    return Ok(new List<ProjectDto>());
+                }
+            }
+
+            var projects = await query
+                .Select(p => new ProjectDto
+                {
+                    ProjectId = p.ProjectId,
+                    ProjectName = p.ProjectName,
+                    Description = p.Description,
+                    ClientId = p.ClientId,
+                    ClientName = p.Client.Name,
+                    StartDate = p.StartDate,
+                    EndDate = p.EndDate,
+                    TaskCount = p.Tasks.Count()
+                })
+                .ToListAsync();
+
+            return Ok(projects);
+        }
+
+        // GET: api/projects/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ProjectDto>> GetProject(int id)
+        {
+            // Get current user from JWT token
+            var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+            
+            if (currentUser == null)
+            {
+                return Unauthorized("User not found.");
+            }
+
+            var project = await _context.Projects
+                .Include(p => p.Client)
+                .Where(p => p.ProjectId == id)
+                .Select(p => new ProjectDto
+                {
+                    ProjectId = p.ProjectId,
+                    ProjectName = p.ProjectName,
+                    Description = p.Description,
+                    ClientId = p.ClientId,
+                    ClientName = p.Client.Name,
+                    StartDate = p.StartDate,
+                    EndDate = p.EndDate,
+                    TaskCount = p.Tasks.Count()
+                })
+                .FirstOrDefaultAsync();
+
+            if (project == null)
+            {
+                return NotFound($"Project with ID {id} not found.");
+            }
+
+            // If user is Client (Role 6), check if this is their project
+            if (currentUser.Role == UserRole.Client)
+            {
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == currentUser.Email);
+                if (client == null || project.ClientId != client.ClientId)
+                {
+                    return Forbid(); // 403 Forbidden
+                }
+            }
+
+            return Ok(project);
+        }
+
+        // POST: api/projects
+        // Only Manager and Assistant Manager can create projects
+        [HttpPost]
+        [Authorize(Roles = "Manager,AssistantManager")]
+        public async Task<ActionResult<ProjectDto>> CreateProject(CreateProjectDto createProjectDto)
+        {
+            // Validate client exists
+            var client = await _context.Clients.FindAsync(createProjectDto.ClientId);
+            if (client == null)
+            {
+                return BadRequest($"Client with ID {createProjectDto.ClientId} not found.");
+            }
+
+            var project = new Project
+            {
+                ProjectName = createProjectDto.ProjectName,
+                Description = createProjectDto.Description,
+                ClientId = createProjectDto.ClientId,
+                StartDate = createProjectDto.StartDate,
+                EndDate = createProjectDto.EndDate
+            };
+
+            _context.Projects.Add(project);
+            await _context.SaveChangesAsync();
+
+            // Create audit log entry
+            await CreateProjectAuditLog(project.ProjectId, "Created", $"Project '{project.ProjectName}' was created");
+
+            var projectDto = new ProjectDto
+            {
+                ProjectId = project.ProjectId,
+                ProjectName = project.ProjectName,
+                Description = project.Description,
+                ClientId = project.ClientId,
+                ClientName = client.Name,
+                StartDate = project.StartDate,
+                EndDate = project.EndDate,
+                TaskCount = 0
+            };
+
+            return CreatedAtAction(nameof(GetProject), new { id = project.ProjectId }, projectDto);
+        }
+
+        // PUT: api/projects/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProject(int id, UpdateProjectDto updateProjectDto)
+        {
+            var project = await _context.Projects.FindAsync(id);
+
+            if (project == null)
+            {
+                return NotFound($"Project with ID {id} not found.");
+            }
+
+            // Validate client exists
+            var client = await _context.Clients.FindAsync(updateProjectDto.ClientId);
+            if (client == null)
+            {
+                return BadRequest($"Client with ID {updateProjectDto.ClientId} not found.");
+            }
+
+            // Store old values for audit log
+            var oldName = project.ProjectName;
+            var oldClientId = project.ClientId;
+
+            project.ProjectName = updateProjectDto.ProjectName;
+            project.Description = updateProjectDto.Description;
+            project.ClientId = updateProjectDto.ClientId;
+            project.StartDate = updateProjectDto.StartDate;
+            project.EndDate = updateProjectDto.EndDate;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Create audit log entry
+                var changes = new List<string>();
+                if (oldName != project.ProjectName)
+                    changes.Add($"Name changed from '{oldName}' to '{project.ProjectName}'");
+                if (oldClientId != project.ClientId)
+                    changes.Add($"Client changed");
+
+                if (changes.Any())
+                {
+                    await CreateProjectAuditLog(project.ProjectId, "Updated", string.Join(", ", changes));
+                }
+
+                return NoContent();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ProjectExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
+        }
+
+        // DELETE: api/projects/5
+        // Only Manager can delete projects
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound($"Project with ID {id} not found.");
+            }
+
+            // Check if project has tasks
+            var hasTasks = await _context.Tasks.AnyAsync(t => t.ProjectId == id);
+            if (hasTasks)
+            {
+                return BadRequest("Cannot delete project because it has tasks.");
+            }
+
+            // Create audit log entry before deletion
+            await CreateProjectAuditLog(project.ProjectId, "Deleted", $"Project '{project.ProjectName}' was deleted");
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // GET: api/projects/5/tasks
+        [HttpGet("{id}/tasks")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetProjectTasks(int id)
+        {
+            if (!await ProjectExists(id))
+            {
+                return NotFound($"Project with ID {id} not found.");
+            }
+
+            var tasks = await _context.Tasks
+                .Where(t => t.ProjectId == id)
+                .Include(t => t.Priority)
+                .Include(t => t.Status)
+                .Include(t => t.Creator)
+                .Include(t => t.AssignedUser)
+                .Include(t => t.Department)
+                .Select(t => new TaskDto
+                {
+                    TaskId = t.TaskId,
+                    Title = t.Title,
+                    Description = t.Description,
+                    PriorityId = t.PriorityId,
+                    PriorityLevel = t.Priority.Level,
+                    StatusId = t.StatusId,
+                    StatusName = t.Status.StatusName,
+                    DueDate = t.DueDate,
+                    CreatedBy = t.CreatedBy,
+                    CreatedByName = t.Creator.Name,
+                    AssignedTo = t.AssignedTo,
+                    AssignedToName = t.AssignedUser != null ? t.AssignedUser.Name : null,
+                    DeptId = t.DeptId,
+                    DeptName = t.Department.DeptName,
+                    ProjectId = t.ProjectId,
+                    ProjectName = t.Project.ProjectName,
+                    CommentCount = t.TaskComments.Count(),
+                    AttachmentCount = t.Attachments.Count()
+                })
+                .ToListAsync();
+
+            return Ok(tasks);
+        }
+
+        // GET: api/projects/5/auditlogs
+        [HttpGet("{id}/auditlogs")]
+        public async Task<ActionResult<IEnumerable<ProjectHistoryDto>>> GetProjectAuditLogs(int id)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound($"Project with ID {id} not found.");
+            }
+
+            var auditLogs = await _context.AuditLogs
+                .Where(al => al.EntityType == "Project" && al.EntityId == id)
+                .Include(al => al.User)
+                .OrderByDescending(al => al.Timestamp)
+                .Select(al => new ProjectHistoryDto
+                {
+                    HistoryId = al.AuditId,
+                    ProjectId = id,
+                    ProjectName = project.ProjectName,
+                    UserId = al.UserId,
+                    UserName = al.User.Name,
+                    Action = al.Action,
+                    ActionDate = al.Timestamp
+                })
+                .ToListAsync();
+
+            return Ok(auditLogs);
+        }
+
+        private async Task<bool> ProjectExists(int id)
+        {
+            return await _context.Projects.AnyAsync(e => e.ProjectId == id);
+        }
+
+        private async System.Threading.Tasks.Task CreateProjectAuditLog(int projectId, string action, string details)
+        {
+            // Get current user from JWT token
+            var systemUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+
+            var auditLog = new AuditLog
+            {
+                EntityType = "Project",
+                EntityId = projectId,
+                UserId = systemUserId,
+                Action = $"{action}: {details}",
+                Timestamp = DateTime.UtcNow
+            };
+
+            _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+        }
+    }
+}

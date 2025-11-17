@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Test - Barq TMS</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #0a0a0a;
+        color: #f2f0d9;
+        padding: 40px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #7e2d96;
+        margin-bottom: 30px;
+      }
+      .card {
+        background: #121212;
+        padding: 30px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        border: 1px solid #7e2d96;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #88d3ce;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        background: #0a0a0a;
+        border: 1px solid #7e2d96;
+        border-radius: 8px;
+        color: #f2f0d9;
+        font-size: 14px;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #88d3ce;
+        box-shadow: 0 0 0 3px rgba(136, 211, 206, 0.1);
+      }
+      button {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #7e2d96, #5c216e);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      button:hover {
+        transform: translateY(-2px);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      #response {
+        background: #0a0a0a;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #7e2d96;
+        margin-top: 20px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .success {
+        color: #10b981;
+      }
+      .error {
+        color: #ef4444;
+      }
+      .info {
+        color: #88d3ce;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 API Connection Tester</h1>
+
+      <div class="card">
+        <h3 style="margin-bottom: 20px; color: #88d3ce">Test Backend API</h3>
+
+        <div class="form-group">
+          <label>API Base URL</label>
+          <input type="text" id="apiUrl" value="https://localhost:44383/api" />
+        </div>
+
+        <div class="form-group">
+          <label>Endpoint</label>
+          <select id="endpoint">
+            <option value="/Auth/login">POST /Auth/login (Login)</option>
+            <option value="/Tasks">GET /Tasks (Get All Tasks)</option>
+            <option value="/Projects">GET /Projects (Get All Projects)</option>
+            <option value="/Employees">
+              GET /Employees (Get All Employees)
+            </option>
+            <option value="/Clients">GET /Clients (Get All Clients)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="loginFields">
+          <label>Username</label>
+          <input type="text" id="username" value="admin" />
+
+          <label style="margin-top: 12px">Password</label>
+          <input type="password" id="password" value="password" />
+        </div>
+
+        <div>
+          <button onclick="testApi()">Test Connection</button>
+          <button onclick="clearResponse()">Clear</button>
+        </div>
+
+        <div id="response"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom: 15px; color: #88d3ce">Quick Info</h3>
+        <p style="color: #aaa; line-height: 1.8">
+          <strong>Purpose:</strong> Test if your backend API is working
+          correctly<br />
+          <strong>CORS:</strong> Make sure your backend allows requests from
+          this origin<br />
+          <strong>SSL:</strong> For https://localhost, you may need to accept
+          the certificate first<br />
+          <br />
+          <strong>Expected Login Response:</strong><br />
+          <code style="color: #88d3ce">
+            {<br />
+            &nbsp;&nbsp;"Token": "your-jwt-token",<br />
+            &nbsp;&nbsp;"User": {<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;"UserId": 1,<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;"Name": "User Name",<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;"Email": "user@example.com",<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;"Role": 1<br />
+            &nbsp;&nbsp;}<br />
+            }
+          </code>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Show/hide login fields based on endpoint
+      document.getElementById("endpoint").addEventListener("change", (e) => {
+        const loginFields = document.getElementById("loginFields");
+        loginFields.style.display =
+          e.target.value === "/Auth/login" ? "block" : "none";
+      });
+
+      function clearResponse() {
+        document.getElementById("response").innerHTML = "";
+      }
+
+      async function testApi() {
+        const responseDiv = document.getElementById("response");
+        const apiUrl = document.getElementById("apiUrl").value;
+        const endpoint = document.getElementById("endpoint").value;
+        const fullUrl = apiUrl + endpoint;
+
+        responseDiv.innerHTML =
+          '<span class="info">⏳ Testing connection...</span>\n\n';
+        responseDiv.innerHTML += `<span class="info">URL:</span> ${fullUrl}\n`;
+        responseDiv.innerHTML += `<span class="info">Method:</span> ${
+          endpoint === "/Auth/login" ? "POST" : "GET"
+        }\n\n`;
+
+        try {
+          const isLogin = endpoint === "/Auth/login";
+          const options = {
+            method: isLogin ? "POST" : "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          };
+
+          if (isLogin) {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            options.body = JSON.stringify({
+              Username: username,
+              Password: password,
+            });
+            responseDiv.innerHTML += `<span class="info">Request Body:</span>\n${options.body}\n\n`;
+          }
+
+          responseDiv.innerHTML +=
+            '<span class="info">🔄 Sending request...</span>\n\n';
+
+          const startTime = Date.now();
+          const response = await fetch(fullUrl, options);
+          const endTime = Date.now();
+          const duration = endTime - startTime;
+
+          responseDiv.innerHTML += `<span class="info">⏱️ Response Time:</span> ${duration}ms\n`;
+          responseDiv.innerHTML += `<span class="info">📊 Status:</span> ${response.status} ${response.statusText}\n\n`;
+
+          // Get response headers
+          responseDiv.innerHTML +=
+            '<span class="info">📋 Response Headers:</span>\n';
+          response.headers.forEach((value, key) => {
+            responseDiv.innerHTML += `  ${key}: ${value}\n`;
+          });
+          responseDiv.innerHTML += "\n";
+
+          // Get response body
+          const contentType = response.headers.get("content-type");
+          let data;
+
+          if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+            responseDiv.innerHTML +=
+              '<span class="info">📦 Response Body (JSON):</span>\n';
+            responseDiv.innerHTML += JSON.stringify(data, null, 2) + "\n\n";
+          } else {
+            data = await response.text();
+            responseDiv.innerHTML +=
+              '<span class="info">📦 Response Body (Text):</span>\n';
+            responseDiv.innerHTML += data + "\n\n";
+          }
+
+          if (response.ok) {
+            responseDiv.innerHTML +=
+              '<span class="success">✅ SUCCESS!</span>\n';
+
+            // Additional validation for login
+            if (isLogin) {
+              if (data.Token && data.User) {
+                responseDiv.innerHTML +=
+                  '<span class="success">✅ Response format is correct (Token + User present)</span>\n';
+                responseDiv.innerHTML += `<span class="success">✅ User: ${data.User.Name} (Role: ${data.User.Role})</span>\n`;
+              } else {
+                responseDiv.innerHTML +=
+                  '<span class="error">⚠️ Warning: Response missing Token or User field</span>\n';
+              }
+            }
+          } else {
+            responseDiv.innerHTML +=
+              '<span class="error">❌ ERROR: Request failed</span>\n';
+            responseDiv.innerHTML += `<span class="error">Status: ${response.status}</span>\n`;
+          }
+        } catch (error) {
+          responseDiv.innerHTML += `<span class="error">❌ ERROR: ${error.message}</span>\n\n`;
+
+          if (error.message.includes("Failed to fetch")) {
+            responseDiv.innerHTML +=
+              '<span class="error">💡 Common causes:</span>\n';
+            responseDiv.innerHTML += "  • Backend API is not running\n";
+            responseDiv.innerHTML += "  • Wrong API URL\n";
+            responseDiv.innerHTML += "  • CORS not configured on backend\n";
+            responseDiv.innerHTML +=
+              "  • Network/firewall blocking the request\n";
+            responseDiv.innerHTML += "  • SSL certificate issue (for https)\n";
+          }
+        }
+      }
+
+      // Show info on load
+      window.addEventListener("DOMContentLoaded", () => {
+        const responseDiv = document.getElementById("response");
+        responseDiv.innerHTML =
+          '<span class="info">👋 Ready to test!</span>\n\n';
+        responseDiv.innerHTML +=
+          'Click "Test Connection" to check if your backend API is working.\n\n';
+        responseDiv.innerHTML +=
+          '<span class="info">💡 Tip:</span> Open browser Developer Tools (F12) → Network tab to see detailed request information.\n';
+      });
+    </script>
+  </body>
+</html>
