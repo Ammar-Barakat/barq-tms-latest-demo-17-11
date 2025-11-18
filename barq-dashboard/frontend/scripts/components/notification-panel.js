@@ -126,18 +126,19 @@ class NotificationPanel {
 
   // Handle new notification from SignalR
   handleNewNotification(notification) {
+    // Notifications may come in different shapes (notifId vs NotificationId)
+    const incomingId = this.getId(notification);
+
     if (notification.type === "read") {
       // Mark notification as read
       const index = this.notifications.findIndex(
-        (n) => n.NotificationId === notification.id
+        (n) => this.getId(n) == incomingId
       );
-      if (index !== -1) {
-        this.notifications[index].IsRead = true;
-      }
+      if (index !== -1) this.notifications[index].IsRead = true;
     } else if (notification.type === "deleted") {
       // Remove notification
       this.notifications = this.notifications.filter(
-        (n) => n.NotificationId !== notification.id
+        (n) => this.getId(n) != incomingId
       );
     } else {
       // Add new notification at the beginning
@@ -171,14 +172,31 @@ class NotificationPanel {
       .querySelectorAll(".notification-item")
       .forEach((item, index) => {
         const notification = this.notifications[index];
+        const id = this.getId(notification);
 
         item.addEventListener("click", async (e) => {
           if (e.target.closest(".notification-item-action-btn")) return;
 
-          await this.markAsRead(notification.NotificationId);
+          const taskId = notification?.TaskId ?? notification?.taskId ?? null;
+          const hasDetails = taskId != null;
 
-          if (notification.Link) {
-            window.location.href = notification.Link;
+          // If notification has details, open the modal instead of just marking as read
+          if (hasDetails) {
+            const isRead = this.getIsRead(notification);
+            if (!isRead) {
+              await this.markAsRead(id);
+            }
+            await this.showNotificationDetails(notification);
+          } else {
+            // For regular notifications, mark as read and navigate if there's a link
+            const isRead = this.getIsRead(notification);
+            if (!isRead) {
+              await this.markAsRead(id);
+            }
+
+            if (notification.Link) {
+              window.location.href = notification.Link;
+            }
           }
         });
 
@@ -186,7 +204,7 @@ class NotificationPanel {
         if (deleteBtn) {
           deleteBtn.addEventListener("click", async (e) => {
             e.stopPropagation();
-            await this.deleteNotification(notification.NotificationId);
+            await this.deleteNotification(id);
           });
         }
 
@@ -194,7 +212,22 @@ class NotificationPanel {
         if (readBtn) {
           readBtn.addEventListener("click", async (e) => {
             e.stopPropagation();
-            await this.markAsRead(notification.NotificationId);
+            const isRead = this.getIsRead(notification);
+            if (!isRead) {
+              await this.markAsRead(id);
+            }
+          });
+        }
+
+        const detailsBtn = item.querySelector(".notification-details-btn");
+        if (detailsBtn) {
+          detailsBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const isRead = this.getIsRead(notification);
+            if (!isRead) {
+              await this.markAsRead(id);
+            }
+            await this.showNotificationDetails(notification);
           });
         }
       });
@@ -202,23 +235,34 @@ class NotificationPanel {
 
   // Render single notification item
   renderNotificationItem(notification) {
-    const isRead = notification.IsRead;
-    const icon = this.getNotificationIcon(notification.Type || "info");
-    const time = this.getRelativeTime(notification.CreatedAt);
+    const isRead = this.getIsRead(notification);
+    const icon = this.getNotificationIcon(this.getType(notification) || "info");
+    const time = this.getRelativeTime(this.getCreatedAt(notification));
+    const taskId = notification?.TaskId ?? notification?.taskId ?? null;
+    const hasDetails = taskId != null;
 
     return `
       <div class="notification-item ${isRead ? "read" : "unread"}">
         <div class="notification-item-icon">${icon}</div>
         <div class="notification-item-content">
           <div class="notification-item-title">${this.escapeHtml(
-            notification.Title || "Notification"
+            this.getTitle(notification) || "Notification"
           )}</div>
           <div class="notification-item-message">${this.escapeHtml(
-            notification.Message || ""
+            this.getMessage(notification) || ""
           )}</div>
           <div class="notification-item-time">${time}</div>
         </div>
         <div class="notification-item-actions">
+          ${
+            hasDetails
+              ? `
+            <button class="notification-item-action-btn notification-details-btn" title="View Details">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          `
+              : ""
+          }
           ${
             !isRead
               ? `
@@ -251,17 +295,221 @@ class NotificationPanel {
     return icons[type] || icons.info;
   }
 
+  // Convenience accessors to handle different DTO casings
+  getId(notification) {
+    // API returns NotifId (PascalCase with capital N and I)
+    const id =
+      notification?.NotifId ??
+      notification?.notifId ??
+      notification?.NotificationId ??
+      notification?.id ??
+      notification?.Id ??
+      null;
+    console.log("[NotificationPanel] getId:", { notification, resolvedId: id });
+    return id;
+  }
+
+  getIsRead(notification) {
+    return (
+      notification?.IsRead ??
+      notification?.isRead ??
+      notification?.read ??
+      false
+    );
+  }
+
+  getTitle(notification) {
+    return (
+      notification?.TaskTitle ??
+      notification?.taskTitle ??
+      notification?.Title ??
+      notification?.title ??
+      notification?.messageTitle ??
+      null
+    );
+  }
+
+  getMessage(notification) {
+    return notification?.Message ?? notification?.message ?? null;
+  }
+
+  getType(notification) {
+    return notification?.type ?? notification?.Type ?? null;
+  }
+
+  getCreatedAt(notification) {
+    return notification?.CreatedAt ?? notification?.createdAt ?? new Date();
+  }
+
+  getTaskStatusUpdate(notification) {
+    return (
+      notification?.TaskStatusUpdate ??
+      notification?.taskStatusUpdate ??
+      notification?.StatusName ??
+      notification?.statusName ??
+      null
+    );
+  }
+
+  getEmployeeNotes(notification) {
+    return (
+      notification?.EmployeeNotes ??
+      notification?.employeeNotes ??
+      notification?.Notes ??
+      notification?.notes ??
+      notification?.TaskNotes ??
+      notification?.taskNotes ??
+      null
+    );
+  }
+
+  // Show notification details modal
+  async showNotificationDetails(notification) {
+    const notifId = this.getId(notification);
+
+    try {
+      // Fetch full details from API
+      const details = await API.Notifications.getDetails(notifId);
+
+      const taskTitle =
+        details.TaskTitle ||
+        details.taskTitle ||
+        this.getTitle(notification) ||
+        "Task Update";
+      const message =
+        details.Message ||
+        details.message ||
+        this.getMessage(notification) ||
+        "";
+      const createdAt =
+        details.CreatedAt ||
+        details.createdAt ||
+        this.getCreatedAt(notification);
+
+      // Create modal if it doesn't exist
+      let modal = document.getElementById("notificationDetailsModal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "notificationDetailsModal";
+        modal.className = "modal-backdrop d-none";
+        modal.innerHTML = `
+          <div class="modal-dialog" style="max-width: 600px">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3>Task Status Update</h3>
+                <button class="btn-icon" onclick="document.getElementById('notificationDetailsModal').classList.add('d-none')">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label><strong>Task:</strong></label>
+                  <p id="notifDetailTaskTitle">-</p>
+                </div>
+                <div class="form-group">
+                  <label><strong>Message:</strong></label>
+                  <p id="notifDetailMessage">-</p>
+                </div>
+                <div class="form-group">
+                  <label><strong>Received:</strong></label>
+                  <p id="notifDetailTime">-</p>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('notificationDetailsModal').classList.add('d-none')">
+                  Close
+                </button>
+                <button class="btn btn-primary" id="notifDetailGoToTask" style="display: none">
+                  <i class="fa-solid fa-arrow-right"></i> Go to Tasks
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+
+      // Populate modal with notification data
+      document.getElementById("notifDetailTaskTitle").textContent = taskTitle;
+      document.getElementById("notifDetailMessage").textContent = message;
+      document.getElementById("notifDetailTime").textContent = new Date(
+        createdAt
+      ).toLocaleString();
+
+      // Setup "Go to Tasks" button
+      const goToTaskBtn = document.getElementById("notifDetailGoToTask");
+      const taskId = details.TaskId || details.taskId;
+      if (taskId) {
+        goToTaskBtn.style.display = "inline-block";
+        goToTaskBtn.onclick = () => {
+          // Determine the correct tasks page based on user role
+          const currentUser = auth.getCurrentUser();
+          const role = currentUser?.Role || currentUser?.role;
+          let tasksPage = "tasks.html"; // Default fallback
+
+          if (role === 1) {
+            // Manager
+            tasksPage = "tasks.html";
+          } else if (role === 2) {
+            // Assistant Manager
+            tasksPage = "tasks.html";
+          } else if (role === 3) {
+            // Accountant
+            tasksPage = "tasks.html";
+          } else if (role === 4) {
+            // Team Leader
+            tasksPage = "team-tasks.html";
+          } else if (role === 5) {
+            // Employee
+            tasksPage = "my-tasks.html";
+          } else if (role === 6) {
+            // Client
+            tasksPage = "tasks.html";
+          }
+
+          document
+            .getElementById("notificationDetailsModal")
+            .classList.add("d-none");
+          // Navigate to the tasks page in the current role's folder
+          if (tasksPage) {
+            window.location.href = tasksPage;
+          }
+        };
+      } else {
+        goToTaskBtn.style.display = "none";
+      }
+
+      // Show modal
+      modal.classList.remove("d-none");
+    } catch (error) {
+      console.error(
+        "[NotificationPanel] Failed to load notification details:",
+        error
+      );
+      utils.showError("Failed to load notification details");
+    }
+  }
+
   // Mark notification as read
   async markAsRead(notificationId) {
     try {
+      console.log(
+        "[NotificationPanel] markAsRead called with:",
+        notificationId
+      );
+      if (notificationId == null) {
+        console.error(
+          "[NotificationPanel] notificationId is null/undefined, cannot mark as read"
+        );
+        utils.showError("Invalid notification ID");
+        return;
+      }
       await API.Notifications.markAsRead(notificationId);
 
       const index = this.notifications.findIndex(
-        (n) => n.NotificationId === notificationId
+        (n) => this.getId(n) == notificationId
       );
-      if (index !== -1) {
-        this.notifications[index].IsRead = true;
-      }
+      if (index !== -1) this.notifications[index].IsRead = true;
 
       this.render();
       notificationService.updateNotificationBadge();
@@ -289,7 +537,7 @@ class NotificationPanel {
       await API.Notifications.delete(notificationId);
 
       this.notifications = this.notifications.filter(
-        (n) => n.NotificationId !== notificationId
+        (n) => this.getId(n) != notificationId
       );
       this.render();
       notificationService.updateNotificationBadge();

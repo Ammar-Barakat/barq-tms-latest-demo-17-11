@@ -7,7 +7,7 @@ namespace BarqTMS.API.Models
     {
         Manager = 1,
         AssistantManager = 2,
-        Accountant = 3,
+        AccountManager = 3,
         TeamLeader = 4,
         Employee = 5,
         Client = 6
@@ -66,5 +66,6 @@ namespace BarqTMS.API.Models
         public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
         public virtual ICollection<TimeLog> TimeLogs { get; set; } = new List<TimeLog>();
         public virtual UserSettings? Settings { get; set; }
+        public virtual ICollection<Client> ManagedClients { get; set; } = new List<Client>(); // Clients for Account Manager
     }
 }

@@ -17,16 +17,12 @@ async function loadData() {
     // Load projects - clients are embedded in project data (ClientId, ClientName)
     projects = await API.Projects.getAll().catch(() => []);
 
-    // Extract unique clients from projects for dropdown
-    const clientMap = new Map();
-    projects.forEach((p) => {
-      if (p.ClientId && p.ClientName) {
-        clientMap.set(p.ClientId, p.ClientName);
-      }
-    });
-    clients = Array.from(clientMap, ([ClientId, ClientName]) => ({
-      ClientId,
-      ClientName,
+    // Load all clients so the dropdown shows every client, not only those
+    // already referenced by existing projects.
+    const allClients = await API.Clients.getAll().catch(() => []);
+    clients = allClients.map((c) => ({
+      ClientId: c.clientId || c.ClientId,
+      ClientName: c.name || c.Name || c.clientName || c.ClientName,
     }));
 
     populateDropdowns();

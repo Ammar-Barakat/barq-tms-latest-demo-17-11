@@ -91,6 +91,7 @@ class AuthManager {
   }
 
   getCurrentUser() {
+    console.log(this.currentUser);
     return this.currentUser;
   }
 

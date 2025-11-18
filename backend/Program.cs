@@ -31,6 +31,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? ""))
         };
+
+        // Allow SignalR connections to authenticate via the access_token query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                // If the request is for our SignalR hubs and contains an access token, use it
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/hubs/notifications") ||
+                     path.StartsWithSegments("/hub/notifications") ||
+                     path.StartsWithSegments("/notificationHub") ||
+                     path.StartsWithSegments("/hubs/notificationHub")))
+                {
+                    context.Token = accessToken!;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -48,9 +70,16 @@ builder.Services.AddScoped<BarqTMS.API.Services.IRealTimeService, BarqTMS.API.Se
 builder.Services.AddScoped<BarqTMS.API.Services.ICalendarService, BarqTMS.API.Services.CalendarService>();
 builder.Services.AddScoped<BarqTMS.API.Services.IReportingService, BarqTMS.API.Services.ReportingService>();
 builder.Services.AddScoped<BarqTMS.API.Services.ISecurityService, BarqTMS.API.Services.SecurityService>();
+// Register client service
+builder.Services.AddScoped<BarqTMS.API.Services.IClientService, BarqTMS.API.Services.ClientService>();
+// Register task service
+builder.Services.AddScoped<BarqTMS.API.Services.ITaskService, BarqTMS.API.Services.TaskService>();
 
 // Add SignalR
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 
 // Add HTTP context accessor for audit service
 builder.Services.AddHttpContextAccessor();

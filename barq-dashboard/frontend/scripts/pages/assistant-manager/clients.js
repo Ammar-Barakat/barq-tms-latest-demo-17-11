@@ -14,22 +14,8 @@ async function loadData() {
   try {
     utils.showLoading();
 
-    // Get projects and extract unique clients
-    const projects = await API.Projects.getAll().catch(() => []);
-    const clientsMap = new Map();
-    projects.forEach((project) => {
-      if (project.ClientId && project.ClientName) {
-        if (!clientsMap.has(project.ClientId)) {
-          clientsMap.set(project.ClientId, {
-            ClientId: project.ClientId,
-            ClientName: project.ClientName,
-            ProjectCount: 0,
-          });
-        }
-        clientsMap.get(project.ClientId).ProjectCount++;
-      }
-    });
-    clients = Array.from(clientsMap.values());
+    // Fetch clients from API
+    clients = await API.Clients.getAll().catch(() => []);
 
     // Fetch accountants (role 3)
     const allEmployees = await API.Employees.getAll().catch(() => []);
@@ -67,18 +53,22 @@ function renderClients() {
     .map(
       (client) => `
     <tr>
-      <td><strong>${client.ClientId}</strong></td>
-      <td>${client.ClientName || "Unknown"}</td>
+      <td><strong>${client.clientId || client.ClientId}</strong></td>
+      <td>${client.name || client.Name || "Unknown"}</td>
+      <td>${client.email || client.Email || "N/A"}</td>
       <td><span class="badge badge-info">${
-        client.ProjectCount || 0
+        client.projectCount || client.ProjectCount || 0
       } projects</span></td>
-      <td><span class="badge badge-secondary"><i class="fa-solid fa-folder-open"></i> From Projects</span></td>
       <td>
         <div class="table-actions">
-          <button class="btn btn-sm btn-primary" disabled title="View only - extracted from projects">
-            <i class="fa-solid fa-eye"></i>
+          <button class="btn btn-sm btn-primary" onclick="editClient(${
+            client.clientId || client.ClientId
+          })">
+            <i class="fa-solid fa-edit"></i>
           </button>
-          <button class="btn btn-sm btn-danger" disabled title="Cannot delete - extracted from projects">
+          <button class="btn btn-sm btn-danger" onclick="deleteClient(${
+            client.clientId || client.ClientId
+          })">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -106,6 +96,9 @@ function populateAccountantDropdown() {
 
 function setupEventListeners() {
   document
+    .getElementById("clientForm")
+    .addEventListener("submit", handleSubmit);
+  document
     .getElementById("searchInput")
     .addEventListener("input", handleSearch);
 }
@@ -118,4 +111,121 @@ function handleSearch(e) {
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(searchTerm) ? "" : "none";
   });
+}
+
+function showCreateModal() {
+  currentEditId = null;
+  document.getElementById("modalTitle").textContent = "Add New Client";
+  document.getElementById("clientForm").reset();
+  document.getElementById("accountant").value = "";
+    client.company || client.Company || "";
+  document.getElementById("address").value =
+    client.address || client.Address || "";
+  document.getElementById("accountant").value =
+    client.accountManagerId || client.AccountManagerId || "";
+
+  document.getElementById("clientModal").classList.remove("d-none");
+  try {
+    utils.showLoading();
+
+    // Fetch full client details from API (list endpoint may not include optional fields)
+    let client = null;
+    try {
+      client = await API.Clients.getById(id);
+    } catch (err) {
+      client = clients.find((c) => (c.clientId || c.ClientId) === id);
+    }
+
+    if (!client) {
+      utils.showError("Client not found");
+      return;
+    }
+
+    currentEditId = id;
+    document.getElementById("modalTitle").textContent = "Edit Client";
+    document.getElementById("clientId").value = id;
+    document.getElementById("name").value = client.name || client.Name || "";
+    document.getElementById("email").value = client.email || client.Email || "";
+    document.getElementById("phoneNumber").value = client.phoneNumber || client.PhoneNumber || "";
+    document.getElementById("company").value = client.company || client.Company || "";
+    document.getElementById("address").value = client.address || client.Address || "";
+    if (document.getElementById("accountant")) {
+      const acctId = client.accountManagerId || client.AccountManagerId || client.AccountManager || null;
+      document.getElementById("accountant").value = acctId || "";
+    }
+
+    document.getElementById("clientModal").classList.remove("d-none");
+  } catch (error) {
+    console.error("Error opening edit modal:", error);
+    utils.showError("Failed to load client details");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  const clientData = {
+    Name: document.getElementById("name").value,
+    Email: document.getElementById("email").value,
+    PhoneNumber: document.getElementById("phoneNumber").value || null,
+    Company: document.getElementById("company").value || null,
+    Address: document.getElementById("address").value || null,
+    AccountManagerId:
+      parseInt(document.getElementById("accountant").value) || null,
+  };
+
+  try {
+    utils.showLoading();
+
+    if (currentEditId) {
+      await API.Clients.update(currentEditId, clientData);
+      utils.showSuccess("Client updated successfully");
+    } else {
+      await API.Clients.create(clientData);
+      utils.showSuccess("Client created successfully");
+    }
+
+    closeModal();
+    await loadData();
+  } catch (error) {
+    console.error("Error saving client:", error);
+    // Prefer showing the server-provided error message when available
+    let msg = "Failed to save client";
+    if (error && error.message) {
+      const parts = error.message.split(":");
+      if (parts.length > 1) {
+        msg = parts.slice(1).join(":").trim();
+      } else {
+        msg = error.message;
+      }
+      msg = msg.replace(/^\s*["']|["']\s*$/g, "");
+    }
+    utils.showError(msg);
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+async function deleteClient(id) {
+  if (
+    !confirm(
+      "Are you sure you want to delete this client? This will affect all associated projects."
+    )
+  ) {
+    return;
+  }
+
+  try {
+    utils.showLoading();
+    await API.Clients.delete(id);
+    utils.showSuccess("Client deleted successfully");
+    await loadData();
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    utils.showError("Failed to delete client");
+  } finally {
+    utils.hideLoading();
+  }
 }

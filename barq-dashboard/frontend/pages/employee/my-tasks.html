@@ -192,44 +192,92 @@
       </main>
     </div>
 
-    <!-- Update Status Modal -->
-    <div id="statusModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Update Task Status</h3>
-          <button class="modal-close" onclick="closeStatusModal()">
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Task: <span id="modalTaskTitle"></span></label>
+    <!-- Task Details Modal -->
+    <div id="taskDetailsModal" class="modal-backdrop d-none">
+      <div class="modal-dialog" style="max-width: 700px">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="detailsTaskTitle">Task Details</h3>
+            <button class="btn-icon" onclick="closeDetailsModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
-          <div class="form-group">
-            <label for="taskStatus">Status</label>
-            <select id="taskStatus" class="form-control">
-              <option value="1">Pending</option>
-              <option value="2">In Progress</option>
-              <option value="3">Completed</option>
-            </select>
+          <div class="modal-body">
+            <div class="form-group">
+              <label><strong>Description:</strong></label>
+              <p id="detailsDescription">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Project:</strong></label>
+              <p id="detailsProject">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Status:</strong></label>
+              <p id="detailsStatus">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Priority:</strong></label>
+              <p id="detailsPriority">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Due Date:</strong></label>
+              <p id="detailsDueDate">-</p>
+            </div>
+            <div class="form-group" id="uploadLinkGroup" style="display: none">
+              <label><strong>Upload Folder Link:</strong></label>
+              <div>
+                <a
+                  id="detailsUploadLink"
+                  href="#"
+                  target="_blank"
+                  class="btn btn-sm btn-success"
+                >
+                  <i class="fa-solid fa-upload"></i> Open Upload Folder
+                </a>
+              </div>
+            </div>
+            <div
+              class="form-group"
+              id="materialLinkGroup"
+              style="display: none"
+            >
+              <label><strong>Material Folder Link:</strong></label>
+              <div>
+                <a
+                  id="detailsMaterialLink"
+                  href="#"
+                  target="_blank"
+                  class="btn btn-sm btn-info"
+                >
+                  <i class="fa-solid fa-folder"></i> Open Material Folder
+                </a>
+              </div>
+            </div>
+            <div
+              class="form-group"
+              id="managerNotesGroup"
+              style="display: none; margin-top: 20px"
+            >
+              <label><strong>Manager Review Notes:</strong></label>
+              <div
+                id="detailsManagerNotes"
+                class="alert alert-warning"
+                style="margin-top: 10px"
+              ></div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="taskNotes">Notes (Optional)</label>
-            <textarea
-              id="taskNotes"
-              class="form-input"
-              rows="3"
-              placeholder="Add any notes..."
-            ></textarea>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDetailsModal()">
+              Close
+            </button>
+            <button
+              class="btn btn-success"
+              onclick="markTaskAsDone()"
+              id="markDoneBtn"
+            >
+              <i class="fa-solid fa-check"></i> Mark as Done
+            </button>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeStatusModal()">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="saveTaskStatus()">
-            Update Status
-          </button>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ using BarqTMS.API.Data;
 using BarqTMS.API.Models;
 using BarqTMS.API.DTOs;
 using BarqTMS.API.Helpers;
+using BarqTMS.API.Services;
 
 namespace BarqTMS.API.Controllers
 {
@@ -15,11 +16,13 @@ namespace BarqTMS.API.Controllers
     {
         private readonly BarqTMSDbContext _context;
         private readonly ILogger<NotificationsController> _logger;
+        private readonly IRealTimeService _realTimeService;
 
-        public NotificationsController(BarqTMSDbContext context, ILogger<NotificationsController> logger)
+        public NotificationsController(BarqTMSDbContext context, ILogger<NotificationsController> logger, IRealTimeService realTimeService)
         {
             _context = context;
             _logger = logger;
+            _realTimeService = realTimeService;
         }
 
         // GET: api/notifications/user/5
@@ -308,6 +311,18 @@ namespace BarqTMS.API.Controllers
             }
 
             return NoContent();
+        }
+
+        // GET: api/notifications/{id}/details
+        [HttpGet("{id}/details")]
+        public async Task<ActionResult<NotificationDetailsDto>> GetNotificationDetails(int id)
+        {
+            // Get current user id from claims (or pass as param if needed)
+            var userIdClaim = UserContextHelper.GetCurrentUserIdOrThrow(User);
+            var details = await _realTimeService.GetNotificationDetailsWithTaskNotesAsync(id, userIdClaim);
+            if (details == null)
+                return NotFound($"Notification with ID {id} not found.");
+            return Ok(details);
         }
 
         private async Task<bool> NotificationExists(int id)

@@ -167,7 +167,7 @@ namespace BarqTMS.API.Data
                     Name = "Michael Chen",
                     Username = "michael.chen",
                     Email = "m.chen@barqtms.com",
-                    Role = UserRole.Accountant,
+                    Role = UserRole.AccountManager,
                     PasswordHash = authService.HashPassword("password123"),
                     CreatedAt = DateTime.UtcNow.AddDays(-300),
                     UpdatedAt = DateTime.UtcNow.AddDays(-10),

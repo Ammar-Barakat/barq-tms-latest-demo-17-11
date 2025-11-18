@@ -3,6 +3,7 @@ using BarqTMS.API.Data;
 using BarqTMS.API.Models;
 using BarqTMS.API.Hubs;
 using Microsoft.EntityFrameworkCore;
+using BarqTMS.API.DTOs;
 
 namespace BarqTMS.API.Services
 {
@@ -16,6 +17,7 @@ namespace BarqTMS.API.Services
         Task BroadcastSystemAnnouncementAsync(string message, object? data = null);
         Task SendToUsersAsync(List<int> userIds, string eventName, object data);
         Task SendToUserAsync(int userId, string eventName, object data);
+        Task<NotificationDetailsDto?> GetNotificationDetailsWithTaskNotesAsync(int notificationId, int userId);
     }
 
     public class RealTimeService : IRealTimeService
@@ -203,6 +205,49 @@ namespace BarqTMS.API.Services
             {
                 _logger.LogError(ex, "Failed to send {EventName} to user {UserId}", eventName, userId);
             }
+        }
+
+        public async Task<NotificationDetailsDto?> GetNotificationDetailsWithTaskNotesAsync(int notificationId, int userId)
+        {
+            var notification = await _context.Notifications
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .FirstOrDefaultAsync(n => n.NotifId == notificationId && n.UserId == userId);
+            if (notification == null) return null;
+
+            var dto = new NotificationDetailsDto
+            {
+                NotifId = notification.NotifId,
+                UserId = notification.UserId,
+                Message = notification.Message,
+                CreatedAt = notification.CreatedAt,
+                IsRead = notification.IsRead,
+                TaskId = notification.TaskId,
+                TaskTitle = notification.Task?.Title,
+                ProjectId = notification.ProjectId,
+                ProjectName = notification.Project?.ProjectName,
+                TaskNotes = new List<TaskCommentDto>()
+            };
+
+            if (notification.TaskId.HasValue)
+            {
+                dto.TaskNotes = await _context.TaskComments
+                    .Where(tc => tc.TaskId == notification.TaskId.Value)
+                    .Include(tc => tc.User)
+                    .OrderBy(tc => tc.CreatedAt)
+                    .Select(tc => new TaskCommentDto
+                    {
+                        CommentId = tc.CommentId,
+                        TaskId = tc.TaskId,
+                        UserId = tc.UserId,
+                        UserName = tc.User.Name,
+                        Comment = tc.Comment,
+                        CreatedAt = tc.CreatedAt
+                    })
+                    .ToListAsync();
+            }
+
+            return dto;
         }
     }
 }

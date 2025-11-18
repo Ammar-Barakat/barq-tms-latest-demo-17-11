@@ -13,26 +13,17 @@ async function loadData() {
   try {
     utils.showLoading();
 
-    // No /api/Clients endpoint - extract unique clients from projects
-    const projects = await API.Projects.getAll().catch(() => []);
-
-    // Create unique clients list from projects
-    const clientMap = new Map();
-    projects.forEach((p) => {
-      if (p.ClientId && p.ClientName) {
-        if (!clientMap.has(p.ClientId)) {
-          clientMap.set(p.ClientId, {
-            ClientId: p.ClientId,
-            ClientName: p.ClientName,
-            ProjectCount: 1,
-          });
-        } else {
-          clientMap.get(p.ClientId).ProjectCount++;
-        }
-      }
-    });
-
-    clients = Array.from(clientMap.values());
+    // Load clients from the API so we have complete client records
+    const allClients = await API.Clients.getAll().catch(() => []);
+    clients = allClients.map((c) => ({
+      ClientId: c.clientId || c.ClientId,
+      ClientName: c.name || c.Name || c.clientName || c.ClientName,
+      ProjectCount: c.projectCount || c.ProjectCount || 0,
+      Email: c.email || c.Email || "",
+      PhoneNumber: c.phoneNumber || c.PhoneNumber || "",
+      Company: c.company || c.Company || "",
+      Address: c.address || c.Address || "",
+    }));
     renderClients();
   } catch (error) {
     console.error("Error loading data:", error);

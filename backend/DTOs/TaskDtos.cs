@@ -2,6 +2,25 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BarqTMS.API.DTOs
 {
+    public class TaskListDto
+    {
+        public int TaskId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public int PriorityId { get; set; }
+        public string PriorityLevel { get; set; } = string.Empty;
+        public int StatusId { get; set; }
+        public string StatusName { get; set; } = string.Empty;
+        public DateTime? DueDate { get; set; }
+        public int? AssignedTo { get; set; }
+        public string? AssignedToName { get; set; }
+        public int ProjectId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
+        public int CommentCount { get; set; }
+        public int AttachmentCount { get; set; }
+        public string DriveFolderLink { get; set; } = string.Empty;
+        public string? MaterialDriveFolderLink { get; set; }
+    }
+
     public class TaskDto
     {
         public int TaskId { get; set; }
@@ -22,6 +41,8 @@ namespace BarqTMS.API.DTOs
         public string ProjectName { get; set; } = string.Empty;
         public int CommentCount { get; set; }
         public int AttachmentCount { get; set; }
+        public string DriveFolderLink { get; set; } = string.Empty;
+        public string? MaterialDriveFolderLink { get; set; }
     }
 
     public class CreateTaskDto
@@ -48,6 +69,13 @@ namespace BarqTMS.API.DTOs
         
         [Required]
         public int ProjectId { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string DriveFolderLink { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string? MaterialDriveFolderLink { get; set; }
     }
 
     public class UpdateTaskDto
@@ -65,6 +93,13 @@ namespace BarqTMS.API.DTOs
         public int? AssignedTo { get; set; }
         public int DeptId { get; set; }
         public int ProjectId { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string DriveFolderLink { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string? MaterialDriveFolderLink { get; set; }
     }
 
     public class TaskCommentDto
@@ -82,5 +117,36 @@ namespace BarqTMS.API.DTOs
         [Required]
         [StringLength(1000)]
         public string Comment { get; set; } = string.Empty;
+    }
+
+    public class UpdateTaskStatusDto
+    {
+        [Required]
+        public int StatusId { get; set; }
+
+        [StringLength(1000)]
+        public string? Notes { get; set; }
+    }
+
+    public class NotificationDetailsDto
+    {
+        public int NotifId { get; set; }
+        public int UserId { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public bool IsRead { get; set; }
+        public int? TaskId { get; set; }
+        public string? TaskTitle { get; set; }
+        public int? ProjectId { get; set; }
+        public string? ProjectName { get; set; }
+        public List<TaskCommentDto> TaskNotes { get; set; } = new();
+    }
+
+    public class ReviewTaskCompletionDto
+    {
+        public bool Approve { get; set; }
+        [StringLength(1000)]
+        public string? Notes { get; set; }
+        public DateTime? NewDueDate { get; set; }
     }
 }

@@ -15,20 +15,15 @@ async function loadData() {
     utils.showLoading();
 
     projects = await API.Projects.getAll().catch(() => []);
+    projects = await API.Projects.getAll().catch(() => []);
 
-    // Extract unique clients from projects
-    const clientMap = new Map();
-    projects.forEach((p) => {
-      if (p.ClientId && p.ClientName) {
-        if (!clientMap.has(p.ClientId)) {
-          clientMap.set(p.ClientId, {
-            ClientId: p.ClientId,
-            ClientName: p.ClientName,
-          });
-        }
-      }
-    });
-    clients = Array.from(clientMap.values());
+    // Load all clients so the project creation dropdown contains every client
+    // instead of only clients referenced by existing projects.
+    const allClients = await API.Clients.getAll().catch(() => []);
+    clients = allClients.map((c) => ({
+      ClientId: c.clientId || c.ClientId,
+      ClientName: c.name || c.Name || c.clientName || c.ClientName,
+    }));
 
     populateDropdowns();
     renderProjects();

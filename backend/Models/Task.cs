@@ -62,6 +62,16 @@ namespace BarqTMS.API.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        // New drive folder links
+        [Required]
+        [StringLength(500)]
+        [Column("drive_folder_link")]
+        public string DriveFolderLink { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        [Column("material_drive_folder_link")]
+        public string? MaterialDriveFolderLink { get; set; }
+
         // Navigation properties
         [ForeignKey("PriorityId")]
         public virtual Priority Priority { get; set; } = null!;

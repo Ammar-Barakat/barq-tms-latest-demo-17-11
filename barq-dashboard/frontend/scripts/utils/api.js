@@ -172,6 +172,10 @@ const API = {
       const client = new APIClient();
       return client.put(`/Tasks/${id}`, taskData);
     },
+    async updateStatus(id, statusData) {
+      const client = new APIClient();
+      return client.put(`/Tasks/${id}/status`, statusData);
+    },
     async delete(id) {
       const client = new APIClient();
       return client.delete(`/Tasks/${id}`);
@@ -191,6 +195,18 @@ const API = {
     async getHistory(taskId) {
       const client = new APIClient();
       return client.get(`/Tasks/${taskId}/history`);
+    },
+    async requestComplete(id) {
+      const client = new APIClient();
+      return client.put(`/Tasks/${id}/request-complete`);
+    },
+    async reviewCompletion(id, reviewData) {
+      const client = new APIClient();
+      return client.put(`/Tasks/${id}/review-completion`, reviewData);
+    },
+    async getLatestDeclineComment(id) {
+      const client = new APIClient();
+      return client.get(`/Tasks/${id}/latest-decline-comment`);
     },
   },
 
@@ -294,6 +310,34 @@ const API = {
     },
   },
 
+  // Clients Service
+  Clients: {
+    async getAll() {
+      const client = new APIClient();
+      return client.get("/Clients");
+    },
+    async getById(id) {
+      const client = new APIClient();
+      return client.get(`/Clients/${id}`);
+    },
+    async create(clientData) {
+      const client = new APIClient();
+      return client.post("/Clients", clientData);
+    },
+    async update(id, clientData) {
+      const client = new APIClient();
+      return client.put(`/Clients/${id}`, clientData);
+    },
+    async delete(id) {
+      const client = new APIClient();
+      return client.delete(`/Clients/${id}`);
+    },
+    async getProjects(clientId) {
+      const client = new APIClient();
+      return client.get(`/Clients/${clientId}/projects`);
+    },
+  },
+
   // Roles Service
   Roles: {
     async getAll() {
@@ -331,6 +375,10 @@ const API = {
     async getUnreadCount(userId) {
       const client = new APIClient();
       return client.get(`/Notifications/user/${userId}/count/unread`);
+    },
+    async getDetails(notifId) {
+      const client = new APIClient();
+      return client.get(`/Notifications/${notifId}/details`);
     },
     async markAsRead(notifId) {
       const client = new APIClient();

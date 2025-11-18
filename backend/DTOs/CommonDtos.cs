@@ -66,5 +66,10 @@ namespace BarqTMS.API.DTOs
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public int ProjectCount { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Company { get; set; }
+        public string? Address { get; set; }
+        public int AccountManagerId { get; set; }
+        public string? AccountManagerName { get; set; }
     }
 }

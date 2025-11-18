@@ -21,6 +21,9 @@ async function loadData() {
       API.Employees.getAll().catch(() => []),
     ]);
 
+    console.log("[Manager] Loaded tasks from API:", tasks.length, "tasks");
+    console.log("[Manager] Sample task structure:", tasks[0]);
+
     populateDropdowns();
     renderTasks();
   } catch (error) {
@@ -39,14 +42,24 @@ function populateDropdowns() {
   projectSelect.innerHTML =
     '<option value="">Select Project</option>' +
     projects
-      .map((p) => `<option value="${p.ProjectId}">${p.ProjectName}</option>`)
+      .map(
+        (p) =>
+          `<option value="${p.projectId || p.ProjectId}">${
+            p.projectName || p.ProjectName || p.Name || "Unnamed"
+          }</option>`
+      )
       .join("");
 
   // API returns: UserId, Name for users
   employeeSelect.innerHTML =
     '<option value="">Select Employee</option>' +
     employees
-      .map((e) => `<option value="${e.UserId}">${e.Name}</option>`)
+      .map(
+        (e) =>
+          `<option value="${e.UserId || e.Id}">${
+            e.Name || e.name || e.Username || e.username || "Unknown"
+          }</option>`
+      )
       .join("");
 }
 
@@ -69,33 +82,57 @@ function renderTasks() {
   }
 
   tbody.innerHTML = tasks
-    .map(
-      (task) => `
-    <tr>
-      <td><strong>${task.Title || "Untitled"}</strong></td>
-      <td>${utils.truncateText(task.Description || "No description", 50)}</td>
-      <td>${task.ProjectName || "N/A"}</td>
-      <td>${task.AssignedToName || "Unassigned"}</td>
-      <td>${utils.getStatusBadge(task.StatusId || 1)}</td>
-      <td>${utils.getPriorityBadge(task.PriorityId || 1)}</td>
-      <td>${utils.formatDate(task.DueDate)}</td>
+    .map((task) => {
+      const taskId = task.taskId || task.TaskId || task.Id;
+      const statusId = task.statusId || task.StatusId || task.Status || 1;
+      const priorityId =
+        task.priorityId || task.PriorityId || task.Priority || 1;
+
+      // Check if task needs review
+      // StatusId 3 = "In Review" (set by backend when employee requests completion)
+      const needsReview = statusId === 3;
+
+      // Debug: Log tasks with "In Review" status
+      if (needsReview) {
+        console.log("[Tasks] Task needs review (StatusId=3):", task);
+      }
+
+      const reviewBadge = needsReview
+        ? '<span class="badge badge-warning" style="margin-left: 5px;">Needs Review</span>'
+        : "";
+
+      return `
+    <tr style="${needsReview ? "border-left: 4px solid #ff9800;" : ""}">
+      <td><strong>${
+        task.Title || task.title || "Untitled"
+      }</strong>${reviewBadge}</td>
+      <td>${task.ProjectName || task.projectName || "N/A"}</td>
+      <td>${task.AssignedToName || task.assignedToName || "Unassigned"}</td>
+      <td>${utils.getStatusBadge(statusId)}</td>
+      <td>${utils.getPriorityBadge(priorityId)}</td>
+      <td>${utils.formatDate(task.DueDate || task.dueDate)}</td>
       <td>
         <div class="table-actions">
-          <button class="btn btn-sm btn-primary" onclick="editTask(${
-            task.TaskId
-          })">
+          ${
+            needsReview
+              ? `
+          <button class="btn btn-sm btn-warning" onclick="openReviewModal(${taskId})" title="Review completed task">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </button>
+          `
+              : ""
+          }
+          <button class="btn btn-sm btn-primary" onclick="editTask(${taskId})">
             <i class="fa-solid fa-pen"></i>
           </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteTask(${
-            task.TaskId
-          })">
+          <button class="btn btn-sm btn-danger" onclick="deleteTask(${taskId})">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
       </td>
     </tr>
-  `
-    )
+  `;
+    })
     .join("");
 }
 
@@ -120,6 +157,7 @@ function showCreateModal() {
   currentEditId = null;
   document.getElementById("modalTitle").textContent = "Create Task";
   document.getElementById("taskForm").reset();
+  clearFormErrors(document.getElementById("taskForm"));
   document.getElementById("taskId").value = "";
   document.getElementById("taskModal").classList.remove("d-none");
 }
@@ -131,21 +169,31 @@ function closeModal() {
 }
 
 async function editTask(id) {
-  const task = tasks.find((t) => t.TaskId === id);
+  const task = tasks.find((t) => (t.taskId || t.TaskId || t.Id) == id);
   if (!task) return;
+  // Try to fetch full task details from the API to ensure optional fields
+  // like Description and Drive links are available (list endpoints may omit them).
+  try {
+    const full = await API.Tasks.getById(id).catch(() => null);
+    if (full) Object.assign(task, full);
+  } catch (e) {
+    // ignore and continue with available data
+    console.warn("Failed to fetch full task details:", e);
+  }
 
   currentEditId = id;
   document.getElementById("modalTitle").textContent = "Edit Task";
   document.getElementById("taskId").value = id;
+  // Use detail DTO fields (PascalCase from getById)
   document.getElementById("title").value = task.Title || "";
   document.getElementById("description").value = task.Description || "";
   document.getElementById("projectId").value = task.ProjectId || "";
   document.getElementById("assignedToId").value = task.AssignedTo || "";
   document.getElementById("status").value = task.StatusId || 1;
   document.getElementById("priority").value = task.PriorityId || 1;
-  document.getElementById("driveUploadLink").value = task.DriveUploadLink || "";
+  document.getElementById("driveUploadLink").value = task.DriveFolderLink || "";
   document.getElementById("driveMaterialLink").value =
-    task.DriveMaterialLink || "";
+    task.MaterialDriveFolderLink || "";
 
   if (task.DueDate) {
     const date = new Date(task.DueDate);
@@ -157,20 +205,20 @@ async function editTask(id) {
 
 async function handleSubmit(e) {
   e.preventDefault();
-
-  // API expects PascalCase for request body
+  clearFormErrors(document.getElementById("taskForm"));
+  // Build payload matching API `CreateTaskDto` / `UpdateTaskDto` (camelCase)
   const formData = {
-    Title: document.getElementById("title").value,
-    Description: document.getElementById("description").value,
-    ProjectId: parseInt(document.getElementById("projectId").value),
-    AssignedTo: parseInt(document.getElementById("assignedToId").value) || null,
-    StatusId: parseInt(document.getElementById("status").value),
-    PriorityId: parseInt(document.getElementById("priority").value),
-    DueDate: document.getElementById("dueDate").value || null,
-    DriveUploadLink: document.getElementById("driveUploadLink").value || null,
-    DriveMaterialLink:
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value || null,
+    projectId: parseInt(document.getElementById("projectId").value) || null,
+    assignedTo: parseInt(document.getElementById("assignedToId").value) || null,
+    statusId: parseInt(document.getElementById("status").value) || 1,
+    priorityId: parseInt(document.getElementById("priority").value) || 1,
+    dueDate: document.getElementById("dueDate").value || null,
+    driveFolderLink: document.getElementById("driveUploadLink").value || null,
+    materialDriveFolderLink:
       document.getElementById("driveMaterialLink").value || null,
-    DeptId: 1, // Default department - should be selected from form
+    deptId: parseInt(document.getElementById("deptId")?.value) || 1,
   };
 
   try {
@@ -188,9 +236,94 @@ async function handleSubmit(e) {
     await loadData();
   } catch (error) {
     console.error("Error saving task:", error);
-    utils.showError("Failed to save task");
+    // prefer showing server-provided message when available
+    let msg = "Failed to save task";
+    if (error && error.message) {
+      const parts = error.message.split(":");
+      msg = parts.length > 1 ? parts.slice(1).join(":").trim() : error.message;
+      msg = msg.replace(/^\s*["']|["']\s*$/g, "");
+    }
+    // If there are field-level errors in the response attempt to show them
+    if (typeof tryApplyFieldErrors === "function") {
+      tryApplyFieldErrors(error, document.getElementById("taskForm"));
+    }
+    utils.showError(msg);
   } finally {
     utils.hideLoading();
+  }
+}
+
+// --- Form error helpers ---
+function clearFormErrors(form) {
+  if (!form) return;
+  form
+    .querySelectorAll(".is-invalid")
+    .forEach((el) => el.classList.remove("is-invalid"));
+  form.querySelectorAll(".invalid-feedback").forEach((el) => el.remove());
+}
+
+function applyFieldErrors(form, fieldErrors) {
+  if (!form || !fieldErrors) return;
+  let firstEl = null;
+  Object.keys(fieldErrors).forEach((field) => {
+    const msg = Array.isArray(fieldErrors[field])
+      ? fieldErrors[field].join(", ")
+      : fieldErrors[field];
+    // try several id/name variants
+    const candidates = [
+      field,
+      field.charAt(0).toLowerCase() + field.slice(1),
+      field.toLowerCase(),
+      field + "Id",
+      field.replace(/Id$/i, ""),
+    ];
+    let el = null;
+    for (const c of candidates) {
+      el = form.querySelector(`#${c}`) || form.querySelector(`[name="${c}"]`);
+      if (el) break;
+    }
+    if (!el) return;
+    el.classList.add("is-invalid");
+    const feedback = document.createElement("div");
+    feedback.className = "invalid-feedback";
+    feedback.textContent = msg;
+    if (el.parentNode) el.parentNode.appendChild(feedback);
+    if (!firstEl) firstEl = el;
+  });
+  if (firstEl) firstEl.focus();
+}
+
+function tryApplyFieldErrors(error, form) {
+  try {
+    if (!error || !error.message) return false;
+    // remove leading HTTP code if present
+    let content = error.message.replace(/^HTTP\s*\d+\s*:\s*/i, "").trim();
+    // if it's quoted JSON string, strip wrapping quotes
+    if (
+      (content.startsWith('"') && content.endsWith('"')) ||
+      (content.startsWith("'") && content.endsWith("'"))
+    ) {
+      content = content.slice(1, -1);
+    }
+    // try parse JSON
+    let parsed = null;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      parsed = null;
+    }
+    if (parsed) {
+      // Common shapes: { errors: { field: [msg] } } or { field: [msg] }
+      if (parsed.errors) {
+        applyFieldErrors(form, parsed.errors);
+        return true;
+      }
+      applyFieldErrors(form, parsed);
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
   }
 }
 
@@ -206,6 +339,149 @@ async function deleteTask(id) {
   } catch (error) {
     console.error("Error deleting task:", error);
     utils.showError("Failed to delete task");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Open review modal
+async function openReviewModal(taskId) {
+  const task = tasks.find((t) => (t.taskId || t.TaskId || t.Id) == taskId);
+  if (!task) return;
+
+  currentEditId = taskId;
+
+  try {
+    utils.showLoading();
+
+    // Populate modal with task details (tolerant to casing)
+    document.getElementById("reviewTaskTitle").textContent =
+      task.title || task.Title || "Untitled";
+    document.getElementById("reviewDescription").textContent =
+      task.description || task.Description || "No description";
+    document.getElementById("reviewAssignee").textContent =
+      task.assignedToName ||
+      task.AssignedToName ||
+      task.AssignedTo ||
+      "Unknown";
+    document.getElementById("reviewCompletedDate").textContent =
+      utils.formatDate(
+        task.completedDate ||
+          task.CompletedDate ||
+          task.CompletedAt ||
+          new Date()
+      );
+
+    // Show/hide upload link (handle multiple possible property names)
+    const uploadLinkGroup = document.getElementById("reviewUploadLinkGroup");
+    const uploadHref =
+      task.driveFolderLink ||
+      task.DriveFolderLink ||
+      task.DriveUploadLink ||
+      task.driveUploadLink ||
+      null;
+    if (uploadHref) {
+      uploadLinkGroup.style.display = "block";
+      document.getElementById("reviewUploadLink").href = uploadHref;
+    } else {
+      uploadLinkGroup.style.display = "none";
+    }
+
+    // Hide employee notes section (not needed per requirements)
+    const employeeNotesGroup = document.getElementById(
+      "reviewEmployeeNotesGroup"
+    );
+    if (employeeNotesGroup) {
+      employeeNotesGroup.style.display = "none";
+    }
+
+    document.getElementById("reviewAction").value = "approve";
+    document.getElementById("managerNotes").value = "";
+    document.getElementById("newDueDate").value = "";
+
+    // Show/hide notes and due date fields based on action
+    toggleReviewFields();
+
+    // Add event listener for action change
+    document.getElementById("reviewAction").onchange = toggleReviewFields;
+
+    document.getElementById("reviewModal").classList.remove("d-none");
+  } catch (error) {
+    console.error("Error loading review modal:", error);
+    utils.showError("Failed to load task details for review");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Toggle review fields based on action
+function toggleReviewFields() {
+  const action = document.getElementById("reviewAction").value;
+  const notesGroup = document.getElementById("managerNotesGroup");
+  const dueDateGroup = document.getElementById("newDueDateGroup");
+
+  if (action === "revise") {
+    notesGroup.style.display = "block";
+    dueDateGroup.style.display = "block";
+  } else {
+    notesGroup.style.display = "none";
+    dueDateGroup.style.display = "none";
+  }
+}
+
+// Close review modal
+function closeReviewModal() {
+  document.getElementById("reviewModal").classList.add("d-none");
+  currentEditId = null;
+}
+
+// Submit review
+async function submitReview() {
+  if (!currentEditId) return;
+
+  const action = document.getElementById("reviewAction").value;
+  const notes = document.getElementById("managerNotes").value;
+
+  if (action === "revise" && !notes.trim()) {
+    utils.showError("Please provide revision notes");
+    return;
+  }
+
+  try {
+    utils.showLoading();
+
+    // Use the new review-completion endpoint
+    const newDueDate = document.getElementById("newDueDate").value;
+
+    const reviewData = {
+      approve: action === "approve",
+      notes: notes || null,
+      newDueDate: newDueDate || null,
+    };
+
+    console.log("[Manager Review] Submitting review:", {
+      taskId: currentEditId,
+      action,
+      reviewData,
+    });
+    await API.Tasks.reviewCompletion(currentEditId, reviewData);
+    console.log("[Manager Review] Review submitted successfully");
+
+    // Close modal first
+    closeReviewModal();
+
+    // Show success message
+    utils.showSuccess(
+      action === "approve"
+        ? "Task approved successfully! Task removed from employee's list."
+        : "Revision request sent to employee with notes."
+    );
+
+    // Reload tasks to refresh the list and remove review flag
+    await loadData();
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    utils.showError("Failed to submit review");
   } finally {
     utils.hideLoading();
   }
