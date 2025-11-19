@@ -121,11 +121,9 @@ namespace BarqTMS.API.Services
 
         public async Task<(bool Success, string? Error)> DeleteClientAsync(int id)
         {
-            var client = await _context.Clients.Include(c => c.Projects).FirstOrDefaultAsync(c => c.ClientId == id);
+            var client = await _context.Clients.FindAsync(id);
             if (client == null)
                 return (false, "notfound");
-            if (client.Projects.Any())
-                return (false, "Cannot delete client with existing projects.");
 
             _context.Clients.Remove(client);
             await _context.SaveChangesAsync();

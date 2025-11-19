@@ -62,7 +62,7 @@ namespace BarqTMS.API.Data
                 .HasOne(p => p.Client)
                 .WithMany(c => c.Projects)
                 .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure AuditLog relationships
             modelBuilder.Entity<AuditLog>()
@@ -205,7 +205,7 @@ namespace BarqTMS.API.Data
                 .HasOne(n => n.Task)
                 .WithMany(t => t.Notifications)
                 .HasForeignKey(n => n.TaskId)
-                .OnDelete(DeleteBehavior.Restrict); // changed from SetNull to Restrict
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.Project)
@@ -243,7 +243,7 @@ namespace BarqTMS.API.Data
                 .HasOne(ce => ce.Task)
                 .WithMany()
                 .HasForeignKey(ce => ce.TaskId)
-                .OnDelete(DeleteBehavior.Restrict); // changed from SetNull to Restrict
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<CalendarEvent>()
                 .HasOne(ce => ce.Project)

@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: "https://localhost:44383/api",
+  BASE_URL: "http://localhost:5144/api",
   TOKEN_KEY: "auth_token",
   USER_KEY: "user_data",
 };
@@ -400,13 +400,10 @@ const API = {
 
   // Calendar Service
   Calendar: {
-    async getEvents(startDate, endDate) {
+    async getEvents(filter) {
       const client = new APIClient();
-      let url = "/Calendar/events";
-      if (startDate && endDate) {
-        url += `?startDate=${startDate}&endDate=${endDate}`;
-      }
-      return client.get(url);
+      // Use POST /Calendar/view endpoint
+      return client.post("/Calendar/view", filter);
     },
     async getEventById(id) {
       const client = new APIClient();

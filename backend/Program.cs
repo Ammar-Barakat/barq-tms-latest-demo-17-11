@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddDbContext<BarqTMSDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
 // Add authentication
@@ -98,16 +98,16 @@ builder.Services.AddControllers()
     });
 
 // Add Swagger/OpenAPI
-//builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen(c =>
-//{
-//    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-//    {
-//        Title = "Barq Task Management System API",
-//        Version = "v1",
-//        Description = "A comprehensive task management system for organizations"
-//    });
-//});
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+   c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+   {
+       Title = "Barq Task Management System API",
+       Version = "v1",
+       Description = "A comprehensive task management system for organizations"
+   });
+});
 
 builder.Services.AddOpenApi();
 
@@ -138,12 +138,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    //app.UseSwagger();
-    //app.UseSwaggerUI(c =>
-    //{
-    //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Barq TMS API V1");
-    //    c.RoutePrefix = string.Empty;
-    //});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+       c.SwaggerEndpoint("/swagger/v1/swagger.json", "Barq TMS API V1");
+       c.RoutePrefix = string.Empty;
+    });
 
     app.MapOpenApi();
     app.MapScalarApiReference();

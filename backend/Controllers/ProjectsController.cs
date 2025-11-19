@@ -130,6 +130,15 @@ namespace BarqTMS.API.Controllers
                 return BadRequest($"Client with ID {createProjectDto.ClientId} not found.");
             }
 
+            // FIX 1: Validate project dates - DueDate must be after StartDate
+            if (createProjectDto.StartDate.HasValue && createProjectDto.EndDate.HasValue)
+            {
+                if (createProjectDto.EndDate.Value <= createProjectDto.StartDate.Value)
+                {
+                    return BadRequest("Project Due Date must be after the Start Date.");
+                }
+            }
+
             var project = new Project
             {
                 ProjectName = createProjectDto.ProjectName,
@@ -176,6 +185,15 @@ namespace BarqTMS.API.Controllers
             if (client == null)
             {
                 return BadRequest($"Client with ID {updateProjectDto.ClientId} not found.");
+            }
+
+            // FIX 1: Validate project dates - DueDate must be after StartDate
+            if (updateProjectDto.StartDate.HasValue && updateProjectDto.EndDate.HasValue)
+            {
+                if (updateProjectDto.EndDate.Value <= updateProjectDto.StartDate.Value)
+                {
+                    return BadRequest("Project Due Date must be after the Start Date.");
+                }
             }
 
             // Store old values for audit log
@@ -226,13 +244,6 @@ namespace BarqTMS.API.Controllers
             if (project == null)
             {
                 return NotFound($"Project with ID {id} not found.");
-            }
-
-            // Check if project has tasks
-            var hasTasks = await _context.Tasks.AnyAsync(t => t.ProjectId == id);
-            if (hasTasks)
-            {
-                return BadRequest("Cannot delete project because it has tasks.");
             }
 
             // Create audit log entry before deletion

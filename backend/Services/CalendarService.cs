@@ -46,6 +46,18 @@ namespace BarqTMS.API.Services
 
         public async Task<CalendarEventDto> CreateEventAsync(CreateCalendarEventDto dto, int currentUserId)
         {
+            // FIX 5: Validate calendar event dates - EndDate must be after StartDate
+            if (dto.EndDate <= dto.StartDate)
+            {
+                throw new ArgumentException("Event end date must be after the start date.");
+            }
+
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(dto.Title))
+            {
+                throw new ArgumentException("Event title is required.");
+            }
+
             var calendarEvent = new CalendarEvent
             {
                 Title = dto.Title,
@@ -152,6 +164,14 @@ namespace BarqTMS.API.Services
                 calendarEvent.Color,
                 calendarEvent.EventType
             });
+
+            // FIX 5: Validate calendar event dates if both are being updated
+            var newStartDate = dto.StartDate ?? calendarEvent.StartDate;
+            var newEndDate = dto.EndDate ?? calendarEvent.EndDate;
+            if (newEndDate <= newStartDate)
+            {
+                throw new ArgumentException("Event end date must be after the start date.");
+            }
 
             // Update properties
             if (dto.Title != null) calendarEvent.Title = dto.Title;

@@ -153,6 +153,37 @@ namespace BarqTMS.API.Services
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
 
+            // FIX 2: Validate task due date is within project timeline
+            if (dto.DueDate.HasValue)
+            {
+                var project = await _context.Projects.FindAsync(dto.ProjectId);
+                if (project != null)
+                {
+                    if (project.StartDate.HasValue && dto.DueDate.Value < project.StartDate.Value)
+                    {
+                        throw new ArgumentException($"Task due date ({dto.DueDate.Value:MM/dd/yyyy}) cannot be before the project start date ({project.StartDate.Value:MM/dd/yyyy}).");
+                    }
+                    if (project.EndDate.HasValue && dto.DueDate.Value > project.EndDate.Value)
+                    {
+                        throw new ArgumentException($"Task due date ({dto.DueDate.Value:MM/dd/yyyy}) cannot be after the project due date ({project.EndDate.Value:MM/dd/yyyy}).");
+                    }
+                }
+            }
+
+            // FIX 4: Manager/Assistant Manager assignment restrictions
+            if (dto.AssignedTo.HasValue)
+            {
+                var creatorUser = await _context.Users.FindAsync(createdBy);
+                if (creatorUser != null && (creatorUser.Role == UserRole.Manager || creatorUser.Role == UserRole.AssistantManager))
+                {
+                    var assignedUser = await _context.Users.FindAsync(dto.AssignedTo.Value);
+                    if (assignedUser != null && (assignedUser.Role == UserRole.Manager || assignedUser.Role == UserRole.AssistantManager))
+                    {
+                        throw new ArgumentException("Managers and Assistant Managers can only assign tasks to Team Leaders or Employees, not to other Managers or Assistant Managers.");
+                    }
+                }
+            }
+
             var task = new WorkTask
             {
                 Title = dto.Title,
@@ -198,6 +229,37 @@ namespace BarqTMS.API.Services
                 throw new ArgumentException($"Project with ID {dto.ProjectId} not found.");
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
+
+            // FIX 2: Validate task due date is within project timeline
+            if (dto.DueDate.HasValue)
+            {
+                var project = await _context.Projects.FindAsync(dto.ProjectId);
+                if (project != null)
+                {
+                    if (project.StartDate.HasValue && dto.DueDate.Value < project.StartDate.Value)
+                    {
+                        throw new ArgumentException($"Task due date ({dto.DueDate.Value:MM/dd/yyyy}) cannot be before the project start date ({project.StartDate.Value:MM/dd/yyyy}).");
+                    }
+                    if (project.EndDate.HasValue && dto.DueDate.Value > project.EndDate.Value)
+                    {
+                        throw new ArgumentException($"Task due date ({dto.DueDate.Value:MM/dd/yyyy}) cannot be after the project due date ({project.EndDate.Value:MM/dd/yyyy}).");
+                    }
+                }
+            }
+
+            // FIX 4: Manager/Assistant Manager assignment restrictions
+            if (dto.AssignedTo.HasValue)
+            {
+                var currentUser = await _context.Users.FindAsync(currentUserId);
+                if (currentUser != null && (currentUser.Role == UserRole.Manager || currentUser.Role == UserRole.AssistantManager))
+                {
+                    var assignedUser = await _context.Users.FindAsync(dto.AssignedTo.Value);
+                    if (assignedUser != null && (assignedUser.Role == UserRole.Manager || assignedUser.Role == UserRole.AssistantManager))
+                    {
+                        throw new ArgumentException("Managers and Assistant Managers can only assign tasks to Team Leaders or Employees, not to other Managers or Assistant Managers.");
+                    }
+                }
+            }
 
             var oldAssignedTo = task.AssignedTo;
             var oldStatusId = task.StatusId;
