@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - Barq TMS</title>
+    <title>Task Reviews - Barq TMS</title>
     <link rel="stylesheet" href="../../styles/main.css" />
     <link
       rel="stylesheet"
@@ -27,7 +27,7 @@
         </div>
         <nav class="sidebar-nav">
           <div class="nav-section">
-            <a href="dashboard.html" class="nav-item active">
+            <a href="dashboard.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
@@ -39,7 +39,7 @@
               ></span>
               <span class="nav-item-text">Projects</span>
             </a>
-            <a href="tasks.html" class="nav-item">
+            <a href="tasks.html" class="nav-item active">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-clipboard-check"></i
               ></span>
@@ -70,7 +70,7 @@
         </nav>
         <div class="sidebar-footer">
           <div class="sidebar-user">
-            <div class="sidebar-user-avatar">U</div>
+            <div class="sidebar-user-avatar">C</div>
             <div>
               <div class="sidebar-user-name">Loading...</div>
               <div class="sidebar-user-role">Client</div>
@@ -89,7 +89,12 @@
               <span class="search-icon"
                 ><i class="fa-solid fa-magnifying-glass"></i
               ></span>
-              <input type="text" class="search-input" placeholder="Search..." />
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search tasks..."
+                id="searchInput"
+              />
             </div>
           </div>
           <div class="header-right">
@@ -98,35 +103,29 @@
               <span class="badge">3</span>
             </button>
             <div class="user-menu">
-              <div class="user-avatar">U</div>
-              <span class="user-name">User Name</span>
+              <div class="user-avatar">C</div>
+              <span class="user-name">Client</span>
             </div>
           </div>
         </header>
 
         <div class="content">
           <div style="margin-bottom: var(--space-6)">
-            <h2>My Projects Dashboard</h2>
+            <h2>Task Reviews</h2>
             <p style="color: var(--text-secondary); margin: 0">
-              Track your project progress
+              Review and approve tasks submitted by your account manager
             </p>
           </div>
 
-          <div class="stats-row">
+          <!-- Stats Row -->
+          <div class="stats-row" style="margin-bottom: var(--space-6)">
             <div class="stat-card">
               <div class="stat-icon">
-                <i class="fa-solid fa-folder-open"></i>
+                <i class="fa-solid fa-hourglass-half"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">My Projects</span>
-                <span class="stat-value" id="totalProjects">0</span>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-              <div class="stat-info">
-                <span class="stat-label">In Progress</span>
-                <span class="stat-value" id="activeProjects">0</span>
+                <span class="stat-label">Pending Review</span>
+                <span class="stat-value" id="pendingCount">0</span>
               </div>
             </div>
             <div class="stat-card">
@@ -134,40 +133,90 @@
                 <i class="fa-solid fa-check-circle"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label">Completed</span>
-                <span class="stat-value" id="completedProjects">0</span>
+                <span class="stat-label">Approved</span>
+                <span class="stat-value" id="approvedCount">0</span>
               </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon">
-                <i class="fa-solid fa-list-check"></i>
+                <i class="fa-solid fa-times-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-label">Rejected</span>
+                <span class="stat-value" id="rejectedCount">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fa-solid fa-clipboard-list"></i>
               </div>
               <div class="stat-info">
                 <span class="stat-label">Total Tasks</span>
-                <span class="stat-value" id="totalTasks">0</span>
+                <span class="stat-value" id="totalCount">0</span>
               </div>
             </div>
           </div>
 
+          <!-- Filter Tabs -->
+          <div class="card" style="margin-bottom: var(--space-6)">
+            <div class="card-body">
+              <div class="tabs">
+                <button
+                  class="tab-btn active"
+                  data-filter="pending"
+                  onclick="filterTasks('pending')"
+                >
+                  <i class="fa-solid fa-clock"></i> Pending Review
+                  <span class="badge badge-warning" id="badge-pending">0</span>
+                </button>
+                <button
+                  class="tab-btn"
+                  data-filter="approved"
+                  onclick="filterTasks('approved')"
+                >
+                  <i class="fa-solid fa-check"></i> Approved
+                  <span class="badge badge-success" id="badge-approved">0</span>
+                </button>
+                <button
+                  class="tab-btn"
+                  data-filter="rejected"
+                  onclick="filterTasks('rejected')"
+                >
+                  <i class="fa-solid fa-times"></i> Rejected
+                  <span class="badge badge-danger" id="badge-rejected">0</span>
+                </button>
+                <button
+                  class="tab-btn"
+                  data-filter="all"
+                  onclick="filterTasks('all')"
+                >
+                  <i class="fa-solid fa-list"></i> All Tasks
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tasks Table -->
           <div class="card">
             <div class="card-header">
-              <h3>My Projects</h3>
-              <a href="projects.html" class="btn btn-primary">View All</a>
+              <h3 id="tableTitle">Tasks Pending Your Review</h3>
             </div>
             <div class="card-body">
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Project Name</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
+                    <th>Task</th>
+                    <th>Project</th>
+                    <th>Priority</th>
                     <th>Status</th>
-                    <th>Progress</th>
+                    <th>Due Date</th>
+                    <th>Submitted Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody id="projectsBody">
+                <tbody id="tasksBody">
                   <tr>
-                    <td colspan="5" class="text-center" style="padding: 40px">
+                    <td colspan="7" class="text-center" style="padding: 40px">
                       <div class="spinner"></div>
                     </td>
                   </tr>
@@ -177,6 +226,62 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <!-- Review Task Modal -->
+    <div id="reviewModal" class="modal-backdrop d-none">
+      <div class="modal-dialog" style="max-width: 900px">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fa-solid fa-clipboard-check"></i> Review Task</h3>
+            <button class="btn-icon" onclick="closeReviewModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="taskDetailsReview">
+              <!-- Task details will be rendered here -->
+            </div>
+
+            <div class="form-group" style="margin-top: var(--space-6)">
+              <label for="clientFeedback">Your Feedback</label>
+              <textarea
+                class="form-control"
+                id="clientFeedback"
+                rows="4"
+                placeholder="Provide your feedback or comments..."
+              ></textarea>
+            </div>
+
+            <div
+              class="form-actions"
+              style="margin-top: var(--space-6); gap: var(--space-3)"
+            >
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeReviewModal()"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="rejectTask()"
+              >
+                <i class="fa-solid fa-times"></i> Reject Task
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                onclick="approveTask()"
+              >
+                <i class="fa-solid fa-check"></i> Approve Task
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- SignalR Client -->
@@ -191,6 +296,6 @@
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
 
-    <script src="../../scripts/pages/client/dashboard.js"></script>
+    <script src="../../scripts/pages/client/tasks.js"></script>
   </body>
 </html>

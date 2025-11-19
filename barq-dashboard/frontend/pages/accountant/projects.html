@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,23 +31,31 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
-                >Dashboard</span
-              >
+              <span class="nav-item-text">Dashboard</span>
+            </a>
+            <a href="my-tasks.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-tasks"></i
+              ></span>
+              <span class="nav-item-text">My Tasks</span>
+            </a>
+            <a href="tasks.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-list-check"></i
+              ></span>
+              <span class="nav-item-text">Task Reviews</span>
             </a>
             <a href="projects.html" class="nav-item active">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
-                >Projects</span
-              >
+              <span class="nav-item-text">Projects</span>
             </a>
             <a href="clients.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-handshake"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.clients">Clients</span>
+              <span class="nav-item-text">Clients</span>
             </a>
           </div>
           <div class="nav-section">
@@ -56,15 +64,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
-                >Settings</span
-              >
+              <span class="nav-item-text">Settings</span>
             </a>
             <a href="#" class="nav-item" onclick="auth.logout(); return false;">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -247,9 +253,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -258,9 +261,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/accountant/projects.js"></script>
   </body>

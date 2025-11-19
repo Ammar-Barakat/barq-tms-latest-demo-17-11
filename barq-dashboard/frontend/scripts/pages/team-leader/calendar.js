@@ -18,7 +18,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadCalendarData() {
   try {
     showLoading();
-    tasks = await API.Tasks.getAll();
+    const allTasks = await API.Tasks.getAll();
+    const currentUser = auth.getUser();
+
+    // Get team members (employees under this team leader)
+    const allUsers = await API.Users.getAll();
+    const teamMembers = allUsers.filter((u) => u.role === "EMPLOYEE");
+    const teamMemberIds = teamMembers.map((m) => m.id);
+
+    // Filter tasks to include:
+    // 1. Tasks assigned to team leader
+    // 2. Tasks assigned to team members
+    tasks = allTasks
+      .filter(
+        (task) =>
+          task.assignedTo === currentUser.id ||
+          teamMemberIds.includes(task.assignedTo)
+      )
+      .map((task) => {
+        // Mark if it's a team member's task
+        task.isTeamTask = task.assignedTo !== currentUser.id;
+        return task;
+      });
   } catch (error) {
     console.error("Error loading calendar data:", error);
     showError("Failed to load calendar data");
@@ -113,16 +134,24 @@ function createDayCell(day, otherMonth = false, isToday = false, date = null) {
   // Add events/tasks for this day
   if (date && !otherMonth) {
     const dayTasks = tasks.filter((task) => {
-      if (!task.DueDate) return false;
-      const taskDate = new Date(task.DueDate);
+      if (!task.DueDate && !task.dueDate) return false;
+      const taskDate = new Date(task.DueDate || task.dueDate);
       return taskDate.toDateString() === date.toDateString();
     });
 
     dayTasks.forEach((task) => {
       const eventEl = document.createElement("div");
-      eventEl.className = "calendar-event task";
-      eventEl.textContent = task.Title;
-      eventEl.title = task.Title;
+      // Different styling for team tasks vs personal tasks
+      eventEl.className = task.isTeamTask
+        ? "calendar-event team-task"
+        : "calendar-event task";
+      eventEl.textContent = task.Title || task.name;
+      eventEl.title = `${task.Title || task.name}${
+        task.isTeamTask ? " (Team)" : " (Personal)"
+      }`;
+      eventEl.style.background = task.isTeamTask
+        ? "var(--color-info)"
+        : "var(--color-primary)";
       dayCell.appendChild(eventEl);
     });
   }
@@ -148,11 +177,14 @@ function renderUpcomingEvents() {
 
   const upcomingTasks = tasks
     .filter((task) => {
-      if (!task.DueDate) return false;
-      const dueDate = new Date(task.DueDate);
+      if (!task.DueDate && !task.dueDate) return false;
+      const dueDate = new Date(task.DueDate || task.dueDate);
       return dueDate >= today && dueDate <= thirtyDaysFromNow;
     })
-    .sort((a, b) => new Date(a.DueDate) - new Date(b.DueDate))
+    .sort(
+      (a, b) =>
+        new Date(a.DueDate || a.dueDate) - new Date(b.DueDate || b.dueDate)
+    )
     .slice(0, 10);
 
   if (upcomingTasks.length === 0) {
@@ -163,7 +195,7 @@ function renderUpcomingEvents() {
 
   container.innerHTML = upcomingTasks
     .map((task) => {
-      const dueDate = new Date(task.DueDate);
+      const dueDate = new Date(task.DueDate || task.dueDate);
       const dateStr = dueDate.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -173,18 +205,25 @@ function renderUpcomingEvents() {
         minute: "2-digit",
       });
 
+      const taskType = task.isTeamTask
+        ? '<i class="fa-solid fa-users"></i> Team'
+        : '<i class="fa-solid fa-user"></i> Personal';
+
       return `
       <div class="upcoming-event-item">
         <div class="upcoming-event-date">${dateStr}</div>
         <div class="upcoming-event-details">
-          <div class="upcoming-event-title">${task.Title}</div>
+          <div class="upcoming-event-title">
+            ${task.Title || task.name}
+            <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px;">${taskType}</span>
+          </div>
           <div class="upcoming-event-time">${timeStr} - ${
-        task.Description || "No description"
+        task.Description || task.description || "No description"
       }</div>
         </div>
         <span class="badge badge-${getStatusBadgeClass(
-          task.StatusId
-        )}">${getStatusText(task.StatusId)}</span>
+          task.StatusId || task.status
+        )}">${getStatusText(task.StatusId || task.status)}</span>
       </div>
     `;
     })

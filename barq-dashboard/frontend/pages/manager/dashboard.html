@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -37,7 +37,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
+              <span class="nav-item-text"
                 >Dashboard</span
               >
             </a>
@@ -45,13 +45,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-list-check"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.tasks">Tasks</span>
+              <span class="nav-item-text">Tasks</span>
             </a>
             <a href="projects.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
+              <span class="nav-item-text"
                 >Projects</span
               >
             </a>
@@ -59,19 +59,19 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-users"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.team">Employees</span>
+              <span class="nav-item-text">Employees</span>
             </a>
             <a href="clients.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-handshake"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.clients">Clients</span>
+              <span class="nav-item-text">Clients</span>
             </a>
             <a href="calendar.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-calendar"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.calendar"
+              <span class="nav-item-text"
                 >Calendar</span
               >
             </a>
@@ -79,21 +79,21 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-chart-line"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.analytics"
+              <span class="nav-item-text"
                 >Analytics</span
               >
             </a>
           </div>
 
           <div class="nav-section">
-            <div class="nav-section-title" data-i18n="nav.settings">
+            <div class="nav-section-title">
               Settings
             </div>
             <a href="settings.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
+              <span class="nav-item-text"
                 >Settings</span
               >
             </a>
@@ -101,7 +101,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -133,7 +133,6 @@
               <input
                 type="text"
                 class="search-input"
-                data-i18n-placeholder="common.search"
                 placeholder="Search..."
               />
             </div>
@@ -156,10 +155,9 @@
         <div class="content">
           <!-- Page Header -->
           <div style="margin-bottom: var(--space-6)">
-            <h2 data-i18n="dashboard.title">Dashboard Overview</h2>
+            <h2>Dashboard Overview</h2>
             <p
               style="color: var(--text-secondary); margin: 0"
-              data-i18n="dashboard.overview"
             >
               Welcome back! Here's what's happening today.
             </p>
@@ -172,7 +170,7 @@
                 <i class="fa-solid fa-list-check"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="dashboard.totalTasks"
+                <span class="stat-label"
                   >Total Tasks</span
                 >
                 <span class="stat-value number" id="totalTasks">0</span>
@@ -184,7 +182,7 @@
                 <i class="fa-solid fa-folder-open"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="dashboard.activeProjects"
+                <span class="stat-label"
                   >Active Projects</span
                 >
                 <span class="stat-value number" id="totalProjects">0</span>
@@ -196,7 +194,7 @@
                 <i class="fa-solid fa-users"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="dashboard.teamMembers"
+                <span class="stat-label"
                   >Team Members</span
                 >
                 <span class="stat-value number" id="totalEmployees">0</span>
@@ -208,7 +206,7 @@
                 <i class="fa-solid fa-handshake"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="nav.clients"
+                <span class="stat-label"
                   >Total Clients</span
                 >
                 <span class="stat-value number" id="totalClients">0</span>
@@ -219,22 +217,22 @@
           <!-- Recent Tasks Card -->
           <div class="card">
             <div class="card-header">
-              <h3 data-i18n="dashboard.recentActivity">Recent Tasks</h3>
+              <h3>Recent Tasks</h3>
               <a href="tasks.html" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i>
-                <span data-i18n="tasks.createTask">New Task</span>
+                <span>New Task</span>
               </a>
             </div>
             <div class="card-body">
               <table class="table">
                 <thead>
                   <tr>
-                    <th data-i18n="tasks.taskTitle">Task</th>
-                    <th data-i18n="tasks.project">Project</th>
-                    <th data-i18n="tasks.assignee">Assigned To</th>
-                    <th data-i18n="tasks.status">Status</th>
-                    <th data-i18n="tasks.priority">Priority</th>
-                    <th data-i18n="tasks.dueDate">Due Date</th>
+                    <th>Task</th>
+                    <th>Project</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
                   </tr>
                 </thead>
                 <tbody id="recentTasksBody">
@@ -251,22 +249,22 @@
           <!-- Recent Projects Card -->
           <div class="card">
             <div class="card-header">
-              <h3 data-i18n="dashboard.activeProjects">Active Projects</h3>
+              <h3>Active Projects</h3>
               <a href="projects.html" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i>
-                <span data-i18n="projects.createProject">New Project</span>
+                <span>New Project</span>
               </a>
             </div>
             <div class="card-body">
               <table class="table">
                 <thead>
                   <tr>
-                    <th data-i18n="projects.projectName">Project Name</th>
-                    <th data-i18n="projects.client">Client</th>
-                    <th data-i18n="projects.budget">Budget</th>
-                    <th data-i18n="projects.startDate">Start Date</th>
-                    <th data-i18n="projects.endDate">End Date</th>
-                    <th data-i18n="tasks.status">Status</th>
+                    <th>Project Name</th>
+                    <th>Client</th>
+                    <th>Budget</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody id="recentProjectsBody">
@@ -287,9 +285,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -298,9 +293,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/manager/dashboard.js"></script>
   </body>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
+              <span class="nav-item-text"
                 >Dashboard</span
               >
             </a>
@@ -39,7 +39,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
+              <span class="nav-item-text"
                 >Projects</span
               >
             </a>
@@ -47,7 +47,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-handshake"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.clients">Clients</span>
+              <span class="nav-item-text">Clients</span>
             </a>
           </div>
           <div class="nav-section">
@@ -56,7 +56,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
+              <span class="nav-item-text"
                 >Settings</span
               >
             </a>
@@ -64,7 +64,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -92,7 +92,6 @@
               <input
                 type="text"
                 class="search-input"
-                data-i18n-placeholder="common.search"
                 placeholder="Search..."
               />
             </div>
@@ -111,7 +110,7 @@
 
         <div class="content">
           <div style="margin-bottom: var(--space-6)">
-            <h2 data-i18n="nav.settings">Settings</h2>
+            <h2>Settings</h2>
             <p style="color: var(--text-secondary); margin: 0">
               Manage your account and preferences
             </p>
@@ -236,9 +235,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -247,9 +243,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/accountant/settings.js"></script>
   </body>

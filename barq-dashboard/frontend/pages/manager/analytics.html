@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -32,7 +32,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
+              <span class="nav-item-text"
                 >Dashboard</span
               >
             </a>
@@ -40,13 +40,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-list-check"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.tasks">Tasks</span>
+              <span class="nav-item-text">Tasks</span>
             </a>
             <a href="projects.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
+              <span class="nav-item-text"
                 >Projects</span
               >
             </a>
@@ -54,19 +54,19 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-users"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.team">Employees</span>
+              <span class="nav-item-text">Employees</span>
             </a>
             <a href="clients.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-handshake"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.clients">Clients</span>
+              <span class="nav-item-text">Clients</span>
             </a>
             <a href="calendar.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-calendar"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.calendar"
+              <span class="nav-item-text"
                 >Calendar</span
               >
             </a>
@@ -74,7 +74,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-chart-line"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.analytics"
+              <span class="nav-item-text"
                 >Analytics</span
               >
             </a>
@@ -85,7 +85,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
+              <span class="nav-item-text"
                 >Settings</span
               >
             </a>
@@ -93,7 +93,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -121,7 +121,6 @@
               <input
                 type="text"
                 class="search-input"
-                data-i18n-placeholder="common.search"
                 placeholder="Search..."
               />
             </div>
@@ -140,10 +139,9 @@
 
         <div class="content">
           <div style="margin-bottom: var(--space-6)">
-            <h2 data-i18n="analytics.title">Analytics & Reports</h2>
+            <h2>Analytics & Reports</h2>
             <p
               style="color: var(--text-secondary); margin: 0"
-              data-i18n="analytics.subtitle"
             >
               View insights and performance metrics
             </p>
@@ -159,7 +157,7 @@
                 <i class="fa-solid fa-check-circle"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="tasks.completed"
+                <span class="stat-label"
                   >Completed Tasks</span
                 >
                 <span class="stat-value" id="completedTasks">0</span>
@@ -173,7 +171,7 @@
                 <i class="fa-solid fa-clock"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="tasks.pending"
+                <span class="stat-label"
                   >Pending Tasks</span
                 >
                 <span class="stat-value" id="pendingTasks">0</span>
@@ -187,7 +185,7 @@
                 <i class="fa-solid fa-spinner"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="tasks.inProgress"
+                <span class="stat-label"
                   >In Progress</span
                 >
                 <span class="stat-value number" id="inProgressTasks">0</span>
@@ -201,7 +199,7 @@
                 <i class="fa-solid fa-exclamation-triangle"></i>
               </div>
               <div class="stat-info">
-                <span class="stat-label" data-i18n="tasks.overdue"
+                <span class="stat-label"
                   >Overdue Tasks</span
                 >
                 <span class="stat-value" id="overdueTasks">0</span>
@@ -212,7 +210,7 @@
           <!-- Task Distribution -->
           <div class="card">
             <div class="card-header">
-              <h3 data-i18n="analytics.taskDistribution">
+              <h3>
                 Task Status Distribution
               </h3>
             </div>
@@ -291,9 +289,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -302,9 +297,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/manager/analytics.js"></script>
   </body>

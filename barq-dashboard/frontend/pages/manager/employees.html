@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -31,7 +31,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
+              <span class="nav-item-text"
                 >Dashboard</span
               >
             </a>
@@ -39,13 +39,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-list-check"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.tasks">Tasks</span>
+              <span class="nav-item-text">Tasks</span>
             </a>
             <a href="projects.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
+              <span class="nav-item-text"
                 >Projects</span
               >
             </a>
@@ -53,19 +53,19 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-users"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.team">Employees</span>
+              <span class="nav-item-text">Employees</span>
             </a>
             <a href="clients.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-handshake"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.clients">Clients</span>
+              <span class="nav-item-text">Clients</span>
             </a>
             <a href="calendar.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-calendar"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.calendar"
+              <span class="nav-item-text"
                 >Calendar</span
               >
             </a>
@@ -73,7 +73,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-chart-line"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.analytics"
+              <span class="nav-item-text"
                 >Analytics</span
               >
             </a>
@@ -84,7 +84,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
+              <span class="nav-item-text"
                 >Settings</span
               >
             </a>
@@ -92,7 +92,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -139,10 +139,9 @@
 
         <div class="content">
           <div style="margin-bottom: var(--space-6)">
-            <h2 data-i18n="employees.management">Employees Management</h2>
+            <h2>Employees Management</h2>
             <p
               style="color: var(--text-secondary); margin: 0"
-              data-i18n="employees.manageDesc"
             >
               Manage your team members
             </p>
@@ -150,21 +149,21 @@
 
           <div class="card">
             <div class="card-header">
-              <h3 data-i18n="employees.allEmployees">All Employees</h3>
+              <h3>All Employees</h3>
               <button class="btn btn-primary" onclick="showCreateModal()">
                 <i class="fa-solid fa-plus"></i>
-                <span data-i18n="employees.addEmployee">Add Employee</span>
+                <span>Add Employee</span>
               </button>
             </div>
             <div class="card-body">
               <table class="table" id="employeesTable">
                 <thead>
                   <tr>
-                    <th data-i18n="common.name">Name</th>
-                    <th data-i18n="common.username">Username</th>
-                    <th data-i18n="common.email">Email</th>
-                    <th data-i18n="common.role">Role</th>
-                    <th data-i18n="common.actions">Actions</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="employeesBody">
@@ -302,9 +301,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -313,9 +309,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/manager/employees.js"></script>
   </body>

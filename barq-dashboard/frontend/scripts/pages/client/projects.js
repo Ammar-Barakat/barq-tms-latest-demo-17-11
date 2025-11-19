@@ -33,7 +33,7 @@ function renderProjects() {
   if (projects.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center" style="padding: 40px;">
+        <td colspan="7" class="text-center" style="padding: 40px;">
           <div class="empty-state">
             <i class="fa-solid fa-inbox"></i>
             <h3>No projects found</h3>
@@ -58,10 +58,22 @@ function renderProjects() {
       <td>${utils.formatDate(project.StartDate)}</td>
       <td>${utils.formatDate(project.EndDate)}</td>
       <td>${utils.getStatusBadge(project.StatusId || 1)}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="viewProjectDetails(${
+          project.Id
+        })">
+          <i class="fa-solid fa-eye"></i> View Details
+        </button>
+      </td>
     </tr>
   `
     )
     .join("");
+}
+
+// View project details
+function viewProjectDetails(projectId) {
+  window.location.href = `project-details.html?id=${projectId}`;
 }
 
 function setupEventListeners() {

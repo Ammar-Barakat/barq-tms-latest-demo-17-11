@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: "http://localhost:5144/api",
+  BASE_URL: "https://localhost:44383/api",
   TOKEN_KEY: "auth_token",
   USER_KEY: "user_data",
 };
@@ -207,6 +207,28 @@ const API = {
     async getLatestDeclineComment(id) {
       const client = new APIClient();
       return client.get(`/Tasks/${id}/latest-decline-comment`);
+    },
+    // Account Manager Review Workflow
+    async approveForClient(id, notes) {
+      const client = new APIClient();
+      // Placeholder endpoint
+      return client.put(`/Tasks/${id}/approve-for-client`, { notes });
+    },
+    async sendBackForRework(id, feedback) {
+      const client = new APIClient();
+      // Placeholder endpoint
+      return client.put(`/Tasks/${id}/send-back-rework`, { feedback });
+    },
+    // Client Review Workflow
+    async clientApprove(id, notes) {
+      const client = new APIClient();
+      // Placeholder endpoint
+      return client.put(`/Tasks/${id}/client-approve`, { notes });
+    },
+    async clientReject(id, feedback) {
+      const client = new APIClient();
+      // Placeholder endpoint
+      return client.put(`/Tasks/${id}/client-reject`, { feedback });
     },
   },
 

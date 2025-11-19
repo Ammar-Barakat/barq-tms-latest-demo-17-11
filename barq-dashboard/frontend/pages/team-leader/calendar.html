@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -37,49 +37,31 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.dashboard"
-                >Dashboard</span
-              >
+              <span class="nav-item-text">Dashboard</span>
+            </a>
+            <a href="my-tasks.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-tasks"></i
+              ></span>
+              <span class="nav-item-text">My Tasks</span>
             </a>
             <a href="team-tasks.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-users-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.tasks"
-                >Team Tasks</span
-              >
+              <span class="nav-item-text">Team Tasks</span>
             </a>
             <a href="team-members.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-users"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.team"
-                >Team Members</span
-              >
-            </a>
-            <a href="projects.html" class="nav-item">
-              <span class="nav-item-icon"
-                ><i class="fa-solid fa-folder-open"></i
-              ></span>
-              <span class="nav-item-text" data-i18n="nav.projects"
-                >Projects</span
-              >
+              <span class="nav-item-text">Team Members</span>
             </a>
             <a href="calendar.html" class="nav-item active">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-calendar"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.calendar"
-                >Calendar</span
-              >
-            </a>
-            <a href="analytics.html" class="nav-item">
-              <span class="nav-item-icon"
-                ><i class="fa-solid fa-chart-line"></i
-              ></span>
-              <span class="nav-item-text" data-i18n="nav.analytics"
-                >Analytics</span
-              >
+              <span class="nav-item-text">Calendar</span>
             </a>
           </div>
 
@@ -89,15 +71,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text" data-i18n="nav.settings"
-                >Settings</span
-              >
+              <span class="nav-item-text">Settings</span>
             </a>
             <a href="#" class="nav-item" onclick="auth.logout(); return false;">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-right-from-bracket"></i
               ></span>
-              <span class="nav-item-text" data-i18n="auth.logout">Logout</span>
+              <span class="nav-item-text">Logout</span>
             </a>
           </div>
         </nav>
@@ -159,7 +139,7 @@
             "
           >
             <div>
-              <h2 data-i18n="nav.calendar">Calendar</h2>
+              <h2>Calendar</h2>
               <p style="color: var(--text-secondary); margin: 0">
                 View and manage your schedule
               </p>
@@ -445,9 +425,6 @@
     <!-- SignalR Client -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
 
-    <!-- i18n System -->
-    <script src="../../scripts/utils/i18n.js"></script>
-
     <script src="../../scripts/utils/utils.js"></script>
     <script src="../../scripts/utils/components.js"></script>
     <script src="../../scripts/utils/api.js"></script>
@@ -456,9 +433,6 @@
     <!-- Notification System -->
     <script src="../../scripts/utils/notifications.js"></script>
     <script src="../../scripts/components/notification-panel.js"></script>
-
-    <!-- Language Switcher -->
-    <script src="../../scripts/components/language-switcher.js"></script>
 
     <script src="../../scripts/pages/team-leader/calendar.js"></script>
   </body>
