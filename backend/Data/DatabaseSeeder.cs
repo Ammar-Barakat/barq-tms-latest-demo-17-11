@@ -72,7 +72,7 @@ namespace BarqTMS.API.Data
             {
                 new Role { RoleName = "Manager" },
                 new Role { RoleName = "Assistant Manager" },
-                new Role { RoleName = "Accountant" },
+                new Role { RoleName = "Account Manager" },
                 new Role { RoleName = "Team Leader" },
                 new Role { RoleName = "Employee" },
                 new Role { RoleName = "Client" }
@@ -100,23 +100,17 @@ namespace BarqTMS.API.Data
             await context.SaveChangesAsync();
         }
 
-        //private static async Task SeedClients(BarqTMSDbContext context)
-        //{
-        //    var clients = new[]
-        //    {
-        //        new Client { Name = "TechCorp Solutions", Email = "contact@techcorp.com" },
-        //        new Client { Name = "Global Industries", Email = "info@globalind.com" },
-        //        new Client { Name = "StartupHub", Email = "hello@startuphub.com" },
-        //        new Client { Name = "Enterprise Systems", Email = "support@enterprise.com" },
-        //        new Client { Name = "Innovation Labs", Email = "team@innovationlabs.com" },
-        //        new Client { Name = "Digital Dynamics", Email = "info@digitaldynamics.com" },
-        //        new Client { Name = "Future Tech", Email = "contact@futuretech.com" },
-        //        new Client { Name = "Smart Solutions", Email = "hello@smartsolutions.com" }
-        //    };
+        private static async Task SeedClients(BarqTMSDbContext context)
+        {
+            var clients = new[]
+            {
+                new Client { Name = "TechCorp Solutions", Email = "contact@techcorp.com" },
+                new Client { Name = "Global Industries", Email = "info@globalind.com" },
+            };
 
-        //    await context.Clients.AddRangeAsync(clients);
-        //    await context.SaveChangesAsync();
-        //}
+            await context.Clients.AddRangeAsync(clients);
+            await context.SaveChangesAsync();
+        }
 
         private static async Task SeedUsers(BarqTMSDbContext context, AuthService authService)
         {

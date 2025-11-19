@@ -57,12 +57,26 @@ namespace BarqTMS.API.Data
                 .HasForeignKey(ud => ud.DeptId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure User self-referencing relationship for TeamLeader-Employee
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.TeamLeader)
+                .WithMany(u => u.ManagedEmployees)
+                .HasForeignKey(u => u.TeamLeaderId)
+                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when team leader is deleted
+
+            // Configure Client-AccountManager relationship
+            modelBuilder.Entity<Client>()
+                .HasOne(c => c.AccountManager)
+                .WithMany(u => u.ManagedClients)
+                .HasForeignKey(c => c.AccountManagerId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of account manager if they have clients
+
             // Configure Project relationships
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.Client)
                 .WithMany(c => c.Projects)
                 .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure AuditLog relationships
             modelBuilder.Entity<AuditLog>()
@@ -205,7 +219,7 @@ namespace BarqTMS.API.Data
                 .HasOne(n => n.Task)
                 .WithMany(t => t.Notifications)
                 .HasForeignKey(n => n.TaskId)
-                .OnDelete(DeleteBehavior.Restrict); // changed from SetNull to Restrict
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.Project)
@@ -243,7 +257,7 @@ namespace BarqTMS.API.Data
                 .HasOne(ce => ce.Task)
                 .WithMany()
                 .HasForeignKey(ce => ce.TaskId)
-                .OnDelete(DeleteBehavior.Restrict); // changed from SetNull to Restrict
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<CalendarEvent>()
                 .HasOne(ce => ce.Project)

@@ -28,18 +28,26 @@ namespace BarqTMS.API.Controllers
             var users = await _context.Users
                 .Include(u => u.UserDepartments)
                     .ThenInclude(ud => ud.Department)
+                .Include(u => u.TeamLeader)
+                .Include(u => u.ManagedEmployees)
+                .Include(u => u.ManagedClients)
                 .Select(u => new UserDto
                 {
                     UserId = u.UserId,
                     Name = u.Name,
                     Username = u.Username,
                     Email = u.Email,
+                    Position = u.Position,
                     Role = u.Role,
+                    TeamLeaderId = u.TeamLeaderId,
+                    TeamLeaderName = u.TeamLeader != null ? u.TeamLeader.Name : null,
                     Departments = u.UserDepartments.Select(ud => new DepartmentDto
                     {
                         DeptId = ud.Department.DeptId,
                         DeptName = ud.Department.DeptName
-                    }).ToList()
+                    }).ToList(),
+                    ManagedEmployeeIds = u.ManagedEmployees.Select(e => e.UserId).ToList(),
+                    ManagedClientIds = u.ManagedClients.Select(c => c.ClientId).ToList()
                 })
                 .ToListAsync();
 
@@ -53,6 +61,9 @@ namespace BarqTMS.API.Controllers
             var user = await _context.Users
                 .Include(u => u.UserDepartments)
                     .ThenInclude(ud => ud.Department)
+                .Include(u => u.TeamLeader)
+                .Include(u => u.ManagedEmployees)
+                .Include(u => u.ManagedClients)
                 .Where(u => u.UserId == id)
                 .Select(u => new UserDto
                 {
@@ -60,12 +71,17 @@ namespace BarqTMS.API.Controllers
                     Name = u.Name,
                     Username = u.Username,
                     Email = u.Email,
+                    Position = u.Position,
                     Role = u.Role,
+                    TeamLeaderId = u.TeamLeaderId,
+                    TeamLeaderName = u.TeamLeader != null ? u.TeamLeader.Name : null,
                     Departments = u.UserDepartments.Select(ud => new DepartmentDto
                     {
                         DeptId = ud.Department.DeptId,
                         DeptName = ud.Department.DeptName
-                    }).ToList()
+                    }).ToList(),
+                    ManagedEmployeeIds = u.ManagedEmployees.Select(e => e.UserId).ToList(),
+                    ManagedClientIds = u.ManagedClients.Select(c => c.ClientId).ToList()
                 })
                 .FirstOrDefaultAsync();
 
@@ -106,12 +122,24 @@ namespace BarqTMS.API.Controllers
                 return BadRequest("One or more department IDs are invalid.");
             }
 
+            // Validate TeamLeaderId if provided
+            if (createUserDto.TeamLeaderId.HasValue)
+            {
+                var teamLeader = await _context.Users.FindAsync(createUserDto.TeamLeaderId.Value);
+                if (teamLeader == null || teamLeader.Role != UserRole.TeamLeader)
+                {
+                    return BadRequest("Invalid Team Leader ID. User must exist and have Team Leader role.");
+                }
+            }
+
             var user = new User
             {
                 Name = createUserDto.Name,
                 Username = createUserDto.Username,
                 Email = createUserDto.Email,
+                Position = createUserDto.Position,
                 Role = createUserDto.Role,
+                TeamLeaderId = createUserDto.TeamLeaderId,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("tempPassword123") // Default password
             };
 
@@ -128,6 +156,32 @@ namespace BarqTMS.API.Controllers
                 });
             }
 
+            // If Team Leader role, assign employees
+            if (user.Role == UserRole.TeamLeader && createUserDto.ManagedEmployeeIds.Any())
+            {
+                var employees = await _context.Users
+                    .Where(u => createUserDto.ManagedEmployeeIds.Contains(u.UserId))
+                    .ToListAsync();
+                
+                foreach (var employee in employees)
+                {
+                    employee.TeamLeaderId = user.UserId;
+                }
+            }
+
+            // If Account Manager role, assign clients
+            if (user.Role == UserRole.AccountManager && createUserDto.ManagedClientIds.Any())
+            {
+                var clients = await _context.Clients
+                    .Where(c => createUserDto.ManagedClientIds.Contains(c.ClientId))
+                    .ToListAsync();
+                
+                foreach (var client in clients)
+                {
+                    client.AccountManagerId = user.UserId;
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             var userDto = new UserDto
@@ -137,11 +191,14 @@ namespace BarqTMS.API.Controllers
                 Username = user.Username,
                 Email = user.Email,
                 Role = user.Role,
+                TeamLeaderId = user.TeamLeaderId,
                 Departments = departments.Select(d => new DepartmentDto
                 {
                     DeptId = d.DeptId,
                     DeptName = d.DeptName
-                }).ToList()
+                }).ToList(),
+                ManagedEmployeeIds = createUserDto.ManagedEmployeeIds,
+                ManagedClientIds = createUserDto.ManagedClientIds
             };
 
             return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, userDto);
@@ -181,11 +238,28 @@ namespace BarqTMS.API.Controllers
             if (!string.IsNullOrEmpty(updateUserDto.Username))
                 user.Username = updateUserDto.Username;
             user.Email = updateUserDto.Email;
+            user.Position = updateUserDto.Position;
 
             // Update role if provided
             if (updateUserDto.Role.HasValue)
             {
                 user.Role = updateUserDto.Role.Value;
+            }
+
+            // Update TeamLeaderId if provided
+            if (updateUserDto.TeamLeaderId.HasValue)
+            {
+                var teamLeader = await _context.Users.FindAsync(updateUserDto.TeamLeaderId.Value);
+                if (teamLeader == null || teamLeader.Role != UserRole.TeamLeader)
+                {
+                    return BadRequest("Invalid Team Leader ID. User must exist and have Team Leader role.");
+                }
+                user.TeamLeaderId = updateUserDto.TeamLeaderId.Value;
+            }
+            else if (updateUserDto.TeamLeaderId == null)
+            {
+                // Explicitly set to null if passed as null
+                user.TeamLeaderId = null;
             }
 
             // Update departments
@@ -212,6 +286,46 @@ namespace BarqTMS.API.Controllers
                         UserId = user.UserId,
                         DeptId = deptId
                     });
+                }
+            }
+
+            // Update managed employees for Team Leader
+            if (updateUserDto.ManagedEmployeeIds != null)
+            {
+                // Remove this team leader from any employees not in the new list
+                var currentEmployees = await _context.Users
+                    .Where(u => u.TeamLeaderId == id)
+                    .ToListAsync();
+                
+                foreach (var emp in currentEmployees)
+                {
+                    if (!updateUserDto.ManagedEmployeeIds.Contains(emp.UserId))
+                    {
+                        emp.TeamLeaderId = null;
+                    }
+                }
+
+                // Assign new employees
+                var newEmployees = await _context.Users
+                    .Where(u => updateUserDto.ManagedEmployeeIds.Contains(u.UserId))
+                    .ToListAsync();
+                
+                foreach (var emp in newEmployees)
+                {
+                    emp.TeamLeaderId = id;
+                }
+            }
+
+            // Update managed clients for Account Manager
+            if (updateUserDto.ManagedClientIds != null)
+            {
+                var clients = await _context.Clients
+                    .Where(c => updateUserDto.ManagedClientIds.Contains(c.ClientId))
+                    .ToListAsync();
+                
+                foreach (var client in clients)
+                {
+                    client.AccountManagerId = id;
                 }
             }
 

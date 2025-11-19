@@ -3,6 +3,8 @@ auth.requireRole([USER_ROLES.MANAGER]);
 
 let employees = [];
 let departments = [];
+let teamLeaders = [];
+let clients = [];
 let currentEditId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -15,6 +17,11 @@ async function loadData() {
     utils.showLoading();
     employees = await API.Employees.getAll().catch(() => []);
     departments = await API.Departments.getAll().catch(() => []);
+    clients = await API.Clients.getAll().catch(() => []);
+    
+    // Filter team leaders from employees
+    teamLeaders = employees.filter(emp => (emp.Role || emp.RoleId) === 4);
+    
     renderEmployees();
     populateDepartmentDropdown();
   } catch (error) {
@@ -44,7 +51,7 @@ function getRoleName(roleId) {
   const roles = {
     1: "Manager",
     2: "Assistant Manager",
-    3: "Accountant",
+    3: "Account Manager",
     4: "Team Leader",
     5: "Employee",
     6: "Client",
@@ -72,14 +79,20 @@ function renderEmployees() {
 
   tbody.innerHTML = employees
     .map(
-      (emp) => `
+      (emp) => {
+        const roleName = getRoleName(emp.Role || emp.RoleId);
+        const teamLeaderName = emp.TeamLeaderName || "";
+        const teamLeaderBadge = teamLeaderName ? `<br><small class="text-muted">Team Leader: ${teamLeaderName}</small>` : "";
+        
+        return `
     <tr>
-      <td><strong>${emp.Name || emp.Username || "Unknown"}</strong></td>
+      <td>
+        <strong>${emp.Name || emp.Username || "Unknown"}</strong>
+        ${teamLeaderBadge}
+      </td>
       <td>${emp.Username || "N/A"}</td>
       <td>${emp.Email || "N/A"}</td>
-      <td><span class="badge badge-info">${getRoleName(
-        emp.Role || emp.RoleId
-      )}</span></td>
+      <td><span class="badge badge-info">${roleName}</span></td>
       <td>
         <div class="table-actions">
           <button class="btn btn-sm btn-primary" onclick="editEmployee(${
@@ -95,7 +108,8 @@ function renderEmployees() {
         </div>
       </td>
     </tr>
-  `
+  `;
+      }
     )
     .join("");
 }
@@ -124,13 +138,98 @@ function showCreateModal() {
   document.getElementById("modalTitle").textContent = "Add Employee";
   document.getElementById("employeeForm").reset();
   document.getElementById("employeeId").value = "";
+  document.getElementById("role").value = "5"; // Default to Employee
+  handleRoleChange(); // Update conditional fields
   document.getElementById("employeeModal").classList.remove("d-none");
 }
 
 function closeModal() {
-  document.getElementById("employeeModal").classList.add("d-none");
   document.getElementById("employeeForm").reset();
   currentEditId = null;
+  document.getElementById("modalTitle").textContent = "Add Employee";
+  document.getElementById("employeeId").value = "";
+  document.getElementById("username").value = "";
+  
+  // Hide all conditional groups
+  document.getElementById("teamLeaderGroup").style.display = "none";
+  document.getElementById("managedEmployeesGroup").style.display = "none";
+  document.getElementById("managedClientsGroup").style.display = "none";
+  
+  document.getElementById("employeeModal").classList.add("d-none");
+}
+
+// Handle role change to show/hide conditional fields
+function handleRoleChange() {
+  const role = parseInt(document.getElementById("role").value);
+  const teamLeaderGroup = document.getElementById("teamLeaderGroup");
+  const managedEmployeesGroup = document.getElementById("managedEmployeesGroup");
+  const managedClientsGroup = document.getElementById("managedClientsGroup");
+  
+  // Hide all conditional fields first
+  teamLeaderGroup.style.display = "none";
+  managedEmployeesGroup.style.display = "none";
+  managedClientsGroup.style.display = "none";
+  
+  // Show relevant fields based on role
+  if (role === 5) {
+    // Employee - show team leader selection
+    teamLeaderGroup.style.display = "block";
+    populateTeamLeaderDropdown();
+  } else if (role === 4) {
+    // Team Leader - show employee assignment
+    managedEmployeesGroup.style.display = "block";
+    populateManagedEmployeesDropdown();
+  } else if (role === 3) {
+    // Account Manager - show client assignment
+    managedClientsGroup.style.display = "block";
+    populateManagedClientsDropdown();
+  }
+}
+
+// Populate team leader dropdown
+function populateTeamLeaderDropdown() {
+  const teamLeaderSelect = document.getElementById("teamLeader");
+  teamLeaderSelect.innerHTML = '<option value="">No Team Leader</option>';
+  
+  teamLeaders.forEach((tl) => {
+    const option = document.createElement("option");
+    option.value = tl.UserId || tl.Id;
+    option.textContent = tl.Name || tl.Username;
+    teamLeaderSelect.appendChild(option);
+  });
+}
+
+// Populate managed employees dropdown
+function populateManagedEmployeesDropdown() {
+  const managedEmployeesSelect = document.getElementById("managedEmployees");
+  managedEmployeesSelect.innerHTML = "";
+  
+  // Get all employees (role 5) that don't have this team leader yet or have no team leader
+  const availableEmployees = employees.filter(emp => {
+    const empRole = emp.Role || emp.RoleId;
+    const empId = emp.UserId || emp.Id;
+    return empRole === 5 && empId !== currentEditId; // Don't include self
+  });
+  
+  availableEmployees.forEach((emp) => {
+    const option = document.createElement("option");
+    option.value = emp.UserId || emp.Id;
+    option.textContent = emp.Name || emp.Username;
+    managedEmployeesSelect.appendChild(option);
+  });
+}
+
+// Populate managed clients dropdown
+function populateManagedClientsDropdown() {
+  const managedClientsSelect = document.getElementById("managedClients");
+  managedClientsSelect.innerHTML = "";
+  
+  clients.forEach((client) => {
+    const option = document.createElement("option");
+    option.value = client.ClientId || client.Id;
+    option.textContent = client.Name || client.Company;
+    managedClientsSelect.appendChild(option);
+  });
 }
 
 async function editEmployee(id) {
@@ -141,11 +240,34 @@ async function editEmployee(id) {
   document.getElementById("modalTitle").textContent = "Edit Employee";
   document.getElementById("employeeId").value = id;
   document.getElementById("name").value = employee.Name || "";
+  document.getElementById("username").value = employee.Username || "";
   document.getElementById("email").value = employee.Email || "";
-  document.getElementById("phoneNumber").value = employee.PhoneNumber || "";
-  document.getElementById("department").value = employee.Department || "";
   document.getElementById("position").value = employee.Position || "";
   document.getElementById("role").value = employee.Role || employee.RoleId || 5;
+
+  // Update conditional fields based on role
+  handleRoleChange();
+  
+  // Set team leader if employee
+  if ((employee.Role || employee.RoleId) === 5 && employee.TeamLeaderId) {
+    document.getElementById("teamLeader").value = employee.TeamLeaderId;
+  }
+  
+  // Set managed employees if team leader
+  if ((employee.Role || employee.RoleId) === 4 && employee.ManagedEmployeeIds) {
+    const managedEmployeesSelect = document.getElementById("managedEmployees");
+    Array.from(managedEmployeesSelect.options).forEach(option => {
+      option.selected = employee.ManagedEmployeeIds.includes(parseInt(option.value));
+    });
+  }
+  
+  // Set managed clients if account manager
+  if ((employee.Role || employee.RoleId) === 3 && employee.ManagedClientIds) {
+    const managedClientsSelect = document.getElementById("managedClients");
+    Array.from(managedClientsSelect.options).forEach(option => {
+      option.selected = employee.ManagedClientIds.includes(parseInt(option.value));
+    });
+  }
 
   document.getElementById("employeeModal").classList.remove("d-none");
 }
@@ -153,14 +275,46 @@ async function editEmployee(id) {
 async function handleSubmit(e) {
   e.preventDefault();
 
+  const role = parseInt(document.getElementById("role").value);
+  
   const formData = {
     Name: document.getElementById("name").value,
-    Email: document.getElementById("email").value,
-    PhoneNumber: document.getElementById("phoneNumber").value,
-    Department: document.getElementById("department").value,
-    Position: document.getElementById("position").value,
-    Role: parseInt(document.getElementById("role").value),
+    Username: document.getElementById("username").value,
+    Email: document.getElementById("email").value || null,
+    Position: document.getElementById("position").value || null,
+    Role: role,
+    DepartmentIds: [], // Empty for now, can be enhanced later
   };
+
+  // Add TeamLeaderId for employees (optional)
+  if (role === 5) {
+    const teamLeaderId = document.getElementById("teamLeader").value;
+    if (teamLeaderId) {
+      formData.TeamLeaderId = parseInt(teamLeaderId);
+    }
+  }
+
+  // Add ManagedEmployeeIds for team leaders (optional)
+  if (role === 4) {
+    const managedEmployeesSelect = document.getElementById("managedEmployees");
+    const selectedEmployees = Array.from(managedEmployeesSelect.selectedOptions).map(
+      option => parseInt(option.value)
+    );
+    if (selectedEmployees.length > 0) {
+      formData.ManagedEmployeeIds = selectedEmployees;
+    }
+  }
+
+  // Add ManagedClientIds for account managers (optional)
+  if (role === 3) {
+    const managedClientsSelect = document.getElementById("managedClients");
+    const selectedClients = Array.from(managedClientsSelect.selectedOptions).map(
+      option => parseInt(option.value)
+    );
+    if (selectedClients.length > 0) {
+      formData.ManagedClientIds = selectedClients;
+    }
+  }
 
   try {
     utils.showLoading();
@@ -177,7 +331,7 @@ async function handleSubmit(e) {
     await loadData();
   } catch (error) {
     console.error("Error saving employee:", error);
-    utils.showError("Failed to save employee");
+    utils.showError(error.message || "Failed to save employee");
   } finally {
     utils.hideLoading();
   }

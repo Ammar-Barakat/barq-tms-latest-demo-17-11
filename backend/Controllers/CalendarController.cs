@@ -36,6 +36,11 @@ namespace BarqTMS.API.Controllers
             {
                 return Forbid(ex.Message);
             }
+            catch (Exception ex)
+            {
+                // Log the full exception for debugging
+                return StatusCode(500, new { error = ex.Message, details = ex.InnerException?.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         [HttpPut("events/{id}")]

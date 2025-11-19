@@ -1,4 +1,4 @@
-// Accountant Settings Page Script
+// Account Manager Settings Page Script
 auth.requireRole([USER_ROLES.ACCOUNTANT]);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -25,7 +25,7 @@ function getRoleName(roleId) {
   const roles = {
     1: "Manager",
     2: "Assistant Manager",
-    3: "Accountant",
+    3: "Account Manager",
     4: "Team Leader",
     5: "Employee",
     6: "Client",
