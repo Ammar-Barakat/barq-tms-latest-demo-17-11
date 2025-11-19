@@ -29,11 +29,17 @@ namespace BarqTMS.API.Services
         public async Task<IEnumerable<ClientDto>> GetClientsAsync()
         {
             return await _context.Clients
+                .Include(c => c.AccountManager)
                 .Select(c => new ClientDto
                 {
                     ClientId = c.ClientId,
                     Name = c.Name,
                     Email = c.Email,
+                    PhoneNumber = c.PhoneNumber,
+                    Company = c.Company,
+                    Address = c.Address,
+                    AccountManagerId = c.AccountManagerId,
+                    AccountManagerName = c.AccountManager != null ? c.AccountManager.Name : null,
                     ProjectCount = c.Projects.Count()
                 })
                 .ToListAsync();
@@ -64,9 +70,13 @@ namespace BarqTMS.API.Services
             if (await _context.Clients.AnyAsync(c => c.Email.ToLower() == dto.Email.ToLower()))
                 throw new ArgumentException("A client with this email already exists.");
 
-            var accountManager = await _context.Users.FirstOrDefaultAsync(u => u.UserId == dto.AccountManagerId && u.Role == UserRole.AccountManager);
-            if (accountManager == null)
-                throw new ArgumentException("Invalid AccountManagerId. User must exist and have AccountManager role.");
+            User? accountManager = null;
+            if (dto.AccountManagerId.HasValue)
+            {
+                accountManager = await _context.Users.FirstOrDefaultAsync(u => u.UserId == dto.AccountManagerId.Value && u.Role == UserRole.AccountManager);
+                if (accountManager == null)
+                    throw new ArgumentException("Invalid AccountManagerId. User must exist and have AccountManager role.");
+            }
 
             var client = new Client
             {
@@ -91,7 +101,7 @@ namespace BarqTMS.API.Services
                 Company = client.Company,
                 Address = client.Address,
                 AccountManagerId = client.AccountManagerId,
-                AccountManagerName = accountManager.Name
+                AccountManagerName = accountManager?.Name
             };
         }
 
@@ -104,9 +114,12 @@ namespace BarqTMS.API.Services
             if (await _context.Clients.AnyAsync(c => c.Email.ToLower() == dto.Email.ToLower() && c.ClientId != id))
                 throw new ArgumentException("A client with this email already exists.");
 
-            var accountManager = await _context.Users.FirstOrDefaultAsync(u => u.UserId == dto.AccountManagerId && u.Role == UserRole.AccountManager);
-            if (accountManager == null)
-                throw new ArgumentException("Invalid AccountManagerId. User must exist and have AccountManager role.");
+            if (dto.AccountManagerId.HasValue)
+            {
+                var accountManager = await _context.Users.FirstOrDefaultAsync(u => u.UserId == dto.AccountManagerId.Value && u.Role == UserRole.AccountManager);
+                if (accountManager == null)
+                    throw new ArgumentException("Invalid AccountManagerId. User must exist and have AccountManager role.");
+            }
 
             client.Name = dto.Name;
             client.Email = dto.Email;

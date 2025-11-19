@@ -22,8 +22,7 @@ namespace BarqTMS.API.DTOs
         [StringLength(500)]
         public string? Address { get; set; }
 
-        [Required]
-        public int AccountManagerId { get; set; }
+        public int? AccountManagerId { get; set; }
     }
 
     public class UpdateClientDto
@@ -46,7 +45,6 @@ namespace BarqTMS.API.DTOs
         [StringLength(500)]
         public string? Address { get; set; }
 
-        [Required]
-        public int AccountManagerId { get; set; }
+        public int? AccountManagerId { get; set; }
     }
 }

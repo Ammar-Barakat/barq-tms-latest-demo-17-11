@@ -299,6 +299,70 @@
       </div>
     </div>
 
+    <!-- Pass Task Modal -->
+    <div id="passTaskModal" class="modal-backdrop d-none">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fa-solid fa-share"></i> Pass Task to Employee</h3>
+            <button class="btn-icon" onclick="closePassTaskModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Task</label>
+              <div
+                id="passTaskTitle"
+                style="
+                  padding: var(--space-3);
+                  background: var(--surface-secondary);
+                  border-radius: var(--radius-md);
+                  font-weight: 600;
+                "
+              >
+                Task name
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="employeeSelect">Select Employee *</label>
+              <select class="form-control" id="employeeSelect" required>
+                <option value="">Select an employee...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="passTaskNotes">Instructions/Notes</label>
+              <textarea
+                class="form-control"
+                id="passTaskNotes"
+                rows="3"
+                placeholder="Add any instructions or notes for the employee..."
+              ></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closePassTaskModal()"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                onclick="handlePassTask()"
+              >
+                <i class="fa-solid fa-share"></i> Pass Task
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Assign Task Modal -->
     <div id="assignModal" class="modal-backdrop d-none">
       <div class="modal-dialog">

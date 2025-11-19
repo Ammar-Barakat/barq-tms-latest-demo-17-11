@@ -19,25 +19,33 @@ async function loadCalendarData() {
   try {
     showLoading();
     const allTasks = await API.Tasks.getAll();
-    const currentUser = auth.getUser();
+    const currentUser = auth.getCurrentUser();
+    const allProjects = await API.Projects.getAll().catch(() => []);
 
     // Get team members (employees under this team leader)
     const allUsers = await API.Users.getAll();
-    const teamMembers = allUsers.filter((u) => u.role === "EMPLOYEE");
-    const teamMemberIds = teamMembers.map((m) => m.id);
+    const teamMembers = allUsers.filter((u) => {
+      const roleId = u.Role || u.RoleId;
+      const teamLeaderId = u.TeamLeaderId || u.teamLeaderId;
+      return roleId === 5 && teamLeaderId === currentUser.UserId;
+    });
+    const teamMemberIds = teamMembers.map((m) => m.UserId || m.userId);
 
-    // Filter tasks to include:
-    // 1. Tasks assigned to team leader
-    // 2. Tasks assigned to team members
+    // Get projects where this team leader is assigned
+    const myProjectIds = allProjects
+      .filter((p) => (p.TeamLeaderId || p.teamLeaderId) === currentUser.UserId)
+      .map((p) => p.ProjectId || p.projectId);
+
+    // Filter tasks from projects assigned to this team leader
     tasks = allTasks
-      .filter(
-        (task) =>
-          task.assignedTo === currentUser.id ||
-          teamMemberIds.includes(task.assignedTo)
-      )
+      .filter((task) => {
+        const taskProjectId = task.ProjectId || task.projectId;
+        return myProjectIds.includes(taskProjectId);
+      })
       .map((task) => {
         // Mark if it's a team member's task
-        task.isTeamTask = task.assignedTo !== currentUser.id;
+        const assignedTo = task.AssignedTo || task.assignedTo;
+        task.isTeamTask = assignedTo !== currentUser.UserId;
         return task;
       });
   } catch (error) {
@@ -303,20 +311,22 @@ async function handleEventSubmit(e) {
 // Helper functions
 function getStatusText(status) {
   const statuses = {
-    1: "Pending",
+    1: "To Do",
     2: "In Progress",
-    3: "Completed",
-    4: "On Hold",
+    3: "In Review",
+    4: "Completed",
+    5: "Cancelled",
   };
   return statuses[status] || "Unknown";
 }
 
 function getStatusBadgeClass(status) {
   const classes = {
-    1: "warning",
+    1: "secondary",
     2: "info",
-    3: "success",
-    4: "secondary",
+    3: "warning",
+    4: "success",
+    5: "danger",
   };
   return classes[status] || "secondary";
 }

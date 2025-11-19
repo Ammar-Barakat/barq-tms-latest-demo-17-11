@@ -69,14 +69,14 @@ namespace BarqTMS.API.Data
                 .HasOne(c => c.AccountManager)
                 .WithMany(u => u.ManagedClients)
                 .HasForeignKey(c => c.AccountManagerId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of account manager if they have clients
+                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when account manager is deleted
 
             // Configure Project relationships
             modelBuilder.Entity<Project>()
                 .HasOne(p => p.Client)
                 .WithMany(c => c.Projects)
                 .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when client is deleted
 
             // Configure AuditLog relationships
             modelBuilder.Entity<AuditLog>()
@@ -90,7 +90,7 @@ namespace BarqTMS.API.Data
                 .HasOne(t => t.Project)
                 .WithMany(p => p.Tasks)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<WorkTask>()
                 .HasOne(t => t.Creator)
@@ -103,6 +103,18 @@ namespace BarqTMS.API.Data
                 .WithMany(u => u.AssignedTasks)
                 .HasForeignKey(t => t.AssignedTo)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<WorkTask>()
+                .HasOne(t => t.OriginalAssigner)
+                .WithMany()
+                .HasForeignKey(t => t.OriginalAssignerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<WorkTask>()
+                .HasOne(t => t.Delegator)
+                .WithMany()
+                .HasForeignKey(t => t.DelegatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<WorkTask>()
                 .HasOne(t => t.Department)

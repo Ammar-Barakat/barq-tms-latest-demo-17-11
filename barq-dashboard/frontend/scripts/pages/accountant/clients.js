@@ -3,8 +3,10 @@ auth.requireRole([USER_ROLES.ACCOUNTANT]);
 
 let clients = [];
 let currentEditId = null;
+let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  currentUser = auth.getCurrentUser();
   await loadData();
   setupEventListeners();
 });
@@ -13,17 +15,51 @@ async function loadData() {
   try {
     utils.showLoading();
 
-    // Load clients from the API so we have complete client records
+    // Load all projects to filter by account manager
+    const allProjects = await API.Projects.getAll().catch(() => []);
+
+    // Filter projects where current user is account manager
+    const myProjects = allProjects.filter((project) => {
+      const accountManagerId =
+        project.accountManagerId || project.AccountManagerId;
+      return accountManagerId === currentUser.userId;
+    });
+
+    // Get unique client IDs from my projects
+    const myClientIds = new Set(
+      myProjects
+        .filter((p) => p.clientId || p.ClientId)
+        .map((p) => p.clientId || p.ClientId)
+    );
+
+    console.log(
+      "[Clients] My projects:",
+      myProjects.length,
+      "Unique clients:",
+      myClientIds.size
+    );
+
+    // Load all clients and filter to only my clients
     const allClients = await API.Clients.getAll().catch(() => []);
-    clients = allClients.map((c) => ({
-      ClientId: c.clientId || c.ClientId,
-      ClientName: c.name || c.Name || c.clientName || c.ClientName,
-      ProjectCount: c.projectCount || c.ProjectCount || 0,
-      Email: c.email || c.Email || "",
-      PhoneNumber: c.phoneNumber || c.PhoneNumber || "",
-      Company: c.company || c.Company || "",
-      Address: c.address || c.Address || "",
-    }));
+    clients = allClients
+      .filter((c) => myClientIds.has(c.clientId || c.ClientId))
+      .map((c) => {
+        const clientId = c.clientId || c.ClientId;
+        const projectCount = myProjects.filter(
+          (p) => (p.clientId || p.ClientId) === clientId
+        ).length;
+
+        return {
+          ClientId: clientId,
+          ClientName: c.name || c.Name || c.clientName || c.ClientName,
+          ProjectCount: projectCount,
+          Email: c.email || c.Email || "",
+          PhoneNumber: c.phoneNumber || c.PhoneNumber || "",
+          Company: c.company || c.Company || "",
+          Address: c.address || c.Address || "",
+        };
+      });
+
     renderClients();
   } catch (error) {
     console.error("Error loading data:", error);
@@ -41,9 +77,9 @@ function renderClients() {
       <tr>
         <td colspan="7" class="text-center" style="padding: 40px;">
           <div class="empty-state">
-            <i class="fa-solid fa-inbox"></i>
+            <i class="fa-solid fa-users"></i>
             <h3>No clients found</h3>
-            <p>Clients will appear here when projects are created</p>
+            <p>Clients from projects you manage will appear here</p>
           </div>
         </td>
       </tr>

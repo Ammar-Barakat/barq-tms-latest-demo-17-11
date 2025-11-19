@@ -11,10 +11,16 @@ namespace BarqTMS.API.DTOs
         public int StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
         public DateTime? DueDate { get; set; }
+        public int CreatedBy { get; set; }
+        public string? CreatedByName { get; set; }
         public int? AssignedTo { get; set; }
         public string? AssignedToName { get; set; }
-        public int ProjectId { get; set; }
-        public string ProjectName { get; set; } = string.Empty;
+        public int? OriginalAssignerId { get; set; }
+        public string? OriginalAssignerName { get; set; }
+        public int? DelegatedBy { get; set; }
+        public string? DelegatedByName { get; set; }
+        public int? ProjectId { get; set; }
+        public string? ProjectName { get; set; }
         public int CommentCount { get; set; }
         public int AttachmentCount { get; set; }
         public string DriveFolderLink { get; set; } = string.Empty;
@@ -35,10 +41,14 @@ namespace BarqTMS.API.DTOs
         public string CreatedByName { get; set; } = string.Empty;
         public int? AssignedTo { get; set; }
         public string? AssignedToName { get; set; }
+        public int? OriginalAssignerId { get; set; }
+        public string? OriginalAssignerName { get; set; }
+        public int? DelegatedBy { get; set; }
+        public string? DelegatedByName { get; set; }
         public int DeptId { get; set; }
         public string DeptName { get; set; } = string.Empty;
-        public int ProjectId { get; set; }
-        public string ProjectName { get; set; } = string.Empty;
+        public int? ProjectId { get; set; }
+        public string? ProjectName { get; set; }
         public int CommentCount { get; set; }
         public int AttachmentCount { get; set; }
         public string DriveFolderLink { get; set; } = string.Empty;
@@ -67,8 +77,7 @@ namespace BarqTMS.API.DTOs
         [Required]
         public int DeptId { get; set; }
         
-        [Required]
-        public int ProjectId { get; set; }
+        public int? ProjectId { get; set; }
 
         [Required]
         [StringLength(500)]
@@ -92,7 +101,7 @@ namespace BarqTMS.API.DTOs
         public DateTime? DueDate { get; set; }
         public int? AssignedTo { get; set; }
         public int DeptId { get; set; }
-        public int ProjectId { get; set; }
+        public int? ProjectId { get; set; }
 
         [Required]
         [StringLength(500)]
@@ -148,5 +157,24 @@ namespace BarqTMS.API.DTOs
         [StringLength(1000)]
         public string? Notes { get; set; }
         public DateTime? NewDueDate { get; set; }
+    }
+
+    public class ExtendTaskDeadlineDto
+    {
+        [Required]
+        public DateTime NewDueDate { get; set; }
+        
+        [Required]
+        [StringLength(500)]
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public class PassTaskDto
+    {
+        [Required]
+        public int AssignToUserId { get; set; }
+        
+        [StringLength(1000)]
+        public string? Notes { get; set; }
     }
 }

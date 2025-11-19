@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using BarqTMS.API.Data;
 using BarqTMS.API.Models;
 using BarqTMS.API.Helpers;
+using System;
+using System.Collections.Generic;
 
 namespace BarqTMS.API.Controllers
 {
@@ -54,7 +56,7 @@ namespace BarqTMS.API.Controllers
                                 .Where(p => p.ClientId == client.ClientId)
                                 .Select(p => p.ProjectId)
                                 .ToListAsync();
-                            tasksQuery = tasksQuery.Where(t => clientProjectIds.Contains(t.ProjectId));
+                            tasksQuery = tasksQuery.Where(t => t.ProjectId.HasValue && clientProjectIds.Contains(t.ProjectId.Value));
                         }
                         break;
 
@@ -70,13 +72,24 @@ namespace BarqTMS.API.Controllers
                         break;
                 }
 
+                var statusLookup = await GetStatusLookupAsync();
+                statusLookup.TryGetValue("To Do", out var toDoStatusId);
+                statusLookup.TryGetValue("In Progress", out var inProgressStatusId);
+                statusLookup.TryGetValue("Done", out var doneStatusId);
+
                 // Task statistics
                 stats.TotalTasks = await tasksQuery.CountAsync();
-                stats.PendingTasks = await tasksQuery.Where(t => t.StatusId == 1).CountAsync();
-                stats.InProgressTasks = await tasksQuery.Where(t => t.StatusId == 2).CountAsync();
-                stats.CompletedTasks = await tasksQuery.Where(t => t.StatusId == 3).CountAsync();
+                stats.PendingTasks = toDoStatusId > 0
+                    ? await tasksQuery.Where(t => t.StatusId == toDoStatusId).CountAsync()
+                    : 0;
+                stats.InProgressTasks = inProgressStatusId > 0
+                    ? await tasksQuery.Where(t => t.StatusId == inProgressStatusId).CountAsync()
+                    : 0;
+                stats.CompletedTasks = doneStatusId > 0
+                    ? await tasksQuery.Where(t => t.StatusId == doneStatusId).CountAsync()
+                    : 0;
                 stats.OverdueTasks = await tasksQuery
-                    .Where(t => t.DueDate < DateTime.UtcNow && t.StatusId != 3)
+                    .Where(t => t.DueDate < DateTime.UtcNow && (doneStatusId == 0 || t.StatusId != doneStatusId))
                     .CountAsync();
 
                 // Project statistics (based on role)
@@ -99,8 +112,8 @@ namespace BarqTMS.API.Controllers
                     .Where(p => p.EndDate < DateTime.UtcNow)
                     .CountAsync();
 
-                // User statistics (for managers only)
-                if (currentUser.Role == UserRole.Manager || currentUser.Role == UserRole.AssistantManager)
+                // User statistics
+                if (currentUser.Role == UserRole.Manager || currentUser.Role == UserRole.AssistantManager || currentUser.Role == UserRole.TeamLeader)
                 {
                     stats.TotalUsers = await _context.Users.Where(u => u.IsActive).CountAsync();
                     stats.TotalDepartments = await _context.Departments.CountAsync();
@@ -126,9 +139,11 @@ namespace BarqTMS.API.Controllers
 
                 // Weekly progress (tasks completed this week)
                 var startOfWeek = DateTime.UtcNow.AddDays(-(int)DateTime.UtcNow.DayOfWeek);
-                stats.TasksCompletedThisWeek = await tasksQuery
-                    .Where(t => t.StatusId == 3 && t.DueDate >= startOfWeek)
-                    .CountAsync();
+                stats.TasksCompletedThisWeek = doneStatusId > 0
+                    ? await tasksQuery
+                        .Where(t => t.StatusId == doneStatusId && t.DueDate >= startOfWeek)
+                        .CountAsync()
+                    : 0;
 
                 return Ok(stats);
             }
@@ -170,7 +185,7 @@ namespace BarqTMS.API.Controllers
                                 .Where(p => p.ClientId == client.ClientId)
                                 .Select(p => p.ProjectId)
                                 .ToListAsync();
-                            tasksQuery = tasksQuery.Where(t => clientProjectIds.Contains(t.ProjectId));
+                            tasksQuery = tasksQuery.Where(t => t.ProjectId.HasValue && clientProjectIds.Contains(t.ProjectId.Value));
                         }
                         break;
 
@@ -236,7 +251,7 @@ namespace BarqTMS.API.Controllers
                                 .Where(p => p.ClientId == client.ClientId)
                                 .Select(p => p.ProjectId)
                                 .ToListAsync();
-                            tasksQuery = tasksQuery.Where(t => clientProjectIds.Contains(t.ProjectId));
+                            tasksQuery = tasksQuery.Where(t => t.ProjectId.HasValue && clientProjectIds.Contains(t.ProjectId.Value));
                         }
                         break;
 
@@ -285,6 +300,9 @@ namespace BarqTMS.API.Controllers
                     return Unauthorized("User not found.");
                 }
 
+                var statusLookup = await GetStatusLookupAsync();
+                statusLookup.TryGetValue("Done", out var doneStatusId);
+
                 var projectsQuery = _context.Projects.AsQueryable();
 
                 if (currentUser.Role == UserRole.Client)
@@ -302,9 +320,9 @@ namespace BarqTMS.API.Controllers
                         ProjectId = p.ProjectId,
                         ProjectName = p.ProjectName,
                         TotalTasks = p.Tasks.Count(),
-                        CompletedTasks = p.Tasks.Count(t => t.StatusId == 3),
+                        CompletedTasks = doneStatusId > 0 ? p.Tasks.Count(t => t.StatusId == doneStatusId) : 0,
                         Progress = p.Tasks.Count() > 0
-                            ? (int)((double)p.Tasks.Count(t => t.StatusId == 3) / p.Tasks.Count() * 100)
+                            ? (int)((double)(doneStatusId > 0 ? p.Tasks.Count(t => t.StatusId == doneStatusId) : 0) / p.Tasks.Count() * 100)
                             : 0
                     })
                     .OrderByDescending(p => p.Progress)
@@ -318,6 +336,18 @@ namespace BarqTMS.API.Controllers
                 _logger.LogError(ex, "Error getting project progress");
                 return StatusCode(500, "An error occurred while retrieving project progress");
             }
+        }
+
+        private async Task<Dictionary<string, int>> GetStatusLookupAsync()
+        {
+            var statuses = await _context.Statuses
+                .Select(s => new { s.StatusId, s.StatusName })
+                .ToListAsync();
+
+            return statuses.ToDictionary(
+                s => s.StatusName,
+                s => s.StatusId,
+                StringComparer.OrdinalIgnoreCase);
         }
     }
 

@@ -7,8 +7,10 @@ namespace BarqTMS.API.DTOs
         public int ProjectId { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public int ClientId { get; set; }
-        public string ClientName { get; set; } = string.Empty;
+        public int? ClientId { get; set; }
+        public string? ClientName { get; set; }
+        public int? TeamLeaderId { get; set; }
+        public string? TeamLeaderName { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int TaskCount { get; set; }
@@ -23,8 +25,8 @@ namespace BarqTMS.API.DTOs
         [StringLength(1000)]
         public string? Description { get; set; }
         
-        [Required]
-        public int ClientId { get; set; }
+        public int? ClientId { get; set; }
+        public int? TeamLeaderId { get; set; }
         
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -39,7 +41,8 @@ namespace BarqTMS.API.DTOs
         [StringLength(1000)]
         public string? Description { get; set; }
         
-        public int ClientId { get; set; }
+        public int? ClientId { get; set; }
+        public int? TeamLeaderId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
     }

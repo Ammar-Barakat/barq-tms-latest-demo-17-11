@@ -49,7 +49,7 @@ namespace BarqTMS.API.Controllers
             var hasAccess = currentUser.Role switch
             {
                 UserRole.Employee => task.AssignedTo == currentUserId,
-                UserRole.Client => await IsClientProject(currentUser.Email ?? string.Empty, task.ProjectId),
+                UserRole.Client => task.ProjectId.HasValue && await IsClientProject(currentUser.Email ?? string.Empty, task.ProjectId.Value),
                 UserRole.TeamLeader => await IsUserInDepartment(currentUserId, task.DeptId),
                 _ => true
             };
@@ -73,9 +73,9 @@ namespace BarqTMS.API.Controllers
         }
 
         // POST: api/tasks
-        // Only Manager, Assistant Manager, and Team Leader can create tasks
+        // Only Manager, Assistant Manager, Account Manager, and Team Leader can create tasks
         [HttpPost]
-        [Authorize(Roles = "Manager,AssistantManager,TeamLeader")]
+        [Authorize(Roles = "Manager,AssistantManager,AccountManager,TeamLeader")]
         public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto createTaskDto)
         {
             var createdBy = UserContextHelper.GetCurrentUserIdOrThrow(User);
@@ -92,7 +92,7 @@ namespace BarqTMS.API.Controllers
 
         // PUT: api/tasks/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "Manager,AssistantManager,TeamLeader")]
+        [Authorize(Roles = "Manager,AssistantManager,AccountManager,TeamLeader")]
         public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto updateTaskDto)
         {
             var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
@@ -109,9 +109,9 @@ namespace BarqTMS.API.Controllers
         }
 
         // PUT: api/tasks/{id}/request-complete
-        // Only assigned employee can request completion (mark as done)
+        // Assigned user (Employee, AccountManager, or TeamLeader) can request completion
         [HttpPut("{id}/request-complete")]
-        [Authorize(Roles = "Employee")]
+        [Authorize(Roles = "Employee,AccountManager,TeamLeader")]
         public async Task<IActionResult> RequestTaskCompletion(int id)
         {
             var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
@@ -124,18 +124,76 @@ namespace BarqTMS.API.Controllers
         }
 
         // PUT: api/tasks/{id}/review-completion
-        // Only task creator (Manager, AssistantManager, TeamLeader) can approve/reject
+        // The person who delegated the task OR the original creator can approve/reject
         [HttpPut("{id}/review-completion")]
-        [Authorize(Roles = "Manager,AssistantManager,TeamLeader")]
+        [Authorize(Roles = "Manager,AssistantManager,AccountManager,TeamLeader")]
         public async Task<IActionResult> ReviewTaskCompletion(int id, ReviewTaskCompletionDto reviewDto)
         {
             var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
             var task = await _taskService.GetTaskByIdAsync(id, currentUserId);
             if (task == null) return NotFound($"Task with ID {id} not found.");
-            if (task.CreatedBy != currentUserId) return Forbid();
+            
+            // Check if user is the one who delegated the task (DelegatedBy) OR the original creator/assigner
+            var canReview = task.CreatedBy == currentUserId || 
+                           task.DelegatedBy == currentUserId ||
+                           task.OriginalAssignerId == currentUserId;
+            
+            if (!canReview) return Forbid();
+            
             var success = await _taskService.ReviewTaskCompletionAsync(id, reviewDto, currentUserId);
             if (!success) return NotFound($"Task with ID {id} not found.");
             return NoContent();
+        }
+
+        // PUT: api/tasks/{id}/extend-deadline
+        // Manager, AssistantManager, or TeamLeader can extend deadlines for overdue tasks
+        [HttpPut("{id}/extend-deadline")]
+        [Authorize(Roles = "Manager,AssistantManager,TeamLeader")]
+        public async Task<IActionResult> ExtendTaskDeadline(int id, [FromBody] ExtendTaskDeadlineDto dto)
+        {
+            try
+            {
+                var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+                var (success, error) = await _taskService.ExtendTaskDeadlineAsync(id, dto, currentUserId);
+                
+                if (!success)
+                {
+                    return BadRequest(new { error });
+                }
+                
+                return Ok(new { message = "Task deadline extended successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error extending deadline for task {TaskId}", id);
+                return StatusCode(500, new { error = "An error occurred while extending the task deadline" });
+            }
+        }
+
+        // PUT: api/tasks/{id}/pass
+        // Account Manager can pass to Team Leader or Employee
+        // Team Leader can pass to Employee
+        [HttpPut("{id}/pass")]
+        [Authorize(Roles = "AccountManager,TeamLeader")]
+        public async Task<IActionResult> PassTask(int id, [FromBody] PassTaskDto dto)
+        {
+            try
+            {
+                var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+                var (success, error) = await _taskService.PassTaskAsync(id, dto, currentUserId);
+                
+                if (!success)
+                {
+                    return BadRequest(new { error });
+                }
+                
+                return Ok(new { message = "Task passed successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error passing task {TaskId}", id);
+                return StatusCode(500, new { error = "An error occurred while passing the task" });
+            }
         }
 
         // DELETE: api/tasks/5

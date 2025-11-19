@@ -17,23 +17,11 @@ async function loadDashboardData() {
     const [tasks, projects, employees] = await Promise.all([
       API.Tasks.getAll().catch(() => []),
       API.Projects.getAll().catch(() => []),
-      API.Users.getAll().catch(() => []),
+      API.Users.getAll().catch(() => []), // This will return only supervised employees for team leader
     ]);
 
-    // Extract unique clients from projects
-    const clientMap = new Map();
-    projects.forEach((p) => {
-      if (p.ClientId && p.ClientName) {
-        clientMap.set(p.ClientId, {
-          ClientId: p.ClientId,
-          ClientName: p.ClientName,
-        });
-      }
-    });
-    const clients = Array.from(clientMap.values());
-
     // Update stats
-    updateStats({ tasks, projects, employees, clients });
+    updateStats({ tasks, projects, employees });
 
     // Render recent data
     renderRecentTasks(tasks.slice(0, 10));
@@ -51,7 +39,6 @@ function updateStats(data) {
   document.getElementById("totalTasks").textContent = data.tasks.length;
   document.getElementById("totalProjects").textContent = data.projects.length;
   document.getElementById("totalEmployees").textContent = data.employees.length;
-  document.getElementById("totalClients").textContent = data.clients.length;
 }
 
 // Render recent tasks

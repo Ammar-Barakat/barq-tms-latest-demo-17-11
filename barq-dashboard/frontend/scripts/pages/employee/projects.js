@@ -22,7 +22,24 @@ function setupEventListeners() {
 async function loadProjects() {
   try {
     utils.showLoading();
-    allProjects = await API.Projects.getAll();
+    const currentUser = auth.getCurrentUser();
+
+    // Load all projects and tasks
+    const [projects, tasks] = await Promise.all([
+      API.Projects.getAll(),
+      API.Tasks.getAll(),
+    ]);
+
+    // Filter projects to only those containing tasks assigned to this employee
+    const myTaskProjectIds = tasks
+      .filter((t) => (t.AssignedTo || t.assignedTo) === currentUser.UserId)
+      .map((t) => t.ProjectId || t.projectId)
+      .filter((id, index, self) => id && self.indexOf(id) === index); // unique IDs
+
+    allProjects = projects.filter((p) =>
+      myTaskProjectIds.includes(p.ProjectId || p.projectId)
+    );
+
     renderProjects(allProjects);
   } catch (error) {
     console.error("Error loading projects:", error);

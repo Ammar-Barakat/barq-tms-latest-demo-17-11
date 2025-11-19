@@ -17,9 +17,9 @@ async function loadData() {
     // Fetch clients from API
     clients = await API.Clients.getAll().catch(() => []);
 
-    // Fetch accountants (role 3)
-    const allEmployees = await API.Employees.getAll().catch(() => []);
-    accountants = allEmployees.filter((emp) => (emp.Role || emp.RoleId) === 3);
+    // Fetch accountants (role 3) from Users API
+    const allUsers = await API.Users.getAll().catch(() => []);
+    accountants = allUsers.filter((user) => (user.Role || user.RoleId) === 3);
 
     renderClients();
     populateAccountantDropdown();
@@ -117,14 +117,16 @@ function showCreateModal() {
   currentEditId = null;
   document.getElementById("modalTitle").textContent = "Add New Client";
   document.getElementById("clientForm").reset();
-  document.getElementById("accountant").value = "";
-    client.company || client.Company || "";
-  document.getElementById("address").value =
-    client.address || client.Address || "";
-  document.getElementById("accountant").value =
-    client.accountManagerId || client.AccountManagerId || "";
-
   document.getElementById("clientModal").classList.remove("d-none");
+}
+
+function closeModal() {
+  document.getElementById("clientModal").classList.add("d-none");
+  document.getElementById("clientForm").reset();
+  currentEditId = null;
+}
+
+async function editClient(id) {
   try {
     utils.showLoading();
 
@@ -146,11 +148,18 @@ function showCreateModal() {
     document.getElementById("clientId").value = id;
     document.getElementById("name").value = client.name || client.Name || "";
     document.getElementById("email").value = client.email || client.Email || "";
-    document.getElementById("phoneNumber").value = client.phoneNumber || client.PhoneNumber || "";
-    document.getElementById("company").value = client.company || client.Company || "";
-    document.getElementById("address").value = client.address || client.Address || "";
+    document.getElementById("phoneNumber").value =
+      client.phoneNumber || client.PhoneNumber || "";
+    document.getElementById("company").value =
+      client.company || client.Company || "";
+    document.getElementById("address").value =
+      client.address || client.Address || "";
     if (document.getElementById("accountant")) {
-      const acctId = client.accountManagerId || client.AccountManagerId || client.AccountManager || null;
+      const acctId =
+        client.accountManagerId ||
+        client.AccountManagerId ||
+        client.AccountManager ||
+        null;
       document.getElementById("accountant").value = acctId || "";
     }
 

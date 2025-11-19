@@ -35,8 +35,11 @@ namespace BarqTMS.API.Controllers
                 return Unauthorized("User not found.");
             }
 
-            // If user is Client (Role 6), only show their projects
-            var query = _context.Projects.Include(p => p.Client).AsQueryable();
+            // Filter projects based on user role
+            var query = _context.Projects
+                .Include(p => p.Client)
+                .Include(p => p.TeamLeader)
+                .AsQueryable();
             
             if (currentUser.Role == UserRole.Client)
             {
@@ -60,7 +63,9 @@ namespace BarqTMS.API.Controllers
                     ProjectName = p.ProjectName,
                     Description = p.Description,
                     ClientId = p.ClientId,
-                    ClientName = p.Client.Name,
+                    ClientName = p.Client != null ? p.Client.Name : null,
+                    TeamLeaderId = p.TeamLeaderId,
+                    TeamLeaderName = p.TeamLeader != null ? p.TeamLeader.Name : null,
                     StartDate = p.StartDate,
                     EndDate = p.EndDate,
                     TaskCount = p.Tasks.Count()
@@ -85,6 +90,7 @@ namespace BarqTMS.API.Controllers
 
             var project = await _context.Projects
                 .Include(p => p.Client)
+                .Include(p => p.TeamLeader)
                 .Where(p => p.ProjectId == id)
                 .Select(p => new ProjectDto
                 {
@@ -92,7 +98,9 @@ namespace BarqTMS.API.Controllers
                     ProjectName = p.ProjectName,
                     Description = p.Description,
                     ClientId = p.ClientId,
-                    ClientName = p.Client.Name,
+                    ClientName = p.Client != null ? p.Client.Name : null,
+                    TeamLeaderId = p.TeamLeaderId,
+                    TeamLeaderName = p.TeamLeader != null ? p.TeamLeader.Name : null,
                     StartDate = p.StartDate,
                     EndDate = p.EndDate,
                     TaskCount = p.Tasks.Count()
@@ -123,11 +131,28 @@ namespace BarqTMS.API.Controllers
         [Authorize(Roles = "Manager,AssistantManager")]
         public async Task<ActionResult<ProjectDto>> CreateProject(CreateProjectDto createProjectDto)
         {
-            // Validate client exists
-            var client = await _context.Clients.FindAsync(createProjectDto.ClientId);
-            if (client == null)
+            // Validate client exists if provided
+            if (createProjectDto.ClientId.HasValue)
             {
-                return BadRequest($"Client with ID {createProjectDto.ClientId} not found.");
+                var client = await _context.Clients.FindAsync(createProjectDto.ClientId.Value);
+                if (client == null)
+                {
+                    return BadRequest($"Client with ID {createProjectDto.ClientId} not found.");
+                }
+            }
+
+            // Validate team leader exists and has correct role if provided
+            if (createProjectDto.TeamLeaderId.HasValue)
+            {
+                var teamLeader = await _context.Users.FindAsync(createProjectDto.TeamLeaderId.Value);
+                if (teamLeader == null)
+                {
+                    return BadRequest($"Team Leader with ID {createProjectDto.TeamLeaderId} not found.");
+                }
+                if (teamLeader.Role != UserRole.TeamLeader)
+                {
+                    return BadRequest($"User with ID {createProjectDto.TeamLeaderId} is not a Team Leader.");
+                }
             }
 
             // FIX 1: Validate project dates - DueDate must be after StartDate
@@ -144,6 +169,7 @@ namespace BarqTMS.API.Controllers
                 ProjectName = createProjectDto.ProjectName,
                 Description = createProjectDto.Description,
                 ClientId = createProjectDto.ClientId,
+                TeamLeaderId = createProjectDto.TeamLeaderId,
                 StartDate = createProjectDto.StartDate,
                 EndDate = createProjectDto.EndDate
             };
@@ -154,13 +180,31 @@ namespace BarqTMS.API.Controllers
             // Create audit log entry
             await CreateProjectAuditLog(project.ProjectId, "Created", $"Project '{project.ProjectName}' was created");
 
+            // Get client name if ClientId is provided
+            string? clientName = null;
+            if (project.ClientId.HasValue)
+            {
+                var client = await _context.Clients.FindAsync(project.ClientId.Value);
+                clientName = client?.Name;
+            }
+
+            // Get team leader name if TeamLeaderId is provided
+            string? teamLeaderName = null;
+            if (project.TeamLeaderId.HasValue)
+            {
+                var teamLeader = await _context.Users.FindAsync(project.TeamLeaderId.Value);
+                teamLeaderName = teamLeader?.Name;
+            }
+
             var projectDto = new ProjectDto
             {
                 ProjectId = project.ProjectId,
                 ProjectName = project.ProjectName,
                 Description = project.Description,
                 ClientId = project.ClientId,
-                ClientName = client.Name,
+                ClientName = clientName,
+                TeamLeaderId = project.TeamLeaderId,
+                TeamLeaderName = teamLeaderName,
                 StartDate = project.StartDate,
                 EndDate = project.EndDate,
                 TaskCount = 0
@@ -180,11 +224,28 @@ namespace BarqTMS.API.Controllers
                 return NotFound($"Project with ID {id} not found.");
             }
 
-            // Validate client exists
-            var client = await _context.Clients.FindAsync(updateProjectDto.ClientId);
-            if (client == null)
+            // Validate client exists if provided
+            if (updateProjectDto.ClientId.HasValue)
             {
-                return BadRequest($"Client with ID {updateProjectDto.ClientId} not found.");
+                var client = await _context.Clients.FindAsync(updateProjectDto.ClientId.Value);
+                if (client == null)
+                {
+                    return BadRequest($"Client with ID {updateProjectDto.ClientId} not found.");
+                }
+            }
+
+            // Validate team leader exists and has correct role if provided
+            if (updateProjectDto.TeamLeaderId.HasValue)
+            {
+                var teamLeader = await _context.Users.FindAsync(updateProjectDto.TeamLeaderId.Value);
+                if (teamLeader == null)
+                {
+                    return BadRequest($"Team Leader with ID {updateProjectDto.TeamLeaderId} not found.");
+                }
+                if (teamLeader.Role != UserRole.TeamLeader)
+                {
+                    return BadRequest($"User with ID {updateProjectDto.TeamLeaderId} is not a Team Leader.");
+                }
             }
 
             // FIX 1: Validate project dates - DueDate must be after StartDate
@@ -199,10 +260,12 @@ namespace BarqTMS.API.Controllers
             // Store old values for audit log
             var oldName = project.ProjectName;
             var oldClientId = project.ClientId;
+            var oldTeamLeaderId = project.TeamLeaderId;
 
             project.ProjectName = updateProjectDto.ProjectName;
             project.Description = updateProjectDto.Description;
             project.ClientId = updateProjectDto.ClientId;
+            project.TeamLeaderId = updateProjectDto.TeamLeaderId;
             project.StartDate = updateProjectDto.StartDate;
             project.EndDate = updateProjectDto.EndDate;
 

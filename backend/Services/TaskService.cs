@@ -20,6 +20,8 @@ namespace BarqTMS.API.Services
         Task<IEnumerable<TaskHistoryDto>> GetTaskHistoryAsync(int id);
         Task<bool> RequestTaskCompletionAsync(int id, int currentUserId);
         Task<bool> ReviewTaskCompletionAsync(int id, ReviewTaskCompletionDto reviewDto, int currentUserId);
+        Task<(bool Success, string? Error)> ExtendTaskDeadlineAsync(int id, ExtendTaskDeadlineDto dto, int currentUserId);
+        Task<(bool Success, string? Error)> PassTaskAsync(int id, PassTaskDto dto, int currentUserId);
     }
 
     public class TaskService : ITaskService
@@ -43,14 +45,35 @@ namespace BarqTMS.API.Services
             var query = _context.Tasks
                 .Include(t => t.Priority)
                 .Include(t => t.Status)
+                .Include(t => t.Creator)
                 .Include(t => t.AssignedUser)
+                .Include(t => t.OriginalAssigner)
+                .Include(t => t.Delegator)
                 .Include(t => t.Project)
                 .AsQueryable();
 
             switch (currentUser.Role)
             {
                 case UserRole.Employee:
+                    // Employees see only tasks assigned to them
                     query = query.Where(t => t.AssignedTo == currentUserId);
+                    break;
+                case UserRole.AccountManager:
+                    // Account Managers see: tasks assigned to them OR tasks they created OR tasks they delegated
+                    query = query.Where(t => t.AssignedTo == currentUserId || 
+                                           t.CreatedBy == currentUserId || 
+                                           t.DelegatedBy == currentUserId);
+                    break;
+                case UserRole.TeamLeader:
+                    // Team Leaders see: tasks assigned to them OR tasks they created OR tasks they delegated OR tasks in their departments
+                    var userDepartments = await _context.UserDepartments
+                        .Where(ud => ud.UserId == currentUserId)
+                        .Select(ud => ud.DeptId)
+                        .ToListAsync();
+                    query = query.Where(t => t.AssignedTo == currentUserId || 
+                                           t.CreatedBy == currentUserId || 
+                                           t.DelegatedBy == currentUserId ||
+                                           (userDepartments.Any() && userDepartments.Contains(t.DeptId)));
                     break;
                 case UserRole.Client:
                 {
@@ -60,19 +83,11 @@ namespace BarqTMS.API.Services
                         .Where(p => p.ClientId == client.ClientId)
                         .Select(p => p.ProjectId)
                         .ToListAsync();
-                    query = query.Where(t => clientProjectIds.Contains(t.ProjectId));
-                    break;
-                }
-                case UserRole.TeamLeader:
-                {
-                    var userDepartments = await _context.UserDepartments
-                        .Where(ud => ud.UserId == currentUserId)
-                        .Select(ud => ud.DeptId)
-                        .ToListAsync();
-                    if (userDepartments.Any()) query = query.Where(t => userDepartments.Contains(t.DeptId));
+                    query = query.Where(t => t.ProjectId.HasValue && clientProjectIds.Contains(t.ProjectId.Value));
                     break;
                 }
                 default:
+                    // Manager and Assistant Manager see all tasks
                     break;
             }
 
@@ -86,10 +101,16 @@ namespace BarqTMS.API.Services
                     StatusId = t.StatusId,
                     StatusName = t.Status.StatusName,
                     DueDate = t.DueDate,
+                    CreatedBy = t.CreatedBy,
+                    CreatedByName = t.Creator.Name,
                     AssignedTo = t.AssignedTo,
                     AssignedToName = t.AssignedUser != null ? t.AssignedUser.Name : null,
+                    OriginalAssignerId = t.OriginalAssignerId,
+                    OriginalAssignerName = t.OriginalAssigner != null ? t.OriginalAssigner.Name : null,
+                    DelegatedBy = t.DelegatedBy,
+                    DelegatedByName = t.Delegator != null ? t.Delegator.Name : null,
                     ProjectId = t.ProjectId,
-                    ProjectName = t.Project.ProjectName,
+                    ProjectName = t.Project != null ? t.Project.ProjectName : null,
                     CommentCount = t.TaskComments.Count(),
                     AttachmentCount = t.Attachments.Count(),
                     DriveFolderLink = t.DriveFolderLink,
@@ -105,6 +126,8 @@ namespace BarqTMS.API.Services
                 .Include(t => t.Status)
                 .Include(t => t.Creator)
                 .Include(t => t.AssignedUser)
+                .Include(t => t.OriginalAssigner)
+                .Include(t => t.Delegator)
                 .Include(t => t.Department)
                 .Include(t => t.Project)
                 .Where(t => t.TaskId == id)
@@ -122,10 +145,14 @@ namespace BarqTMS.API.Services
                     CreatedByName = t.Creator.Name,
                     AssignedTo = t.AssignedTo,
                     AssignedToName = t.AssignedUser != null ? t.AssignedUser.Name : null,
+                    OriginalAssignerId = t.OriginalAssignerId,
+                    OriginalAssignerName = t.OriginalAssigner != null ? t.OriginalAssigner.Name : null,
+                    DelegatedBy = t.DelegatedBy,
+                    DelegatedByName = t.Delegator != null ? t.Delegator.Name : null,
                     DeptId = t.DeptId,
                     DeptName = t.Department.DeptName,
                     ProjectId = t.ProjectId,
-                    ProjectName = t.Project.ProjectName,
+                    ProjectName = t.Project != null ? t.Project.ProjectName : null,
                     CommentCount = t.TaskComments.Count(),
                     AttachmentCount = t.Attachments.Count(),
                     DriveFolderLink = t.DriveFolderLink,
@@ -148,15 +175,15 @@ namespace BarqTMS.API.Services
                 throw new ArgumentException($"Status with ID {dto.StatusId} not found.");
             if (!await _context.Departments.AnyAsync(d => d.DeptId == dto.DeptId))
                 throw new ArgumentException($"Department with ID {dto.DeptId} not found.");
-            if (!await _context.Projects.AnyAsync(p => p.ProjectId == dto.ProjectId))
+            if (dto.ProjectId.HasValue && !await _context.Projects.AnyAsync(p => p.ProjectId == dto.ProjectId))
                 throw new ArgumentException($"Project with ID {dto.ProjectId} not found.");
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
 
             // FIX 2: Validate task due date is within project timeline
-            if (dto.DueDate.HasValue)
+            if (dto.DueDate.HasValue && dto.ProjectId.HasValue)
             {
-                var project = await _context.Projects.FindAsync(dto.ProjectId);
+                var project = await _context.Projects.FindAsync(dto.ProjectId.Value);
                 if (project != null)
                 {
                     if (project.StartDate.HasValue && dto.DueDate.Value < project.StartDate.Value)
@@ -182,6 +209,33 @@ namespace BarqTMS.API.Services
                         throw new ArgumentException("Managers and Assistant Managers can only assign tasks to Team Leaders or Employees, not to other Managers or Assistant Managers.");
                     }
                 }
+                
+                // Validate hierarchical assignment
+                var assignedUser2 = await _context.Users
+                    .Include(u => u.TeamLeader)
+                    .FirstOrDefaultAsync(u => u.UserId == dto.AssignedTo.Value);
+                    
+                if (assignedUser2 != null && assignedUser2.Role == UserRole.Employee)
+                {
+                    // If assigning to Employee, verify they have a Team Leader assigned
+                    if (!assignedUser2.TeamLeaderId.HasValue)
+                    {
+                        throw new ArgumentException($"Employee '{assignedUser2.Name}' must be assigned to a Team Leader before tasks can be assigned to them.");
+                    }
+                    
+                    // If task has a project, verify the employee's team leader is assigned to that project
+                    if (dto.ProjectId.HasValue)
+                    {
+                        var project = await _context.Projects.FindAsync(dto.ProjectId.Value);
+                        if (project != null && project.TeamLeaderId.HasValue)
+                        {
+                            if (assignedUser2.TeamLeaderId != project.TeamLeaderId)
+                            {
+                                throw new ArgumentException($"Employee '{assignedUser2.Name}' can only be assigned tasks from projects managed by their Team Leader.");
+                            }
+                        }
+                    }
+                }
             }
 
             var task = new WorkTask
@@ -193,6 +247,7 @@ namespace BarqTMS.API.Services
                 DueDate = dto.DueDate,
                 CreatedBy = createdBy,
                 AssignedTo = dto.AssignedTo,
+                OriginalAssignerId = createdBy, // Set original assigner when task is created
                 DeptId = dto.DeptId,
                 ProjectId = dto.ProjectId,
                 DriveFolderLink = dto.DriveFolderLink,
@@ -225,15 +280,15 @@ namespace BarqTMS.API.Services
                 throw new ArgumentException($"Status with ID {dto.StatusId} not found.");
             if (!await _context.Departments.AnyAsync(d => d.DeptId == dto.DeptId))
                 throw new ArgumentException($"Department with ID {dto.DeptId} not found.");
-            if (!await _context.Projects.AnyAsync(p => p.ProjectId == dto.ProjectId))
+            if (dto.ProjectId.HasValue && !await _context.Projects.AnyAsync(p => p.ProjectId == dto.ProjectId))
                 throw new ArgumentException($"Project with ID {dto.ProjectId} not found.");
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
 
             // FIX 2: Validate task due date is within project timeline
-            if (dto.DueDate.HasValue)
+            if (dto.DueDate.HasValue && dto.ProjectId.HasValue)
             {
-                var project = await _context.Projects.FindAsync(dto.ProjectId);
+                var project = await _context.Projects.FindAsync(dto.ProjectId.Value);
                 if (project != null)
                 {
                     if (project.StartDate.HasValue && dto.DueDate.Value < project.StartDate.Value)
@@ -443,15 +498,28 @@ namespace BarqTMS.API.Services
 
         public async Task<bool> RequestTaskCompletionAsync(int id, int currentUserId)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks
+                .Include(t => t.AssignedUser)
+                .Include(t => t.Delegator)
+                .FirstOrDefaultAsync(t => t.TaskId == id);
             if (task == null) return false;
+            
             // Set status to "In Review"
             var inReviewStatus = await _context.Statuses.FirstOrDefaultAsync(s => s.StatusName == "In Review");
             if (inReviewStatus == null) throw new ArgumentException("'In Review' status not found.");
             task.StatusId = inReviewStatus.StatusId;
             await _context.SaveChangesAsync();
-            // Notify creator
-            await CreateAndSendNotificationAsync(task.CreatedBy, $"Task '{task.Title}' marked as ready for review.", task.TaskId, task.ProjectId);
+            
+            // Notify the person who passed the task (if delegated), otherwise notify the creator
+            int reviewerId = task.DelegatedBy ?? task.CreatedBy;
+            await CreateAndSendNotificationAsync(reviewerId, $"Task '{task.Title}' marked as ready for review.", task.TaskId, task.ProjectId);
+            
+            // Also notify original assigner if different from delegator
+            if (task.DelegatedBy.HasValue && task.OriginalAssignerId.HasValue && task.OriginalAssignerId.Value != reviewerId)
+            {
+                await CreateAndSendNotificationAsync(task.OriginalAssignerId.Value, $"Task '{task.Title}' (delegated) is ready for review.", task.TaskId, task.ProjectId);
+            }
+            
             await CreateTaskHistory(task.TaskId, currentUserId, "Completion requested");
             return true;
         }
@@ -481,9 +549,14 @@ namespace BarqTMS.API.Services
                 var inProgressStatus = await _context.Statuses.FirstOrDefaultAsync(s => s.StatusName == "In Progress");
                 if (inProgressStatus == null) throw new ArgumentException("'In Progress' status not found.");
                 task.StatusId = inProgressStatus.StatusId;
+                var originalDueDate = task.DueDate;
                 // Update due date if provided
                 if (reviewDto.NewDueDate.HasValue)
                 {
+                    if (originalDueDate.HasValue && reviewDto.NewDueDate.Value <= originalDueDate.Value)
+                    {
+                        throw new ArgumentException("New due date must be later than the current due date.");
+                    }
                     task.DueDate = reviewDto.NewDueDate.Value;
                 }
                 await _context.SaveChangesAsync();
@@ -584,6 +657,158 @@ namespace BarqTMS.API.Services
         private async Task CreateNotification(int userId, string message)
         {
             await CreateAndSendNotificationAsync(userId, message, null, null);
+        }
+
+        public async Task<(bool Success, string? Error)> ExtendTaskDeadlineAsync(int id, ExtendTaskDeadlineDto dto, int currentUserId)
+        {
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+            if (currentUser == null)
+                return (false, "User not found");
+
+            // Only managers, assistant managers, and team leaders can extend deadlines
+            if (currentUser.Role != UserRole.Manager &&
+                currentUser.Role != UserRole.AssistantManager &&
+                currentUser.Role != UserRole.TeamLeader)
+            {
+                return (false, "Unauthorized: Only managers, assistant managers, and team leaders can extend deadlines");
+            }
+
+            var task = await _context.Tasks
+                .Include(t => t.AssignedUser)
+                .Include(t => t.Status)
+                .FirstOrDefaultAsync(t => t.TaskId == id);
+
+            if (task == null)
+                return (false, "Task not found");
+
+            // Validate new due date is in the future
+            if (dto.NewDueDate <= DateTime.UtcNow)
+                return (false, "New due date must be in the future");
+
+            // Validate new due date is after the current due date
+            if (task.DueDate.HasValue && dto.NewDueDate <= task.DueDate.Value)
+                return (false, "New due date must be later than the current due date");
+
+            var oldDueDate = task.DueDate;
+
+            task.DueDate = dto.NewDueDate;
+            task.UpdatedAt = DateTime.UtcNow;
+
+            // Add a comment documenting the extension
+            var comment = new TaskComment
+            {
+                TaskId = id,
+                UserId = currentUserId,
+                Comment = $"Deadline extended from {oldDueDate:MMM dd, yyyy} to {dto.NewDueDate:MMM dd, yyyy}. Reason: {dto.Reason}",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.TaskComments.Add(comment);
+
+            await _context.SaveChangesAsync();
+
+            // Notify the assigned user
+            if (task.AssignedTo.HasValue)
+            {
+                await CreateAndSendNotificationAsync(
+                    task.AssignedTo.Value,
+                    $"Deadline extended for task '{task.Title}' to {dto.NewDueDate:MMM dd, yyyy}. Reason: {dto.Reason}",
+                    task.TaskId,
+                    task.ProjectId);
+            }
+
+            _logger.LogInformation(
+                "Task {TaskId} deadline extended by user {UserId} from {OldDate} to {NewDate}",
+                id, currentUserId, oldDueDate, dto.NewDueDate);
+
+            return (true, null);
+        }
+
+        public async Task<(bool Success, string? Error)> PassTaskAsync(int id, PassTaskDto dto, int currentUserId)
+        {
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+            if (currentUser == null)
+                return (false, "User not found");
+
+            var task = await _context.Tasks
+                .Include(t => t.AssignedUser)
+                .Include(t => t.OriginalAssigner)
+                .FirstOrDefaultAsync(t => t.TaskId == id);
+
+            if (task == null)
+                return (false, "Task not found");
+
+            // Check if the task is assigned to the current user
+            if (task.AssignedTo != currentUserId)
+                return (false, "You can only pass tasks that are assigned to you");
+
+            // Validate the target user exists
+            var targetUser = await _context.Users.FindAsync(dto.AssignToUserId);
+            if (targetUser == null)
+                return (false, "Target user not found");
+
+            // Validate role-based passing rules
+            // Account Manager (3) can pass to Team Leader (4) or Employee (5)
+            // Team Leader (4) can pass to Employee (5)
+            if (currentUser.Role == UserRole.AccountManager)
+            {
+                if (targetUser.Role != UserRole.TeamLeader && targetUser.Role != UserRole.Employee)
+                    return (false, "Account Managers can only pass tasks to Team Leaders or Employees");
+            }
+            else if (currentUser.Role == UserRole.TeamLeader)
+            {
+                if (targetUser.Role != UserRole.Employee)
+                    return (false, "Team Leaders can only pass tasks to Employees");
+            }
+            else
+            {
+                return (false, "Only Account Managers and Team Leaders can pass tasks");
+            }
+
+            // Set the OriginalAssigner if not already set (first delegation in chain)
+            if (!task.OriginalAssignerId.HasValue)
+            {
+                task.OriginalAssignerId = task.CreatedBy;
+            }
+
+            // Track who is delegating this task
+            var previousAssignee = task.AssignedTo;
+            task.DelegatedBy = currentUserId;
+            task.AssignedTo = dto.AssignToUserId;
+            task.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Add a comment if notes were provided
+            if (!string.IsNullOrWhiteSpace(dto.Notes))
+            {
+                var comment = new TaskComment
+                {
+                    TaskId = id,
+                    UserId = currentUserId,
+                    Comment = $"Task passed to {targetUser.Name}. Notes: {dto.Notes}",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.TaskComments.Add(comment);
+                await _context.SaveChangesAsync();
+            }
+
+            // Create audit log
+            await CreateTaskHistory(task.TaskId, currentUserId, 
+                $"Task passed from {currentUser.Name} to {targetUser.Name}");
+
+            // Notify the new assignee
+            await CreateAndSendNotificationAsync(
+                dto.AssignToUserId,
+                $"Task '{task.Title}' has been passed to you by {currentUser.Name}" + 
+                (string.IsNullOrWhiteSpace(dto.Notes) ? "" : $". Notes: {dto.Notes}"),
+                task.TaskId,
+                task.ProjectId);
+
+            _logger.LogInformation(
+                "Task {TaskId} passed by user {UserId} from {PreviousAssignee} to {NewAssignee}",
+                id, currentUserId, previousAssignee, dto.AssignToUserId);
+
+            return (true, null);
         }
     }
 }

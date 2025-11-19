@@ -20,7 +20,7 @@ namespace BarqTMS.API.Models
         public string? Description { get; set; }
 
         [Column("client_id")]
-        public int ClientId { get; set; }
+        public int? ClientId { get; set; }
 
         [Column("start_date")]
         public DateTime? StartDate { get; set; }
@@ -28,9 +28,15 @@ namespace BarqTMS.API.Models
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
 
+        [Column("team_leader_id")]
+        public int? TeamLeaderId { get; set; }
+
         // Navigation properties
         [ForeignKey("ClientId")]
-        public virtual Client Client { get; set; } = null!;
+        public virtual Client? Client { get; set; }
+        
+        [ForeignKey(nameof(TeamLeaderId))]
+        public virtual User? TeamLeader { get; set; }
         
         public virtual ICollection<WorkTask> Tasks { get; set; } = new List<WorkTask>();
         public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();

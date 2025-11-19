@@ -3,6 +3,7 @@ auth.requireRole([USER_ROLES.MANAGER]);
 
 let projects = [];
 let clients = [];
+let teamLeaders = [];
 let currentEditId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -25,6 +26,20 @@ async function loadData() {
       ClientName: c.name || c.Name || c.clientName || c.ClientName,
     }));
 
+    // Load all team leaders (users with RoleId = 4)
+    const allUsers = await API.Users.getAll().catch(() => []);
+    teamLeaders = allUsers
+      .filter((u) => (u.roleId || u.RoleId) === 4)
+      .map((u) => ({
+        UserId: u.userId || u.UserId,
+        UserName:
+          u.name ||
+          u.Name ||
+          `${u.firstName || u.FirstName || ""} ${
+            u.lastName || u.LastName || ""
+          }`.trim(),
+      }));
+
     populateDropdowns();
     renderProjects();
   } catch (error) {
@@ -42,6 +57,13 @@ function populateDropdowns() {
     clients
       .map((c) => `<option value="${c.ClientId}">${c.ClientName}</option>`)
       .join("");
+
+  const teamLeaderSelect = document.getElementById("teamLeaderId");
+  teamLeaderSelect.innerHTML =
+    '<option value="">Select Team Leader</option>' +
+    teamLeaders
+      .map((tl) => `<option value="${tl.UserId}">${tl.UserName}</option>`)
+      .join("");
 }
 
 function renderProjects() {
@@ -50,7 +72,7 @@ function renderProjects() {
   if (projects.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center" style="padding: 40px;">
+        <td colspan="9" class="text-center" style="padding: 40px;">
           <div class="empty-state">
             <i class="fa-solid fa-inbox"></i>
             <h3>No projects found</h3>
@@ -72,6 +94,7 @@ function renderProjects() {
         50
       )}</td>
       <td>${project.ClientName || "N/A"}</td>
+      <td>${project.TeamLeaderName || "Not assigned"}</td>
       <td><span class="badge badge-info">${
         project.TaskCount || 0
       } tasks</span></td>
@@ -145,6 +168,7 @@ async function editProject(id) {
   document.getElementById("name").value = project.ProjectName || "";
   document.getElementById("description").value = project.Description || "";
   document.getElementById("clientId").value = project.ClientId || "";
+  document.getElementById("teamLeaderId").value = project.TeamLeaderId || "";
 
   if (project.StartDate) {
     const startDate = new Date(project.StartDate);
@@ -166,11 +190,13 @@ async function editProject(id) {
 async function handleSubmit(e) {
   e.preventDefault();
 
-  // API expects: ProjectName (required), Description, ClientId (required), StartDate, EndDate
+  // API expects: ProjectName (required), Description, ClientId (required), TeamLeaderId, StartDate, EndDate
+  const teamLeaderValue = document.getElementById("teamLeaderId").value;
   const formData = {
     ProjectName: document.getElementById("name").value,
     Description: document.getElementById("description").value || null,
     ClientId: parseInt(document.getElementById("clientId").value),
+    TeamLeaderId: teamLeaderValue ? parseInt(teamLeaderValue) : null,
     StartDate: document.getElementById("startDate").value || null,
     EndDate: document.getElementById("endDate").value || null,
   };

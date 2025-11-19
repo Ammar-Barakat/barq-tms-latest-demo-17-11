@@ -4,8 +4,26 @@ auth.requireRole([USER_ROLES.ACCOUNTANT]);
 let tasks = [];
 let currentFilter = "pending-review";
 let currentTaskForReview = null;
+let currentUser = null;
+
+// Task Review Workflow Status Codes
+// NOTE: These should match your database status IDs
+const TASK_STATUS = {
+  PENDING: 1,
+  IN_PROGRESS: 2,
+  COMPLETED: 3,
+  ON_HOLD: 4,
+  CANCELLED: 5,
+  // Custom statuses for Account Manager workflow
+  PENDING_AM_REVIEW: 6, // Team Leader submitted, waiting for Account Manager
+  SENT_TO_CLIENT: 7, // Account Manager approved, sent to client
+  CLIENT_REVIEW: 8, // Client is reviewing
+  CLIENT_APPROVED: 9, // Client approved the task
+  CLIENT_REJECTED: 10, // Client rejected, needs rework
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
+  currentUser = auth.getCurrentUser();
   await loadTasks();
   setupEventListeners();
 });
@@ -14,33 +32,78 @@ async function loadTasks() {
   try {
     utils.showLoading();
 
-    // Load all tasks
-    const allTasks = await API.Tasks.getAll().catch(() => []);
+    // Load all data
+    const [allTasks, allProjects] = await Promise.all([
+      API.Tasks.getAll().catch(() => []),
+      API.Projects.getAll().catch(() => []),
+    ]);
 
-    tasks = allTasks.map((task) => ({
-      TaskId: task.taskId || task.TaskId || task.id,
-      Title: task.title || task.Title,
-      Description: task.description || task.Description,
-      ProjectId: task.projectId || task.ProjectId,
-      ProjectName: task.projectName || task.ProjectName || "Unknown Project",
-      ClientId: task.clientId || task.ClientId,
-      ClientName: task.clientName || task.ClientName || "Unknown Client",
-      AssignedToId: task.assignedToId || task.AssignedToId,
-      AssignedToName:
-        task.assignedToName || task.AssignedToName || "Unassigned",
-      DueDate: task.dueDate || task.DueDate,
-      Status: task.status || task.Status || "Pending",
-      Priority: task.priority || task.Priority || "Medium",
-      // Review-specific fields
-      ReviewStatus: task.reviewStatus || task.ReviewStatus || "Not Submitted",
-      SubmittedForReview:
-        task.submittedForReview || task.SubmittedForReview || false,
-      AccountManagerApproved:
-        task.accountManagerApproved || task.AccountManagerApproved || false,
-      SentToClient: task.sentToClient || task.SentToClient || false,
-      ClientApproved: task.clientApproved || task.ClientApproved || null,
-      ClientFeedback: task.clientFeedback || task.ClientFeedback || "",
-    }));
+    // Filter projects where current user is account manager
+    const myProjects = allProjects.filter((project) => {
+      const accountManagerId =
+        project.accountManagerId || project.AccountManagerId;
+      return accountManagerId === currentUser.userId;
+    });
+
+    const myProjectIds = new Set(
+      myProjects.map((p) => p.projectId || p.ProjectId)
+    );
+
+    console.log(
+      "[Tasks] My projects:",
+      myProjects.length,
+      "Total tasks before filter:",
+      allTasks.length
+    );
+
+    // Filter tasks from my projects only
+    tasks = allTasks
+      .filter((task) => myProjectIds.has(task.projectId || task.ProjectId))
+      .map((task) => ({
+        TaskId: task.taskId || task.TaskId || task.id,
+        Title: task.title || task.Title,
+        Description: task.description || task.Description,
+        ProjectId: task.projectId || task.ProjectId,
+        ProjectName: task.projectName || task.ProjectName || "Unknown Project",
+        ClientId: task.clientId || task.ClientId,
+        ClientName: task.clientName || task.ClientName || "Unknown Client",
+        AssignedToId:
+          task.assignedTo ||
+          task.assignedToId ||
+          task.AssignedToId ||
+          task.AssignedTo,
+        AssignedToName:
+          task.assignedToName || task.AssignedToName || "Unassigned",
+        CreatedBy: task.createdBy || task.CreatedBy,
+        CreatedByName: task.createdByName || task.CreatedByName || "Unknown",
+        DueDate: task.dueDate || task.DueDate,
+        StatusId: task.statusId || task.StatusId || TASK_STATUS.PENDING,
+        Status: task.status || task.Status || "Pending",
+        PriorityId: task.priorityId || task.PriorityId || 2,
+        Priority:
+          task.priority ||
+          task.Priority ||
+          task.priorityLevel ||
+          task.PriorityLevel ||
+          "Medium",
+
+        // Review workflow fields
+        // NOTE: These fields need to be added to backend Task model
+        ReviewStatus: task.reviewStatus || task.ReviewStatus || "Not Submitted",
+        SubmittedForReview:
+          task.submittedForReview || task.SubmittedForReview || false,
+        AccountManagerApproved:
+          task.accountManagerApproved || task.AccountManagerApproved || false,
+        AccountManagerNotes:
+          task.accountManagerNotes || task.AccountManagerNotes || "",
+        SentToClient: task.sentToClient || task.SentToClient || false,
+        ClientApproved: task.clientApproved || task.ClientApproved || null,
+        ClientFeedback: task.clientFeedback || task.ClientFeedback || "",
+        ClientReviewDate:
+          task.clientReviewDate || task.ClientReviewDate || null,
+      }));
+
+    console.log("[Tasks] Filtered to my tasks:", tasks.length);
 
     updateStats();
     renderTasks();
@@ -53,22 +116,32 @@ async function loadTasks() {
 }
 
 function updateStats() {
-  // Pending account manager review
+  // Pending account manager review (Status = PENDING_AM_REVIEW or custom flag)
   const pendingReview = tasks.filter(
-    (t) => t.SubmittedForReview && !t.AccountManagerApproved && !t.SentToClient
+    (t) =>
+      t.StatusId === TASK_STATUS.PENDING_AM_REVIEW ||
+      (t.SubmittedForReview && !t.AccountManagerApproved && !t.SentToClient)
   ).length;
 
-  // Sent to client (approved by account manager, waiting for client)
+  // Sent to client (Status = SENT_TO_CLIENT or CLIENT_REVIEW)
   const sentToClient = tasks.filter(
     (t) =>
-      t.AccountManagerApproved && t.SentToClient && t.ClientApproved === null
+      t.StatusId === TASK_STATUS.SENT_TO_CLIENT ||
+      t.StatusId === TASK_STATUS.CLIENT_REVIEW ||
+      (t.AccountManagerApproved && t.SentToClient && t.ClientApproved === null)
   ).length;
 
-  // Approved by both
-  const approved = tasks.filter((t) => t.ClientApproved === true).length;
+  // Approved by client (Status = CLIENT_APPROVED)
+  const approved = tasks.filter(
+    (t) =>
+      t.StatusId === TASK_STATUS.CLIENT_APPROVED || t.ClientApproved === true
+  ).length;
 
-  // Rejected by client (needs rework)
-  const rejected = tasks.filter((t) => t.ClientApproved === false).length;
+  // Rejected by client (Status = CLIENT_REJECTED, needs rework)
+  const rejected = tasks.filter(
+    (t) =>
+      t.StatusId === TASK_STATUS.CLIENT_REJECTED || t.ClientApproved === false
+  ).length;
 
   document.getElementById("pendingMyReview").textContent = pendingReview;
   document.getElementById("sentToClient").textContent = sentToClient;
@@ -112,24 +185,39 @@ function renderTasks() {
 
   switch (currentFilter) {
     case "pending-review":
+      // Tasks waiting for account manager review
       filteredTasks = tasks.filter(
         (t) =>
-          t.SubmittedForReview && !t.AccountManagerApproved && !t.SentToClient
+          t.StatusId === TASK_STATUS.PENDING_AM_REVIEW ||
+          (t.SubmittedForReview && !t.AccountManagerApproved && !t.SentToClient)
       );
       break;
     case "sent-to-client":
+      // Tasks sent to client, awaiting client review
       filteredTasks = tasks.filter(
         (t) =>
-          t.AccountManagerApproved &&
-          t.SentToClient &&
-          t.ClientApproved === null
+          t.StatusId === TASK_STATUS.SENT_TO_CLIENT ||
+          t.StatusId === TASK_STATUS.CLIENT_REVIEW ||
+          (t.AccountManagerApproved &&
+            t.SentToClient &&
+            t.ClientApproved === null)
       );
       break;
     case "client-feedback":
-      filteredTasks = tasks.filter((t) => t.ClientApproved === false);
+      // Tasks rejected by client, need rework
+      filteredTasks = tasks.filter(
+        (t) =>
+          t.StatusId === TASK_STATUS.CLIENT_REJECTED ||
+          t.ClientApproved === false
+      );
       break;
     case "approved":
-      filteredTasks = tasks.filter((t) => t.ClientApproved === true);
+      // Tasks approved by client
+      filteredTasks = tasks.filter(
+        (t) =>
+          t.StatusId === TASK_STATUS.CLIENT_APPROVED ||
+          t.ClientApproved === true
+      );
       break;
   }
 
@@ -331,23 +419,52 @@ async function approveAndSendToClient() {
 
   const notes = document.getElementById("reviewNotes").value;
 
+  if (
+    !confirm(
+      `Are you sure you want to approve this task and send it to ${currentTaskForReview.ClientName}?`
+    )
+  ) {
+    return;
+  }
+
   try {
     utils.showLoading();
 
-    // Add comment if provided
-    if (notes) {
-      await API.Tasks.addComment(currentTaskForReview.TaskId, notes);
-    }
-
-    // Placeholder: Approve and send to client
-    // await API.Tasks.approveForClient(currentTaskForReview.TaskId);
-
-    console.log("Approving task and sending to client:", {
-      taskId: currentTaskForReview.TaskId,
-      notes,
+    // IMPLEMENTATION: Update task status to SENT_TO_CLIENT
+    await API.Tasks.update(currentTaskForReview.TaskId, {
+      StatusId: TASK_STATUS.SENT_TO_CLIENT,
+      // NOTE: These fields require backend support
+      AccountManagerApproved: true,
+      SentToClient: true,
+      AccountManagerNotes: notes || "Approved by Account Manager",
     });
 
-    // TODO: Send notification to client
+    // Add audit comment
+    await API.Tasks.addComment(
+      currentTaskForReview.TaskId,
+      `[ACCOUNT MANAGER APPROVED]\n${
+        notes || "Task approved and sent to client for review."
+      }`
+    );
+
+    // PLACEHOLDER: Notify client user
+    // NOTE: Requires backend endpoint to get client user ID from project/client
+    // await notifyClientUser(currentTaskForReview.ClientId, currentTaskForReview.TaskId);
+    console.log(
+      "[PLACEHOLDER] Should notify client user for task:",
+      currentTaskForReview.TaskId
+    );
+
+    // Notify team leader that task was approved
+    if (currentTaskForReview.AssignedToId) {
+      await API.Notifications.create({
+        UserId: currentTaskForReview.AssignedToId,
+        Message: `Your task "${currentTaskForReview.Title}" was approved and sent to the client`,
+        TaskId: currentTaskForReview.TaskId,
+        ProjectId: currentTaskForReview.ProjectId,
+      }).catch((err) => console.warn("Failed to send notification:", err));
+    }
+
     utils.showSuccess(
       `Task approved and sent to ${currentTaskForReview.ClientName}`
     );
@@ -372,21 +489,42 @@ async function rejectTask() {
     return;
   }
 
+  if (
+    !confirm(
+      `Are you sure you want to reject this task? It will be sent back to ${currentTaskForReview.AssignedToName}.`
+    )
+  ) {
+    return;
+  }
+
   try {
     utils.showLoading();
 
-    // Use existing review completion API with rejection
-    await API.Tasks.reviewCompletion(currentTaskForReview.TaskId, {
-      Approved: false,
-      Comment: notes,
+    // IMPLEMENTATION: Update task status back to IN_PROGRESS
+    await API.Tasks.update(currentTaskForReview.TaskId, {
+      StatusId: TASK_STATUS.IN_PROGRESS,
+      // NOTE: These fields require backend support
+      AccountManagerApproved: false,
+      SentToClient: false,
+      AccountManagerNotes: notes,
     });
 
-    console.log("Rejecting task and sending back:", {
-      taskId: currentTaskForReview.TaskId,
-      notes,
-    });
+    // Add rejection comment with feedback
+    await API.Tasks.addComment(
+      currentTaskForReview.TaskId,
+      `[ACCOUNT MANAGER REJECTED]\n\n${notes}\n\nPlease address the feedback and resubmit.`
+    );
 
-    // TODO: Send notification to assigned employee
+    // Notify team leader/employee
+    if (currentTaskForReview.AssignedToId) {
+      await API.Notifications.create({
+        UserId: currentTaskForReview.AssignedToId,
+        Message: `Your task "${currentTaskForReview.Title}" needs revision. Check the comments for details.`,
+        TaskId: currentTaskForReview.TaskId,
+        ProjectId: currentTaskForReview.ProjectId,
+      }).catch((err) => console.warn("Failed to send notification:", err));
+    }
+
     utils.showSuccess(
       `Task rejected and sent back to ${currentTaskForReview.AssignedToName}`
     );
@@ -417,8 +555,10 @@ async function sendBackToEmployee(taskId) {
   const task = tasks.find((t) => t.TaskId === taskId);
   if (!task) return;
 
+  const clientFeedback = task.ClientFeedback || "No specific feedback provided";
+
   const feedback = prompt(
-    `Send task back to ${task.AssignedToName} with client feedback:\n\n${task.ClientFeedback}\n\nAdd your instructions:`
+    `CLIENT FEEDBACK:\n${clientFeedback}\n\nAdd your instructions to ${task.AssignedToName}:`
   );
 
   if (!feedback) return;
@@ -426,21 +566,34 @@ async function sendBackToEmployee(taskId) {
   try {
     utils.showLoading();
 
-    await API.Tasks.addComment(
-      taskId,
-      `Client Feedback: ${task.ClientFeedback}\n\nAccount Manager: ${feedback}`
-    );
-
-    // Placeholder: Reset task for rework
-    // await API.Tasks.sendBackForRework(taskId, feedback);
-
-    console.log("Sending task back to employee:", {
-      taskId,
-      feedback,
+    // IMPLEMENTATION: Reset task status to IN_PROGRESS for rework
+    await API.Tasks.update(taskId, {
+      StatusId: TASK_STATUS.IN_PROGRESS,
+      // NOTE: These fields require backend support
+      ClientApproved: false,
+      SentToClient: false,
+      AccountManagerApproved: false,
     });
 
-    // TODO: Send notification to employee
-    utils.showSuccess(`Task sent back to ${task.AssignedToName}`);
+    // Add combined feedback comment
+    await API.Tasks.addComment(
+      taskId,
+      `[CLIENT REJECTED - NEEDS REWORK]\n\n` +
+        `CLIENT FEEDBACK:\n${clientFeedback}\n\n` +
+        `ACCOUNT MANAGER INSTRUCTIONS:\n${feedback}`
+    );
+
+    // Notify team leader/employee
+    if (task.AssignedToId) {
+      await API.Notifications.create({
+        UserId: task.AssignedToId,
+        Message: `Task "${task.Title}" rejected by client. Requires rework. Check comments for details.`,
+        TaskId: taskId,
+        ProjectId: task.ProjectId,
+      }).catch((err) => console.warn("Failed to send notification:", err));
+    }
+
+    utils.showSuccess(`Task sent back to ${task.AssignedToName} for rework`);
 
     await loadTasks();
   } catch (error) {
@@ -459,6 +612,12 @@ function setupEventListeners() {
   document
     .getElementById("searchInput")
     .addEventListener("input", handleSearch);
+
+  // File upload listener (if file input exists in modal)
+  const fileInput = document.getElementById("taskFileUpload");
+  if (fileInput) {
+    fileInput.addEventListener("change", handleFileSelection);
+  }
 }
 
 function handleSearch(e) {
@@ -469,4 +628,221 @@ function handleSearch(e) {
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(searchTerm) ? "" : "none";
   });
+}
+
+// ============================================================================
+// FILE UPLOAD FUNCTIONALITY
+// ============================================================================
+
+let selectedFiles = [];
+
+function handleFileSelection(e) {
+  selectedFiles = Array.from(e.target.files);
+  updateFileList();
+}
+
+function updateFileList() {
+  const container = document.getElementById("selectedFilesList");
+  if (!container) return;
+
+  if (selectedFiles.length === 0) {
+    container.innerHTML = '<p class="text-secondary">No files selected</p>';
+    return;
+  }
+
+  container.innerHTML = selectedFiles
+    .map(
+      (file, index) => `
+    <div class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-2); background: var(--surface-secondary); border-radius: var(--radius-sm); margin-bottom: var(--space-2);">
+      <div>
+        <i class="fa-solid fa-file"></i>
+        <span>${file.name}</span>
+        <span class="text-secondary" style="font-size: var(--text-sm);"> (${formatFileSize(
+          file.size
+        )})</span>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="removeFile(${index})" type="button">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+  `
+    )
+    .join("");
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateFileList();
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+}
+
+async function uploadTaskFiles() {
+  if (!currentTaskForReview || selectedFiles.length === 0) {
+    utils.showError("No files selected");
+    return;
+  }
+
+  try {
+    utils.showLoading();
+
+    // Upload each file
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      await API.Files.upload(currentTaskForReview.TaskId, formData);
+      console.log(`Uploaded: ${file.name}`);
+    }
+
+    utils.showSuccess(`${selectedFiles.length} file(s) uploaded successfully`);
+    selectedFiles = [];
+    updateFileList();
+
+    // Reload task details to show new attachments
+    await reviewTask(currentTaskForReview.TaskId);
+  } catch (error) {
+    console.error("Error uploading files:", error);
+    utils.showError("Failed to upload files");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// ============================================================================
+// PLACEHOLDER FUNCTIONS FOR BACKEND ENDPOINTS
+// ============================================================================
+
+/**
+ * PLACEHOLDER: Get client user ID from client/project
+ *
+ * BACKEND REQUIREMENT:
+ * - Add endpoint: GET /api/Clients/{clientId}/users
+ *   Returns: [{ userId, userName, email, role }]
+ *
+ * - Or add field to Project model: ClientUserId
+ *
+ * USAGE: To notify client when task is ready for review
+ */
+async function getClientUserId(clientId, projectId) {
+  console.warn("[PLACEHOLDER] getClientUserId - Backend endpoint needed");
+  console.log("Need endpoint: GET /api/Clients/" + clientId + "/users");
+
+  // WORKAROUND: Return null for now
+  // When backend is ready, implement:
+  // const clientUsers = await API.Clients.getUsers(clientId);
+  // return clientUsers.find(u => u.role === 'ClientAdmin')?.userId;
+
+  return null;
+}
+
+/**
+ * PLACEHOLDER: Notify client user about task ready for review
+ *
+ * BACKEND REQUIREMENT:
+ * - Ensure Notifications API accepts notifications for client users
+ * - Add email notification trigger for client users
+ *
+ * USAGE: Called when account manager approves task
+ */
+async function notifyClientUser(clientId, taskId) {
+  console.warn(
+    "[PLACEHOLDER] notifyClientUser - Requires client user association"
+  );
+
+  const clientUserId = await getClientUserId(clientId);
+
+  if (!clientUserId) {
+    console.log("[PLACEHOLDER] No client user ID found, skipping notification");
+    return;
+  }
+
+  // When backend is ready:
+  // await API.Notifications.create({
+  //   UserId: clientUserId,
+  //   Message: `Task ready for your review: ${taskTitle}`,
+  //   TaskId: taskId
+  // });
+}
+
+/**
+ * PLACEHOLDER: Submit task for account manager review (Team Leader action)
+ *
+ * BACKEND REQUIREMENT:
+ * - Add endpoint: PUT /api/Tasks/{id}/submit-for-review
+ *   Body: { notes: string }
+ *   Updates: StatusId to PENDING_AM_REVIEW, SubmittedForReview = true
+ *
+ * CURRENT WORKAROUND: Team leader can update status manually
+ */
+async function submitTaskForReview(taskId, notes) {
+  console.warn(
+    "[PLACEHOLDER] submitTaskForReview - Should be in Team Leader page"
+  );
+  console.log("Need endpoint: PUT /api/Tasks/" + taskId + "/submit-for-review");
+
+  // WORKAROUND:
+  await API.Tasks.update(taskId, {
+    StatusId: TASK_STATUS.PENDING_AM_REVIEW,
+    SubmittedForReview: true,
+  });
+
+  await API.Tasks.addComment(
+    taskId,
+    `[SUBMITTED FOR REVIEW]\n${notes || "Ready for Account Manager review"}`
+  );
+}
+
+/**
+ * PLACEHOLDER: Client approves task
+ *
+ * BACKEND REQUIREMENT:
+ * - Add endpoint: PUT /api/Tasks/{id}/client-approve
+ *   Body: { notes: string, clientUserId: int }
+ *   Updates: StatusId to CLIENT_APPROVED, ClientApproved = true
+ *
+ * - Add client portal page for task review
+ *
+ * USAGE: Called from client portal (not account manager page)
+ */
+async function clientApproveTask(taskId, notes, clientUserId) {
+  console.warn("[PLACEHOLDER] clientApproveTask - Requires client portal");
+  console.log("Need endpoint: PUT /api/Tasks/" + taskId + "/client-approve");
+
+  // When backend is ready:
+  // await API.Tasks.clientApprove(taskId, {
+  //   notes: notes,
+  //   clientUserId: clientUserId,
+  //   approved: true
+  // });
+}
+
+/**
+ * PLACEHOLDER: Client rejects task with feedback
+ *
+ * BACKEND REQUIREMENT:
+ * - Add endpoint: PUT /api/Tasks/{id}/client-reject
+ *   Body: { feedback: string, clientUserId: int }
+ *   Updates: StatusId to CLIENT_REJECTED, ClientApproved = false, ClientFeedback
+ *
+ * - Add client portal page for task review
+ *
+ * USAGE: Called from client portal (not account manager page)
+ */
+async function clientRejectTask(taskId, feedback, clientUserId) {
+  console.warn("[PLACEHOLDER] clientRejectTask - Requires client portal");
+  console.log("Need endpoint: PUT /api/Tasks/" + taskId + "/client-reject");
+
+  // When backend is ready:
+  // await API.Tasks.clientReject(taskId, {
+  //   feedback: feedback,
+  //   clientUserId: clientUserId,
+  //   approved: false
+  // });
 }

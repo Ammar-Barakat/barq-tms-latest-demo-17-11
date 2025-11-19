@@ -17,9 +17,9 @@ async function loadData() {
     // Fetch clients from API
     clients = await API.Clients.getAll().catch(() => []);
 
-    // Fetch accountants (role 3)
-    const allEmployees = await API.Employees.getAll().catch(() => []);
-    accountants = allEmployees.filter((emp) => (emp.Role || emp.RoleId) === 3);
+    // Fetch account managers (role 3)
+    const allUsers = await API.Users.getAll().catch(() => []);
+    accountants = allUsers.filter((user) => (user.RoleId || user.Role) === 3);
 
     renderClients();
     populateAccountantDropdown();
@@ -35,13 +35,14 @@ function populateAccountantDropdown() {
   const accountantSelect = document.getElementById("accountant");
 
   // Clear existing options except the first one
-  accountantSelect.innerHTML = '<option value="">Select Accountant</option>';
+  accountantSelect.innerHTML =
+    '<option value="">Select Account Manager</option>';
 
-  // Add accountant options
+  // Add account manager options
   accountants.forEach((acc) => {
     const option = document.createElement("option");
-    option.value = acc.UserId || acc.Id;
-    option.textContent = acc.Name || acc.Username || "Unknown";
+    option.value = acc.UserId || acc.userId;
+    option.textContent = acc.Name || acc.name || "Unknown";
     accountantSelect.appendChild(option);
   });
 }

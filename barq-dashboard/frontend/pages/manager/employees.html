@@ -31,9 +31,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gauge"></i
               ></span>
-              <span class="nav-item-text"
-                >Dashboard</span
-              >
+              <span class="nav-item-text">Dashboard</span>
             </a>
             <a href="tasks.html" class="nav-item">
               <span class="nav-item-icon"
@@ -45,9 +43,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-folder-open"></i
               ></span>
-              <span class="nav-item-text"
-                >Projects</span
-              >
+              <span class="nav-item-text">Projects</span>
             </a>
             <a href="employees.html" class="nav-item active">
               <span class="nav-item-icon"
@@ -65,17 +61,13 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-calendar"></i
               ></span>
-              <span class="nav-item-text"
-                >Calendar</span
-              >
+              <span class="nav-item-text">Calendar</span>
             </a>
             <a href="analytics.html" class="nav-item">
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-chart-line"></i
               ></span>
-              <span class="nav-item-text"
-                >Analytics</span
-              >
+              <span class="nav-item-text">Analytics</span>
             </a>
           </div>
           <div class="nav-section">
@@ -84,9 +76,7 @@
               <span class="nav-item-icon"
                 ><i class="fa-solid fa-gear"></i
               ></span>
-              <span class="nav-item-text"
-                >Settings</span
-              >
+              <span class="nav-item-text">Settings</span>
             </a>
             <a href="#" class="nav-item" onclick="auth.logout(); return false;">
               <span class="nav-item-icon"
@@ -140,9 +130,7 @@
         <div class="content">
           <div style="margin-bottom: var(--space-6)">
             <h2>Employees Management</h2>
-            <p
-              style="color: var(--text-secondary); margin: 0"
-            >
+            <p style="color: var(--text-secondary); margin: 0">
               Manage your team members
             </p>
           </div>
@@ -163,12 +151,13 @@
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Team Leader</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="employeesBody">
                   <tr>
-                    <td colspan="5" class="text-center" style="padding: 40px">
+                    <td colspan="6" class="text-center" style="padding: 40px">
                       <div class="spinner"></div>
                     </td>
                   </tr>
@@ -213,6 +202,21 @@
                   required
                 />
               </div>
+              <div class="form-group" id="passwordGroup">
+                <label for="password">Password *</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  name="password"
+                  required
+                  minlength="6"
+                  placeholder="Enter password (min 6 characters)"
+                />
+                <small class="form-text text-muted"
+                  >Leave blank when editing to keep current password</small
+                >
+              </div>
               <div class="form-group">
                 <label for="email">Email</label>
                 <input
@@ -248,16 +252,26 @@
               </div>
               <div class="form-group">
                 <label for="role">Role *</label>
-                <select class="form-control" id="role" name="role" required onchange="handleRoleChange()">
+                <select
+                  class="form-control"
+                  id="role"
+                  name="role"
+                  required
+                  onchange="handleRoleChange()"
+                >
                   <option value="2">Assistant Manager</option>
                   <option value="3">Account Manager</option>
                   <option value="4">Team Leader</option>
                   <option value="5">Employee</option>
                 </select>
               </div>
-              
+
               <!-- Team Leader Selection (for Employees only) -->
-              <div class="form-group" id="teamLeaderGroup" style="display:none;">
+              <div
+                class="form-group"
+                id="teamLeaderGroup"
+                style="display: none"
+              >
                 <label for="teamLeader">Team Leader</label>
                 <select class="form-control" id="teamLeader">
                   <option value="">No Team Leader</option>
@@ -265,21 +279,41 @@
               </div>
 
               <!-- Employee Assignment (for Team Leaders only) -->
-              <div class="form-group" id="managedEmployeesGroup" style="display:none;">
+              <div
+                class="form-group"
+                id="managedEmployeesGroup"
+                style="display: none"
+              >
                 <label for="managedEmployees">Assign Employees</label>
-                <select class="form-control" id="managedEmployees" multiple size="5">
-                </select>
-                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple employees</small>
+                <select
+                  class="form-control"
+                  id="managedEmployees"
+                  multiple
+                  size="5"
+                ></select>
+                <small class="form-text text-muted"
+                  >Hold Ctrl/Cmd to select multiple employees</small
+                >
               </div>
 
               <!-- Client Assignment (for Account Managers only) -->
-              <div class="form-group" id="managedClientsGroup" style="display:none;">
+              <div
+                class="form-group"
+                id="managedClientsGroup"
+                style="display: none"
+              >
                 <label for="managedClients">Assign Clients</label>
-                <select class="form-control" id="managedClients" multiple size="5">
-                </select>
-                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple clients</small>
+                <select
+                  class="form-control"
+                  id="managedClients"
+                  multiple
+                  size="5"
+                ></select>
+                <small class="form-text text-muted"
+                  >Hold Ctrl/Cmd to select multiple clients</small
+                >
               </div>
-              
+
               <div class="form-actions">
                 <button
                   type="button"

@@ -1,20 +1,14 @@
 {
   "openapi": "3.0.4",
   "info": {
-    "title": "BarqTMS.API | v1",
-    "version": "1.0.0"
+    "title": "Barq Task Management System API",
+    "description": "A comprehensive task management system for organizations",
+    "version": "v1"
   },
-  "servers": [
-    {
-      "url": "https://localhost:44383/"
-    }
-  ],
   "paths": {
     "/api/AuditLogs": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "page",
@@ -44,9 +38,7 @@
     },
     "/api/AuditLogs/project/{projectId}": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "projectId",
@@ -93,9 +85,7 @@
     },
     "/api/AuditLogs/task/{taskId}": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "taskId",
@@ -142,9 +132,7 @@
     },
     "/api/AuditLogs/user/{userId}": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "userId",
@@ -183,9 +171,7 @@
     },
     "/api/AuditLogs/department/{departmentId}": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "departmentId",
@@ -224,9 +210,7 @@
     },
     "/api/AuditLogs/recent": {
       "get": {
-        "tags": [
-          "AuditLogs"
-        ],
+        "tags": ["AuditLogs"],
         "parameters": [
           {
             "name": "count",
@@ -247,9 +231,7 @@
     },
     "/api/Auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -267,8 +249,7 @@
                 "$ref": "#/components/schemas/LoginDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -296,9 +277,7 @@
     },
     "/api/Auth/register": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -316,8 +295,7 @@
                 "$ref": "#/components/schemas/RegisterDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -345,9 +323,7 @@
     },
     "/api/Auth/refresh": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -365,8 +341,7 @@
                 "$ref": "#/components/schemas/RefreshTokenDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -394,9 +369,7 @@
     },
     "/api/Auth/logout": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "responses": {
           "200": {
             "description": "OK"
@@ -406,9 +379,7 @@
     },
     "/api/Auth/change-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -426,8 +397,7 @@
                 "$ref": "#/components/schemas/ChangePasswordDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -438,9 +408,7 @@
     },
     "/api/Auth/me": {
       "get": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "responses": {
           "200": {
             "description": "OK",
@@ -467,9 +435,7 @@
     },
     "/api/Auth/forgot-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -487,8 +453,7 @@
                 "$ref": "#/components/schemas/ForgotPasswordDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -499,9 +464,7 @@
     },
     "/api/Auth/reset-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -519,8 +482,7 @@
                 "$ref": "#/components/schemas/ResetPasswordDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -531,9 +493,7 @@
     },
     "/api/Auth/validate-reset-token": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -551,8 +511,7 @@
                 "$ref": "#/components/schemas/ValidateTokenDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -563,9 +522,7 @@
     },
     "/api/Calendar/events": {
       "post": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -583,8 +540,7 @@
                 "$ref": "#/components/schemas/CreateCalendarEventDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -610,17 +566,14 @@
         }
       },
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "startDate",
             "in": "query",
             "schema": {
               "type": "string",
-              "format": "date-time",
-              "default": null
+              "format": "date-time"
             }
           },
           {
@@ -628,8 +581,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "format": "date-time",
-              "default": null
+              "format": "date-time"
             }
           }
         ],
@@ -668,9 +620,7 @@
     },
     "/api/Calendar/events/{id}": {
       "put": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "id",
@@ -699,8 +649,7 @@
                 "$ref": "#/components/schemas/UpdateCalendarEventDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -726,9 +675,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "id",
@@ -747,9 +694,7 @@
         }
       },
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "id",
@@ -787,9 +732,7 @@
     },
     "/api/Calendar/view": {
       "post": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -807,8 +750,7 @@
                 "$ref": "#/components/schemas/CalendarFilterDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -836,9 +778,7 @@
     },
     "/api/Calendar/events/upcoming": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "days",
@@ -885,9 +825,7 @@
     },
     "/api/Calendar/stats": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK",
@@ -914,9 +852,7 @@
     },
     "/api/Calendar/events/{eventId}/attendees/{attendeeId}/status": {
       "put": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "eventId",
@@ -954,8 +890,7 @@
                 "$ref": "#/components/schemas/UpdateAttendeeStatusDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -966,9 +901,7 @@
     },
     "/api/Calendar/events/recurring/{id}/generate": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "id",
@@ -1031,9 +964,7 @@
     },
     "/api/Calendar/events/search": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "query",
@@ -1078,9 +1009,7 @@
     },
     "/api/Calendar/sync/tasks": {
       "post": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1090,9 +1019,7 @@
     },
     "/api/Calendar/sync/milestones": {
       "post": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1102,9 +1029,7 @@
     },
     "/api/Calendar/reminders/send": {
       "post": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1114,9 +1039,7 @@
     },
     "/api/Calendar/events/today": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1152,9 +1075,7 @@
     },
     "/api/Calendar/events/this-week": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1190,9 +1111,7 @@
     },
     "/api/Calendar/events/this-month": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1228,9 +1147,7 @@
     },
     "/api/Calendar/availability/{userId}": {
       "get": {
-        "tags": [
-          "Calendar"
-        ],
+        "tags": ["Calendar"],
         "parameters": [
           {
             "name": "userId",
@@ -1294,9 +1211,7 @@
     },
     "/api/Clients": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1330,9 +1245,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1350,8 +1263,7 @@
                 "$ref": "#/components/schemas/CreateClientDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1379,9 +1291,7 @@
     },
     "/api/Clients/{id}": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "parameters": [
           {
             "name": "id",
@@ -1417,9 +1327,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "parameters": [
           {
             "name": "id",
@@ -1448,8 +1356,7 @@
                 "$ref": "#/components/schemas/UpdateClientDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1458,9 +1365,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "parameters": [
           {
             "name": "id",
@@ -1481,9 +1386,7 @@
     },
     "/api/Clients/{id}/projects": {
       "get": {
-        "tags": [
-          "Clients"
-        ],
+        "tags": ["Clients"],
         "parameters": [
           {
             "name": "id",
@@ -1530,9 +1433,7 @@
     },
     "/api/Dashboard/stats": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1542,9 +1443,7 @@
     },
     "/api/Dashboard/activities": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1554,9 +1453,7 @@
     },
     "/api/Dashboard/recent-projects": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1566,9 +1463,7 @@
     },
     "/api/Dashboard/tasks-by-status": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1578,9 +1473,7 @@
     },
     "/api/Dashboard/user-stats/{userId}": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "parameters": [
           {
             "name": "userId",
@@ -1601,9 +1494,7 @@
     },
     "/api/Dashboard/team-stats": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1613,9 +1504,7 @@
     },
     "/api/Departments": {
       "get": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1649,9 +1538,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1669,8 +1556,7 @@
                 "$ref": "#/components/schemas/CreateDepartmentDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1698,9 +1584,7 @@
     },
     "/api/Departments/{id}": {
       "get": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1736,9 +1620,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1767,8 +1649,7 @@
                 "$ref": "#/components/schemas/UpdateDepartmentDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -1777,9 +1658,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1800,9 +1679,7 @@
     },
     "/api/Departments/{id}/tasks": {
       "get": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1849,9 +1726,7 @@
     },
     "/api/Departments/{id}/projects": {
       "get": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1898,9 +1773,7 @@
     },
     "/api/Departments/{id}/users": {
       "get": {
-        "tags": [
-          "Departments"
-        ],
+        "tags": ["Departments"],
         "parameters": [
           {
             "name": "id",
@@ -1947,9 +1820,7 @@
     },
     "/api/Files/upload/{taskId}": {
       "post": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "parameters": [
           {
             "name": "taskId",
@@ -1972,10 +1843,14 @@
                     "format": "binary"
                   }
                 }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2003,9 +1878,7 @@
     },
     "/api/Files/download/{fileId}": {
       "get": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "parameters": [
           {
             "name": "fileId",
@@ -2026,9 +1899,7 @@
     },
     "/api/Files/{fileId}": {
       "delete": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "parameters": [
           {
             "name": "fileId",
@@ -2049,9 +1920,7 @@
     },
     "/api/Files/info": {
       "get": {
-        "tags": [
-          "Files"
-        ],
+        "tags": ["Files"],
         "responses": {
           "200": {
             "description": "OK"
@@ -2061,9 +1930,7 @@
     },
     "/api/Health": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "responses": {
           "200": {
             "description": "OK"
@@ -2073,9 +1940,7 @@
     },
     "/api/Health/info": {
       "get": {
-        "tags": [
-          "Health"
-        ],
+        "tags": ["Health"],
         "responses": {
           "200": {
             "description": "OK"
@@ -2085,9 +1950,7 @@
     },
     "/api/Notifications/user/{userId}": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "userId",
@@ -2134,9 +1997,7 @@
     },
     "/api/Notifications/user/{userId}/unread": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "userId",
@@ -2183,9 +2044,7 @@
     },
     "/api/Notifications/user/{userId}/count/unread": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "userId",
@@ -2226,9 +2085,7 @@
     },
     "/api/Notifications/{id}/read": {
       "put": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "id",
@@ -2249,9 +2106,7 @@
     },
     "/api/Notifications/user/{userId}/read-all": {
       "put": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "userId",
@@ -2272,9 +2127,7 @@
     },
     "/api/Notifications/{id}": {
       "delete": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "id",
@@ -2293,9 +2146,7 @@
         }
       },
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "id",
@@ -2331,9 +2182,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "id",
@@ -2362,8 +2211,7 @@
                 "$ref": "#/components/schemas/UpdateNotificationDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2374,9 +2222,7 @@
     },
     "/api/Notifications/user/{userId}/read": {
       "delete": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "userId",
@@ -2397,9 +2243,7 @@
     },
     "/api/Notifications": {
       "post": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2417,8 +2261,7 @@
                 "$ref": "#/components/schemas/CreateNotificationDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2446,9 +2289,7 @@
     },
     "/api/Notifications/{id}/details": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "parameters": [
           {
             "name": "id",
@@ -2486,9 +2327,7 @@
     },
     "/api/Projects": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "responses": {
           "200": {
             "description": "OK",
@@ -2522,9 +2361,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2542,8 +2379,7 @@
                 "$ref": "#/components/schemas/CreateProjectDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2571,9 +2407,7 @@
     },
     "/api/Projects/{id}": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "parameters": [
           {
             "name": "id",
@@ -2609,9 +2443,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "parameters": [
           {
             "name": "id",
@@ -2640,8 +2472,7 @@
                 "$ref": "#/components/schemas/UpdateProjectDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2650,9 +2481,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "parameters": [
           {
             "name": "id",
@@ -2673,9 +2502,7 @@
     },
     "/api/Projects/{id}/tasks": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "parameters": [
           {
             "name": "id",
@@ -2722,9 +2549,7 @@
     },
     "/api/Projects/{id}/auditlogs": {
       "get": {
-        "tags": [
-          "Projects"
-        ],
+        "tags": ["Projects"],
         "parameters": [
           {
             "name": "id",
@@ -2771,9 +2596,7 @@
     },
     "/api/Roles": {
       "get": {
-        "tags": [
-          "Roles"
-        ],
+        "tags": ["Roles"],
         "responses": {
           "200": {
             "description": "OK",
@@ -2807,9 +2630,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Roles"
-        ],
+        "tags": ["Roles"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2827,8 +2648,7 @@
                 "$ref": "#/components/schemas/CreateRoleDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2856,9 +2676,7 @@
     },
     "/api/Roles/{id}": {
       "get": {
-        "tags": [
-          "Roles"
-        ],
+        "tags": ["Roles"],
         "parameters": [
           {
             "name": "id",
@@ -2894,9 +2712,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Roles"
-        ],
+        "tags": ["Roles"],
         "parameters": [
           {
             "name": "id",
@@ -2925,8 +2741,7 @@
                 "$ref": "#/components/schemas/CreateRoleDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2935,9 +2750,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Roles"
-        ],
+        "tags": ["Roles"],
         "parameters": [
           {
             "name": "id",
@@ -2958,9 +2771,7 @@
     },
     "/api/Search": {
       "get": {
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "parameters": [
           {
             "name": "q",
@@ -2976,8 +2787,7 @@
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "default": null
+              }
             }
           },
           {
@@ -3025,9 +2835,7 @@
     },
     "/api/Search/tasks": {
       "get": {
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "parameters": [
           {
             "name": "q",
@@ -3041,8 +2849,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           },
           {
@@ -3050,8 +2857,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           },
           {
@@ -3059,8 +2865,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           },
           {
@@ -3068,8 +2873,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           },
           {
@@ -3077,8 +2881,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           }
         ],
@@ -3117,9 +2920,7 @@
     },
     "/api/Search/projects": {
       "get": {
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "parameters": [
           {
             "name": "q",
@@ -3133,8 +2934,7 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           }
         ],
@@ -3173,9 +2973,7 @@
     },
     "/api/Search/users": {
       "get": {
-        "tags": [
-          "Search"
-        ],
+        "tags": ["Search"],
         "parameters": [
           {
             "name": "q",
@@ -3189,16 +2987,14 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32",
-              "default": null
+              "format": "int32"
             }
           },
           {
             "name": "role",
             "in": "query",
             "schema": {
-              "type": "string",
-              "default": null
+              "type": "string"
             }
           }
         ],
@@ -3237,9 +3033,7 @@
     },
     "/api/Statistics/dashboard": {
       "get": {
-        "tags": [
-          "Statistics"
-        ],
+        "tags": ["Statistics"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3266,9 +3060,7 @@
     },
     "/api/Statistics/tasks-by-status": {
       "get": {
-        "tags": [
-          "Statistics"
-        ],
+        "tags": ["Statistics"],
         "responses": {
           "200": {
             "description": "OK"
@@ -3278,9 +3070,7 @@
     },
     "/api/Statistics/tasks-by-priority": {
       "get": {
-        "tags": [
-          "Statistics"
-        ],
+        "tags": ["Statistics"],
         "responses": {
           "200": {
             "description": "OK"
@@ -3290,9 +3080,7 @@
     },
     "/api/Statistics/project-progress": {
       "get": {
-        "tags": [
-          "Statistics"
-        ],
+        "tags": ["Statistics"],
         "responses": {
           "200": {
             "description": "OK"
@@ -3302,9 +3090,7 @@
     },
     "/api/Tasks": {
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3338,9 +3124,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3358,8 +3142,7 @@
                 "$ref": "#/components/schemas/CreateTaskDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -3387,9 +3170,7 @@
     },
     "/api/Tasks/{id}": {
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3425,9 +3206,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3456,8 +3235,7 @@
                 "$ref": "#/components/schemas/UpdateTaskDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -3466,9 +3244,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3480,49 +3256,6 @@
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/Tasks/{id}/status": {
-      "put": {
-        "tags": [
-          "Tasks"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTaskStatusDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTaskStatusDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTaskStatusDto"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3532,9 +3265,7 @@
     },
     "/api/Tasks/{id}/request-complete": {
       "put": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3555,9 +3286,7 @@
     },
     "/api/Tasks/{id}/review-completion": {
       "put": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3586,8 +3315,47 @@
                 "$ref": "#/components/schemas/ReviewTaskCompletionDto"
               }
             }
-          },
-          "required": true
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Tasks/{id}/extend-deadline": {
+      "put": {
+        "tags": ["Tasks"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendTaskDeadlineDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendTaskDeadlineDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendTaskDeadlineDto"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -3598,9 +3366,7 @@
     },
     "/api/Tasks/{id}/comments": {
       "post": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3629,8 +3395,7 @@
                 "$ref": "#/components/schemas/CreateTaskCommentDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -3656,9 +3421,7 @@
         }
       },
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3705,9 +3468,7 @@
     },
     "/api/Tasks/{id}/attachments": {
       "post": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3736,8 +3497,7 @@
                 "$ref": "#/components/schemas/AttachmentDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -3763,9 +3523,7 @@
         }
       },
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3812,9 +3570,7 @@
     },
     "/api/Tasks/{id}/history": {
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
@@ -3861,9 +3617,7 @@
     },
     "/api/Users": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3897,9 +3651,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3917,8 +3669,7 @@
                 "$ref": "#/components/schemas/CreateUserDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -3946,9 +3697,7 @@
     },
     "/api/Users/{id}": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "parameters": [
           {
             "name": "id",
@@ -3984,9 +3733,7 @@
         }
       },
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "parameters": [
           {
             "name": "id",
@@ -4015,8 +3762,7 @@
                 "$ref": "#/components/schemas/UpdateUserDto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -4025,9 +3771,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "parameters": [
           {
             "name": "id",
@@ -4048,9 +3792,7 @@
     },
     "/api/Users/{id}/departments": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "parameters": [
           {
             "name": "id",
@@ -4097,9 +3839,7 @@
     },
     "/api/Users/{id}/tasks": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "parameters": [
           {
             "name": "id",
@@ -4150,238 +3890,256 @@
       "AttachmentDto": {
         "type": "object",
         "properties": {
-          "fileId": {
+          "FileId": {
             "type": "integer",
             "format": "int32"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "fileName": {
-            "type": "string"
+          "FileName": {
+            "type": "string",
+            "nullable": true
           },
-          "fileUrl": {
-            "type": "string"
+          "FileUrl": {
+            "type": "string",
+            "nullable": true
           },
-          "uploadedBy": {
+          "UploadedBy": {
             "type": "integer",
             "format": "int32"
           },
-          "uploadedByName": {
-            "type": "string"
+          "UploadedByName": {
+            "type": "string",
+            "nullable": true
           },
-          "uploadedAt": {
+          "UploadedAt": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AttendeeStatus": {
-        "type": "integer"
+        "enum": [1, 2, 3, 4, 5],
+        "type": "integer",
+        "format": "int32"
       },
       "AvailabilitySlotDto": {
         "type": "object",
         "properties": {
-          "startTime": {
+          "StartTime": {
             "type": "string",
             "format": "date-time"
           },
-          "endTime": {
+          "EndTime": {
             "type": "string",
             "format": "date-time"
           },
-          "isAvailable": {
+          "IsAvailable": {
             "type": "boolean"
           },
-          "duration": {
-            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
-            "type": "string"
+          "Duration": {
+            "type": "string",
+            "format": "date-span"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarEventAttendeeDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "Id": {
             "type": "integer",
             "format": "int32"
           },
-          "calendarEventId": {
+          "CalendarEventId": {
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "userName": {
-            "type": "string"
+          "UserName": {
+            "type": "string",
+            "nullable": true
           },
-          "userEmail": {
-            "type": "string"
+          "UserEmail": {
+            "type": "string",
+            "nullable": true
           },
-          "status": {
+          "Status": {
             "$ref": "#/components/schemas/AttendeeStatus"
           },
-          "isOrganizer": {
+          "IsOrganizer": {
             "type": "boolean"
           },
-          "responseDate": {
+          "ResponseDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "notes": {
+          "Notes": {
             "type": "string",
             "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarEventDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "Id": {
             "type": "integer",
             "format": "int32"
           },
-          "title": {
-            "type": "string"
-          },
-          "description": {
+          "Title": {
             "type": "string",
             "nullable": true
           },
-          "startDate": {
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "StartDate": {
             "type": "string",
             "format": "date-time"
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time"
           },
-          "isAllDay": {
+          "IsAllDay": {
             "type": "boolean"
           },
-          "color": {
-            "type": "string"
+          "Color": {
+            "type": "string",
+            "nullable": true
           },
-          "eventType": {
+          "EventType": {
             "$ref": "#/components/schemas/CalendarEventType"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "departmentId": {
+          "DepartmentId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "isRecurring": {
+          "IsRecurring": {
             "type": "boolean"
           },
-          "recurrencePattern": {
-            "$ref": "#/components/schemas/NullableOfRecurrencePattern"
+          "RecurrencePattern": {
+            "$ref": "#/components/schemas/RecurrencePattern"
           },
-          "recurrenceInterval": {
+          "RecurrenceInterval": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "recurrenceEndDate": {
+          "RecurrenceEndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "recurrenceDays": {
+          "RecurrenceDays": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           },
-          "updatedAt": {
+          "UpdatedAt": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "taskTitle": {
+          "TaskTitle": {
             "type": "string",
             "nullable": true
           },
-          "projectName": {
+          "ProjectName": {
             "type": "string",
             "nullable": true
           },
-          "userName": {
+          "UserName": {
             "type": "string",
             "nullable": true
           },
-          "departmentName": {
+          "DepartmentName": {
             "type": "string",
             "nullable": true
           },
-          "createdByUserName": {
-            "type": "string"
+          "CreatedByUserName": {
+            "type": "string",
+            "nullable": true
           },
-          "attendees": {
+          "Attendees": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CalendarEventAttendeeDto"
-            }
+            },
+            "nullable": true
           },
-          "reminders": {
+          "Reminders": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CalendarReminderDto"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarEventType": {
-        "type": "integer"
+        "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "type": "integer",
+        "format": "int32"
       },
       "CalendarFilterDto": {
         "type": "object",
         "properties": {
-          "startDate": {
+          "StartDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "eventTypes": {
+          "EventTypes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CalendarEventType"
             },
             "nullable": true
           },
-          "projectIds": {
+          "ProjectIds": {
             "type": "array",
             "items": {
               "type": "integer",
@@ -4389,7 +4147,7 @@
             },
             "nullable": true
           },
-          "userIds": {
+          "UserIds": {
             "type": "array",
             "items": {
               "type": "integer",
@@ -4397,7 +4155,7 @@
             },
             "nullable": true
           },
-          "departmentIds": {
+          "DepartmentIds": {
             "type": "array",
             "items": {
               "type": "integer",
@@ -4405,1273 +4163,1417 @@
             },
             "nullable": true
           },
-          "includeRecurring": {
+          "IncludeRecurring": {
             "type": "boolean"
           },
-          "viewType": {
+          "ViewType": {
             "$ref": "#/components/schemas/CalendarViewType"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarReminderDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "Id": {
             "type": "integer",
             "format": "int32"
           },
-          "calendarEventId": {
+          "CalendarEventId": {
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "userName": {
-            "type": "string"
+          "UserName": {
+            "type": "string",
+            "nullable": true
           },
-          "minutesBefore": {
+          "MinutesBefore": {
             "type": "integer",
             "format": "int32"
           },
-          "type": {
+          "Type": {
             "$ref": "#/components/schemas/ReminderType"
           },
-          "isActive": {
+          "IsActive": {
             "type": "boolean"
           },
-          "sentAt": {
+          "SentAt": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarStatsDto": {
         "type": "object",
         "properties": {
-          "totalEvents": {
+          "TotalEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "upcomingEvents": {
+          "UpcomingEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "overdueEvents": {
+          "OverdueEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "todayEvents": {
+          "TodayEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "thisWeekEvents": {
+          "ThisWeekEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "thisMonthEvents": {
+          "ThisMonthEvents": {
             "type": "integer",
             "format": "int32"
           },
-          "eventsByType": {
+          "EventsByType": {
+            "type": "object",
+            "properties": {
+              "Task": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Meeting": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Deadline": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Milestone": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Holiday": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Personal": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "ProjectStart": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "ProjectEnd": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "Custom": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "additionalProperties": false,
+            "nullable": true
+          },
+          "EventsByProject": {
             "type": "object",
             "additionalProperties": {
               "type": "integer",
               "format": "int32"
-            }
+            },
+            "nullable": true
           },
-          "eventsByProject": {
+          "EventsByUser": {
             "type": "object",
             "additionalProperties": {
               "type": "integer",
               "format": "int32"
-            }
-          },
-          "eventsByUser": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "integer",
-              "format": "int32"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarViewDto": {
         "type": "object",
         "properties": {
-          "startDate": {
+          "StartDate": {
             "type": "string",
             "format": "date-time"
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time"
           },
-          "events": {
+          "Events": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CalendarEventDto"
-            }
+            },
+            "nullable": true
           },
-          "viewType": {
+          "ViewType": {
             "$ref": "#/components/schemas/CalendarViewType"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CalendarViewType": {
-        "type": "integer"
+        "enum": [1, 2, 3, 4, 5],
+        "type": "integer",
+        "format": "int32"
       },
       "ChangePasswordDto": {
-        "required": [
-          "currentPassword",
-          "newPassword",
-          "confirmPassword"
-        ],
+        "required": ["ConfirmPassword", "CurrentPassword", "NewPassword"],
         "type": "object",
         "properties": {
-          "currentPassword": {
+          "CurrentPassword": {
+            "minLength": 1,
             "type": "string"
           },
-          "newPassword": {
+          "NewPassword": {
             "minLength": 6,
             "type": "string"
           },
-          "confirmPassword": {
+          "ConfirmPassword": {
+            "minLength": 1,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ClientDto": {
         "type": "object",
         "properties": {
-          "clientId": {
+          "ClientId": {
             "type": "integer",
             "format": "int32"
           },
-          "name": {
-            "type": "string"
+          "Name": {
+            "type": "string",
+            "nullable": true
           },
-          "email": {
-            "type": "string"
+          "Email": {
+            "type": "string",
+            "nullable": true
           },
-          "projectCount": {
+          "ProjectCount": {
             "type": "integer",
             "format": "int32"
           },
-          "phoneNumber": {
+          "PhoneNumber": {
             "type": "string",
             "nullable": true
           },
-          "company": {
+          "Company": {
             "type": "string",
             "nullable": true
           },
-          "address": {
+          "Address": {
             "type": "string",
             "nullable": true
           },
-          "accountManagerId": {
+          "AccountManagerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
-          "accountManagerName": {
+          "AccountManagerName": {
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateCalendarEventDto": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string"
-          },
-          "description": {
+          "Title": {
             "type": "string",
             "nullable": true
           },
-          "startDate": {
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "StartDate": {
             "type": "string",
             "format": "date-time"
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time"
           },
-          "isAllDay": {
+          "IsAllDay": {
             "type": "boolean"
           },
-          "color": {
-            "type": "string"
+          "Color": {
+            "type": "string",
+            "nullable": true
           },
-          "eventType": {
+          "EventType": {
             "$ref": "#/components/schemas/CalendarEventType"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "departmentId": {
+          "DepartmentId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "isRecurring": {
+          "IsRecurring": {
             "type": "boolean"
           },
-          "recurrencePattern": {
-            "$ref": "#/components/schemas/NullableOfRecurrencePattern"
+          "RecurrencePattern": {
+            "$ref": "#/components/schemas/RecurrencePattern"
           },
-          "recurrenceInterval": {
+          "RecurrenceInterval": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "recurrenceEndDate": {
+          "RecurrenceEndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "recurrenceDays": {
+          "RecurrenceDays": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "nullable": true
           },
-          "attendeeUserIds": {
+          "AttendeeUserIds": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int32"
-            }
+            },
+            "nullable": true
           },
-          "reminders": {
+          "Reminders": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateCalendarReminderDto"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateCalendarReminderDto": {
         "type": "object",
         "properties": {
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "minutesBefore": {
+          "MinutesBefore": {
             "type": "integer",
             "format": "int32"
           },
-          "type": {
+          "Type": {
             "$ref": "#/components/schemas/ReminderType"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateClientDto": {
-        "required": [
-          "name",
-          "email",
-          "accountManagerId"
-        ],
+        "required": ["Email", "Name"],
         "type": "object",
         "properties": {
-          "name": {
+          "Name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           },
-          "email": {
+          "Email": {
             "maxLength": 255,
             "minLength": 0,
-            "type": "string"
+            "type": "string",
+            "format": "email"
           },
-          "phoneNumber": {
+          "PhoneNumber": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "company": {
+          "Company": {
             "maxLength": 255,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "address": {
+          "Address": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "accountManagerId": {
+          "AccountManagerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateDepartmentDto": {
-        "required": [
-          "deptName"
-        ],
+        "required": ["DeptName"],
         "type": "object",
         "properties": {
-          "deptName": {
+          "DeptName": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateNotificationDto": {
         "type": "object",
         "properties": {
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "message": {
-            "type": "string"
+          "Message": {
+            "type": "string",
+            "nullable": true
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateProjectDto": {
-        "required": [
-          "projectName",
-          "clientId"
-        ],
+        "required": ["ProjectName"],
         "type": "object",
         "properties": {
-          "projectName": {
+          "ProjectName": {
             "maxLength": 200,
             "minLength": 0,
             "type": "string"
           },
-          "description": {
+          "Description": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "clientId": {
+          "ClientId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
-          "startDate": {
+          "StartDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateRoleDto": {
-        "required": [
-          "roleName"
-        ],
+        "required": ["RoleName"],
         "type": "object",
         "properties": {
-          "roleName": {
+          "RoleName": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateTaskCommentDto": {
-        "required": [
-          "comment"
-        ],
+        "required": ["Comment"],
         "type": "object",
         "properties": {
-          "comment": {
+          "Comment": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateTaskDto": {
         "required": [
-          "title",
-          "priorityId",
-          "statusId",
-          "deptId",
-          "projectId",
-          "driveFolderLink"
+          "DeptId",
+          "DriveFolderLink",
+          "PriorityId",
+          "StatusId",
+          "Title"
         ],
         "type": "object",
         "properties": {
-          "title": {
+          "Title": {
             "maxLength": 200,
             "minLength": 0,
             "type": "string"
           },
-          "description": {
+          "Description": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "priorityId": {
+          "PriorityId": {
             "type": "integer",
             "format": "int32"
           },
-          "statusId": {
+          "StatusId": {
             "type": "integer",
             "format": "int32"
           },
-          "dueDate": {
+          "DueDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "assignedTo": {
+          "AssignedTo": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "deptId": {
+          "DeptId": {
             "type": "integer",
             "format": "int32"
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
-          "driveFolderLink": {
+          "DriveFolderLink": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string"
           },
-          "materialDriveFolderLink": {
+          "MaterialDriveFolderLink": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "CreateUserDto": {
-        "required": [
-          "name",
-          "username",
-          "role"
-        ],
+        "required": ["Name", "Role", "Username"],
         "type": "object",
         "properties": {
-          "name": {
+          "Name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           },
-          "username": {
+          "Username": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string"
           },
-          "email": {
+          "Email": {
             "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "Position": {
+            "maxLength": 100,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "role": {
+          "Role": {
             "$ref": "#/components/schemas/UserRole"
           },
-          "departmentIds": {
+          "TeamLeaderId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "DepartmentIds": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int32"
-            }
+            },
+            "nullable": true
+          },
+          "ManagedEmployeeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "ManagedClientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "DashboardStats": {
         "type": "object",
         "properties": {
-          "totalTasks": {
+          "TotalTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "pendingTasks": {
+          "PendingTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "inProgressTasks": {
+          "InProgressTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "completedTasks": {
+          "CompletedTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "overdueTasks": {
+          "OverdueTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "totalProjects": {
+          "TotalProjects": {
             "type": "integer",
             "format": "int32"
           },
-          "activeProjects": {
+          "ActiveProjects": {
             "type": "integer",
             "format": "int32"
           },
-          "completedProjects": {
+          "CompletedProjects": {
             "type": "integer",
             "format": "int32"
           },
-          "totalUsers": {
+          "TotalUsers": {
             "type": "integer",
             "format": "int32"
           },
-          "totalDepartments": {
+          "TotalDepartments": {
             "type": "integer",
             "format": "int32"
           },
-          "highPriorityTasks": {
+          "HighPriorityTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "mediumPriorityTasks": {
+          "MediumPriorityTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "lowPriorityTasks": {
+          "LowPriorityTasks": {
             "type": "integer",
             "format": "int32"
           },
-          "tasksCompletedThisWeek": {
+          "TasksCompletedThisWeek": {
             "type": "integer",
             "format": "int32"
           },
-          "recentTasks": {
+          "RecentTasks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TaskSummary"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "DepartmentDto": {
         "type": "object",
         "properties": {
-          "deptId": {
+          "DeptId": {
             "type": "integer",
             "format": "int32"
           },
-          "deptName": {
-            "type": "string"
+          "DeptName": {
+            "type": "string",
+            "nullable": true
           },
-          "userCount": {
+          "UserCount": {
             "type": "integer",
             "format": "int32"
           },
-          "taskCount": {
+          "TaskCount": {
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "additionalProperties": false
+      },
+      "ExtendTaskDeadlineDto": {
+        "required": ["NewDueDate", "Reason"],
+        "type": "object",
+        "properties": {
+          "NewDueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Reason": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "ForgotPasswordDto": {
-        "required": [
-          "userName"
-        ],
+        "required": ["UserName"],
         "type": "object",
         "properties": {
-          "userName": {
+          "UserName": {
+            "minLength": 1,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "LoginDto": {
-        "required": [
-          "userName",
-          "password"
-        ],
+        "required": ["Password", "UserName"],
         "type": "object",
         "properties": {
-          "userName": {
+          "UserName": {
+            "minLength": 1,
             "type": "string"
           },
-          "password": {
+          "Password": {
             "minLength": 6,
             "type": "string"
           },
-          "rememberMe": {
+          "RememberMe": {
             "type": "boolean"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "LoginResponseDto": {
         "type": "object",
         "properties": {
-          "user": {
+          "User": {
             "$ref": "#/components/schemas/UserDto"
           },
-          "token": {
-            "type": "string"
+          "Token": {
+            "type": "string",
+            "nullable": true
           },
-          "refreshToken": {
-            "type": "string"
+          "RefreshToken": {
+            "type": "string",
+            "nullable": true
           },
-          "expiresIn": {
+          "ExpiresIn": {
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "NotificationDetailsDto": {
         "type": "object",
         "properties": {
-          "notifId": {
+          "NotifId": {
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "message": {
-            "type": "string"
+          "Message": {
+            "type": "string",
+            "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           },
-          "isRead": {
+          "IsRead": {
             "type": "boolean"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "taskTitle": {
+          "TaskTitle": {
             "type": "string",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectName": {
+          "ProjectName": {
             "type": "string",
             "nullable": true
           },
-          "taskNotes": {
+          "TaskNotes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TaskCommentDto"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "NotificationDto": {
         "type": "object",
         "properties": {
-          "notifId": {
+          "NotifId": {
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "message": {
-            "type": "string"
+          "Message": {
+            "type": "string",
+            "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           },
-          "isRead": {
+          "IsRead": {
             "type": "boolean"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "taskTitle": {
+          "TaskTitle": {
             "type": "string",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectName": {
+          "ProjectName": {
             "type": "string",
             "nullable": true
           }
-        }
-      },
-      "NullableOfCalendarEventType": {
-        "type": "integer",
-        "nullable": true
-      },
-      "NullableOfRecurrencePattern": {
-        "type": "integer",
-        "nullable": true
-      },
-      "NullableOfUserRole": {
-        "type": "integer",
-        "nullable": true
+        },
+        "additionalProperties": false
       },
       "ProjectDto": {
         "type": "object",
         "properties": {
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32"
           },
-          "projectName": {
-            "type": "string"
-          },
-          "description": {
+          "ProjectName": {
             "type": "string",
             "nullable": true
           },
-          "clientId": {
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "ClientId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
-          "clientName": {
-            "type": "string"
+          "ClientName": {
+            "type": "string",
+            "nullable": true
           },
-          "startDate": {
+          "StartDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "endDate": {
+          "EndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "taskCount": {
+          "TaskCount": {
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ProjectHistoryDto": {
         "type": "object",
         "properties": {
-          "historyId": {
+          "HistoryId": {
             "type": "integer",
             "format": "int32"
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32"
           },
-          "projectName": {
-            "type": "string"
+          "ProjectName": {
+            "type": "string",
+            "nullable": true
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "userName": {
-            "type": "string"
+          "UserName": {
+            "type": "string",
+            "nullable": true
           },
-          "action": {
-            "type": "string"
+          "Action": {
+            "type": "string",
+            "nullable": true
           },
-          "actionDate": {
+          "ActionDate": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
+      },
+      "RecurrencePattern": {
+        "enum": [1, 2, 3, 4, 5, 6],
+        "type": "integer",
+        "format": "int32"
       },
       "RefreshTokenDto": {
-        "required": [
-          "refreshToken"
-        ],
+        "required": ["RefreshToken"],
         "type": "object",
         "properties": {
-          "refreshToken": {
+          "RefreshToken": {
+            "minLength": 1,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "RegisterDto": {
-        "required": [
-          "name",
-          "userName",
-          "password",
-          "confirmPassword",
-          "role"
-        ],
+        "required": ["ConfirmPassword", "Name", "Password", "Role", "UserName"],
         "type": "object",
         "properties": {
-          "name": {
+          "Name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           },
-          "userName": {
+          "UserName": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string"
           },
-          "email": {
+          "Email": {
             "maxLength": 255,
             "minLength": 0,
             "type": "string",
+            "format": "email",
             "nullable": true
           },
-          "password": {
+          "Password": {
             "maxLength": 255,
             "minLength": 0,
             "type": "string"
           },
-          "confirmPassword": {
+          "ConfirmPassword": {
+            "minLength": 1,
             "type": "string"
           },
-          "role": {
+          "Role": {
             "$ref": "#/components/schemas/UserRole"
           },
-          "departmentIds": {
+          "DepartmentIds": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int32"
-            }
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ReminderType": {
-        "type": "integer"
+        "enum": [1, 2, 3],
+        "type": "integer",
+        "format": "int32"
       },
       "ResetPasswordDto": {
-        "required": [
-          "token",
-          "newPassword",
-          "confirmPassword"
-        ],
+        "required": ["ConfirmPassword", "NewPassword", "Token"],
         "type": "object",
         "properties": {
-          "token": {
+          "Token": {
+            "minLength": 1,
             "type": "string"
           },
-          "newPassword": {
+          "NewPassword": {
             "minLength": 6,
             "type": "string"
           },
-          "confirmPassword": {
+          "ConfirmPassword": {
+            "minLength": 1,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ReviewTaskCompletionDto": {
         "type": "object",
         "properties": {
-          "approve": {
+          "Approve": {
             "type": "boolean"
           },
-          "notes": {
+          "Notes": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "newDueDate": {
+          "NewDueDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "RoleDto": {
         "type": "object",
         "properties": {
-          "roleId": {
+          "RoleId": {
             "type": "integer",
             "format": "int32"
           },
-          "roleName": {
-            "type": "string"
+          "RoleName": {
+            "type": "string",
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "SearchResultsDto": {
         "type": "object",
         "properties": {
-          "query": {
-            "type": "string"
+          "Query": {
+            "type": "string",
+            "nullable": true
           },
-          "tasks": {
+          "Tasks": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TaskDto"
-            }
+            },
+            "nullable": true
           },
-          "projects": {
+          "Projects": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProjectDto"
-            }
+            },
+            "nullable": true
           },
-          "users": {
+          "Users": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UserDto"
-            }
+            },
+            "nullable": true
           },
-          "departments": {
+          "Departments": {
             "type": "array",
-            "items": {}
+            "items": {
+              "$ref": "#/components/schemas/DepartmentDto"
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TaskCommentDto": {
         "type": "object",
         "properties": {
-          "commentId": {
+          "CommentId": {
             "type": "integer",
             "format": "int32"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "userName": {
-            "type": "string"
+          "UserName": {
+            "type": "string",
+            "nullable": true
           },
-          "comment": {
-            "type": "string"
+          "Comment": {
+            "type": "string",
+            "nullable": true
           },
-          "createdAt": {
+          "CreatedAt": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TaskDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "title": {
-            "type": "string"
-          },
-          "description": {
+          "Title": {
             "type": "string",
             "nullable": true
           },
-          "priorityId": {
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "PriorityId": {
             "type": "integer",
             "format": "int32"
           },
-          "priorityLevel": {
-            "type": "string"
+          "PriorityLevel": {
+            "type": "string",
+            "nullable": true
           },
-          "statusId": {
+          "StatusId": {
             "type": "integer",
             "format": "int32"
           },
-          "statusName": {
-            "type": "string"
+          "StatusName": {
+            "type": "string",
+            "nullable": true
           },
-          "dueDate": {
+          "DueDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "createdBy": {
+          "CreatedBy": {
             "type": "integer",
             "format": "int32"
           },
-          "createdByName": {
-            "type": "string"
+          "CreatedByName": {
+            "type": "string",
+            "nullable": true
           },
-          "assignedTo": {
+          "AssignedTo": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "assignedToName": {
+          "AssignedToName": {
             "type": "string",
             "nullable": true
           },
-          "deptId": {
+          "DeptId": {
             "type": "integer",
             "format": "int32"
           },
-          "deptName": {
-            "type": "string"
+          "DeptName": {
+            "type": "string",
+            "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ProjectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "CommentCount": {
             "type": "integer",
             "format": "int32"
           },
-          "projectName": {
-            "type": "string"
-          },
-          "commentCount": {
+          "AttachmentCount": {
             "type": "integer",
             "format": "int32"
           },
-          "attachmentCount": {
-            "type": "integer",
-            "format": "int32"
+          "DriveFolderLink": {
+            "type": "string",
+            "nullable": true
           },
-          "driveFolderLink": {
-            "type": "string"
-          },
-          "materialDriveFolderLink": {
+          "MaterialDriveFolderLink": {
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TaskHistoryDto": {
         "type": "object",
         "properties": {
-          "historyId": {
+          "HistoryId": {
             "type": "integer",
             "format": "int32"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "taskTitle": {
-            "type": "string"
+          "TaskTitle": {
+            "type": "string",
+            "nullable": true
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "userName": {
-            "type": "string"
+          "UserName": {
+            "type": "string",
+            "nullable": true
           },
-          "action": {
-            "type": "string"
+          "Action": {
+            "type": "string",
+            "nullable": true
           },
-          "actionDate": {
+          "ActionDate": {
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TaskListDto": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "title": {
-            "type": "string"
+          "Title": {
+            "type": "string",
+            "nullable": true
           },
-          "priorityId": {
+          "PriorityId": {
             "type": "integer",
             "format": "int32"
           },
-          "priorityLevel": {
-            "type": "string"
+          "PriorityLevel": {
+            "type": "string",
+            "nullable": true
           },
-          "statusId": {
+          "StatusId": {
             "type": "integer",
             "format": "int32"
           },
-          "statusName": {
-            "type": "string"
+          "StatusName": {
+            "type": "string",
+            "nullable": true
           },
-          "dueDate": {
+          "DueDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "assignedTo": {
+          "AssignedTo": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "assignedToName": {
+          "AssignedToName": {
             "type": "string",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ProjectName": {
+            "type": "string",
+            "nullable": true
+          },
+          "CommentCount": {
             "type": "integer",
             "format": "int32"
           },
-          "projectName": {
-            "type": "string"
-          },
-          "commentCount": {
+          "AttachmentCount": {
             "type": "integer",
             "format": "int32"
           },
-          "attachmentCount": {
-            "type": "integer",
-            "format": "int32"
+          "DriveFolderLink": {
+            "type": "string",
+            "nullable": true
           },
-          "driveFolderLink": {
-            "type": "string"
-          },
-          "materialDriveFolderLink": {
+          "MaterialDriveFolderLink": {
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TaskSummary": {
         "type": "object",
         "properties": {
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32"
           },
-          "title": {
-            "type": "string"
+          "Title": {
+            "type": "string",
+            "nullable": true
           },
-          "statusName": {
-            "type": "string"
+          "StatusName": {
+            "type": "string",
+            "nullable": true
           },
-          "dueDate": {
+          "DueDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateAttendeeStatusDto": {
         "type": "object",
         "properties": {
-          "status": {
+          "Status": {
             "$ref": "#/components/schemas/AttendeeStatus"
           },
-          "notes": {
+          "Notes": {
             "type": "string",
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateCalendarEventDto": {
         "type": "object",
         "properties": {
-          "title": {
+          "Title": {
             "type": "string",
             "nullable": true
           },
-          "description": {
+          "Description": {
             "type": "string",
             "nullable": true
           },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "endDate": {
+          "StartDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "isAllDay": {
+          "EndDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "IsAllDay": {
             "type": "boolean",
             "nullable": true
           },
-          "color": {
+          "Color": {
             "type": "string",
             "nullable": true
           },
-          "eventType": {
-            "$ref": "#/components/schemas/NullableOfCalendarEventType"
+          "EventType": {
+            "$ref": "#/components/schemas/CalendarEventType"
           },
-          "taskId": {
+          "TaskId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "projectId": {
+          "ProjectId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "departmentId": {
+          "DepartmentId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "isRecurring": {
+          "IsRecurring": {
             "type": "boolean",
             "nullable": true
           },
-          "recurrencePattern": {
-            "$ref": "#/components/schemas/NullableOfRecurrencePattern"
+          "RecurrencePattern": {
+            "$ref": "#/components/schemas/RecurrencePattern"
           },
-          "recurrenceInterval": {
+          "RecurrenceInterval": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "recurrenceEndDate": {
+          "RecurrenceEndDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
-          "recurrenceDays": {
+          "RecurrenceDays": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "nullable": true
           },
-          "attendeeUserIds": {
+          "AttendeeUserIds": {
             "type": "array",
             "items": {
               "type": "integer",
@@ -5679,313 +5581,311 @@
             },
             "nullable": true
           },
-          "reminders": {
+          "Reminders": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CreateCalendarReminderDto"
             },
             "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateClientDto": {
-        "required": [
-          "name",
-          "email",
-          "accountManagerId"
-        ],
+        "required": ["Email", "Name"],
         "type": "object",
         "properties": {
-          "name": {
+          "Name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           },
-          "email": {
+          "Email": {
             "maxLength": 255,
             "minLength": 0,
-            "type": "string"
+            "type": "string",
+            "format": "email"
           },
-          "phoneNumber": {
+          "PhoneNumber": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "company": {
+          "Company": {
             "maxLength": 255,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "address": {
+          "Address": {
             "maxLength": 500,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "accountManagerId": {
+          "AccountManagerId": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateDepartmentDto": {
-        "required": [
-          "deptName"
-        ],
+        "required": ["DeptName"],
         "type": "object",
         "properties": {
-          "deptName": {
+          "DeptName": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateNotificationDto": {
         "type": "object",
         "properties": {
-          "message": {
-            "type": "string"
+          "Message": {
+            "type": "string",
+            "nullable": true
           },
-          "isRead": {
+          "IsRead": {
             "type": "boolean"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateProjectDto": {
-        "required": [
-          "projectName"
-        ],
+        "required": ["ProjectName"],
         "type": "object",
         "properties": {
-          "projectName": {
+          "ProjectName": {
             "maxLength": 200,
             "minLength": 0,
             "type": "string"
           },
-          "description": {
+          "Description": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "clientId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        }
-      },
-      "UpdateTaskDto": {
-        "required": [
-          "title",
-          "driveFolderLink"
-        ],
-        "type": "object",
-        "properties": {
-          "title": {
-            "maxLength": 200,
-            "minLength": 0,
-            "type": "string"
-          },
-          "description": {
-            "maxLength": 1000,
-            "minLength": 0,
-            "type": "string",
-            "nullable": true
-          },
-          "priorityId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dueDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "assignedTo": {
+          "ClientId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
-          "deptId": {
-            "type": "integer",
-            "format": "int32"
+          "StartDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
-          "projectId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "driveFolderLink": {
-            "maxLength": 500,
+          "EndDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTaskDto": {
+        "required": ["DriveFolderLink", "Title"],
+        "type": "object",
+        "properties": {
+          "Title": {
+            "maxLength": 200,
             "minLength": 0,
             "type": "string"
           },
-          "materialDriveFolderLink": {
-            "maxLength": 500,
-            "minLength": 0,
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
-      "UpdateTaskStatusDto": {
-        "required": [
-          "statusId"
-        ],
-        "type": "object",
-        "properties": {
-          "statusId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "notes": {
+          "Description": {
             "maxLength": 1000,
             "minLength": 0,
             "type": "string",
             "nullable": true
+          },
+          "PriorityId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "StatusId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "DueDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "AssignedTo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "DeptId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ProjectId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "DriveFolderLink": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string"
+          },
+          "MaterialDriveFolderLink": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateUserDto": {
-        "required": [
-          "name"
-        ],
+        "required": ["Name"],
         "type": "object",
         "properties": {
-          "name": {
+          "Name": {
             "maxLength": 100,
             "minLength": 0,
             "type": "string"
           },
-          "username": {
+          "Username": {
             "maxLength": 50,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "email": {
+          "Email": {
             "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "Position": {
+            "maxLength": 100,
             "minLength": 0,
             "type": "string",
             "nullable": true
           },
-          "role": {
-            "$ref": "#/components/schemas/NullableOfUserRole"
+          "Role": {
+            "$ref": "#/components/schemas/UserRole"
           },
-          "departmentIds": {
+          "TeamLeaderId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "DepartmentIds": {
             "type": "array",
             "items": {
               "type": "integer",
               "format": "int32"
-            }
+            },
+            "nullable": true
+          },
+          "ManagedEmployeeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "ManagedClientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UserDto": {
         "type": "object",
         "properties": {
-          "userId": {
+          "UserId": {
             "type": "integer",
             "format": "int32"
           },
-          "name": {
-            "type": "string"
-          },
-          "username": {
-            "type": "string"
-          },
-          "email": {
+          "Name": {
             "type": "string",
             "nullable": true
           },
-          "role": {
+          "Username": {
+            "type": "string",
+            "nullable": true
+          },
+          "Email": {
+            "type": "string",
+            "nullable": true
+          },
+          "Position": {
+            "type": "string",
+            "nullable": true
+          },
+          "Role": {
             "$ref": "#/components/schemas/UserRole"
           },
-          "departments": {
+          "TeamLeaderId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "TeamLeaderName": {
+            "type": "string",
+            "nullable": true
+          },
+          "Departments": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DepartmentDto"
-            }
+            },
+            "nullable": true
+          },
+          "ManagedEmployeeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "ManagedClientIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UserRole": {
-        "type": "integer"
+        "enum": [1, 2, 3, 4, 5, 6],
+        "type": "integer",
+        "format": "int32"
       },
       "ValidateTokenDto": {
-        "required": [
-          "token"
-        ],
+        "required": ["Token"],
         "type": "object",
         "properties": {
-          "token": {
+          "Token": {
+            "minLength": 1,
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       }
     }
-  },
-  "tags": [
-    {
-      "name": "AuditLogs"
-    },
-    {
-      "name": "Auth"
-    },
-    {
-      "name": "Calendar"
-    },
-    {
-      "name": "Clients"
-    },
-    {
-      "name": "Dashboard"
-    },
-    {
-      "name": "Departments"
-    },
-    {
-      "name": "Files"
-    },
-    {
-      "name": "Health"
-    },
-    {
-      "name": "Notifications"
-    },
-    {
-      "name": "Projects"
-    },
-    {
-      "name": "Roles"
-    },
-    {
-      "name": "Search"
-    },
-    {
-      "name": "Statistics"
-    },
-    {
-      "name": "Tasks"
-    },
-    {
-      "name": "Users"
-    }
-  ]
+  }
 }

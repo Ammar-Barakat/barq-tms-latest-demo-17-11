@@ -33,12 +33,11 @@ namespace BarqTMS.API.Models
         [Column("address")]
         public string? Address { get; set; }
         
-        [Required]
         [Column("account_manager_id")]
-        public int AccountManagerId { get; set; }
+        public int? AccountManagerId { get; set; }
         
         [ForeignKey(nameof(AccountManagerId))]
-        public virtual User AccountManager { get; set; } = null!;
+        public virtual User? AccountManager { get; set; }
         
         // Navigation properties
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();

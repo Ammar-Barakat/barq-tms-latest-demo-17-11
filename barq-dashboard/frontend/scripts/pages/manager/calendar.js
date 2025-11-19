@@ -30,17 +30,35 @@ async function loadCalendarData() {
       0
     );
 
-    const response = await API.Calendar.getEvents({
-      StartDate: startDate.toISOString(),
-      EndDate: endDate.toISOString(),
-    });
-    
+    const [calendarResponse, tasksResponse] = await Promise.all([
+      API.Calendar.getEvents({
+        StartDate: startDate.toISOString(),
+        EndDate: endDate.toISOString(),
+      }).catch(() => ({ Events: [] })),
+      API.Tasks.getAll().catch(() => []),
+    ]);
+
     // Extract events array from CalendarViewDto response
-    events = response.Events || response.events || [];
+    events = calendarResponse.Events || calendarResponse.events || [];
+
+    // Add tasks as calendar events (type 3 = task)
+    tasks = tasksResponse;
+    const taskEvents = tasks.map((task) => ({
+      EventId: `task-${task.TaskId}`,
+      Title: task.Title,
+      StartDate: task.DueDate,
+      EventType: 3,
+      Description: task.Description,
+      isTask: true,
+      taskData: task,
+    }));
+
+    events = [...events, ...taskEvents];
   } catch (error) {
     console.error("Error loading calendar data:", error);
     showError("Failed to load calendar data");
-    events = []; // Set to empty array on error
+    events = [];
+    tasks = [];
   } finally {
     hideLoading();
   }
@@ -144,23 +162,24 @@ function createDayCell(day, otherMonth = false, isToday = false, date = null) {
     dayEvents.forEach((event) => {
       const eventEl = document.createElement("div");
       // Map EventType enum to CSS class
-      const eventTypeClass = {
-        1: "meeting",
-        2: "deadline",
-        3: "task",
-        4: "reminder",
-      }[event.EventType] || "task";
-      
+      const eventTypeClass =
+        {
+          1: "meeting",
+          2: "deadline",
+          3: "task",
+          4: "reminder",
+        }[event.EventType] || "task";
+
       eventEl.className = `calendar-event ${eventTypeClass}`;
       eventEl.textContent = event.Title;
       eventEl.title = event.Title;
-      
+
       // Add click handler to edit event
       eventEl.onclick = (e) => {
         e.stopPropagation(); // Prevent day cell click
         showEditEventModal(event);
       };
-      
+
       eventsContainer.appendChild(eventEl);
     });
   }
@@ -214,12 +233,13 @@ function renderUpcomingEvents() {
       });
 
       // Map EventType enum to label
-      const eventTypeLabel = {
-        1: "Meeting",
-        2: "Deadline",
-        3: "Task",
-        4: "Reminder",
-      }[event.EventType] || "Event";
+      const eventTypeLabel =
+        {
+          1: "Meeting",
+          2: "Deadline",
+          3: "Task",
+          4: "Reminder",
+        }[event.EventType] || "Event";
 
       return `
       <div class="upcoming-event-item" data-event-index="${index}" style="cursor: pointer;">
@@ -232,10 +252,10 @@ function renderUpcomingEvents() {
     `;
     })
     .join("");
-    
+
   // Add click handlers to upcoming event items
-  container.querySelectorAll('.upcoming-event-item').forEach((item, index) => {
-    item.addEventListener('click', () => {
+  container.querySelectorAll(".upcoming-event-item").forEach((item, index) => {
+    item.addEventListener("click", () => {
       showEditEventModal(upcomingEvents[index]);
     });
   });
@@ -261,11 +281,11 @@ function showCreateEventModal(date = null) {
   document.getElementById("eventModal").classList.remove("d-none");
   document.getElementById("eventForm").reset();
   document.getElementById("eventId").value = "";
-  
+
   // Update modal title
   const modalTitle = document.querySelector("#eventModal .modal-header h3");
   if (modalTitle) modalTitle.textContent = "Add Event";
-  
+
   // Hide delete button for new events
   const deleteBtn = document.getElementById("deleteEventBtn");
   if (deleteBtn) deleteBtn.style.display = "none";
@@ -273,8 +293,8 @@ function showCreateEventModal(date = null) {
   if (date) {
     // Format date without timezone conversion to avoid day shift
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
     document.getElementById("eventDate").value = dateStr;
   }
@@ -283,33 +303,34 @@ function showCreateEventModal(date = null) {
 function showEditEventModal(event) {
   document.getElementById("eventModal").classList.remove("d-none");
   document.getElementById("eventForm").reset();
-  
+
   // Populate form with event data
   document.getElementById("eventId").value = event.Id;
   document.getElementById("eventTitle").value = event.Title;
   document.getElementById("eventDescription").value = event.Description || "";
-  
+
   // Parse date and time
   const startDate = new Date(event.StartDate);
   const dateStr = startDate.toISOString().split("T")[0];
   const timeStr = startDate.toTimeString().slice(0, 5);
-  
+
   document.getElementById("eventDate").value = dateStr;
   document.getElementById("eventTime").value = timeStr;
-  
+
   // Map EventType enum back to frontend type
   const eventTypeMap = {
     1: "meeting",
     2: "deadline",
     3: "task",
-    4: "reminder"
+    4: "reminder",
   };
-  document.getElementById("eventType").value = eventTypeMap[event.EventType] || "task";
-  
+  document.getElementById("eventType").value =
+    eventTypeMap[event.EventType] || "task";
+
   // Update modal title
   const modalTitle = document.querySelector("#eventModal .modal-header h3");
   if (modalTitle) modalTitle.textContent = "Edit Event";
-  
+
   // Show delete button for existing events
   const deleteBtn = document.getElementById("deleteEventBtn");
   if (deleteBtn) deleteBtn.style.display = "inline-block";
@@ -346,11 +367,11 @@ async function handleEventSubmit(e) {
   try {
     // Combine date and time
     const startDateTime = `${eventDate}T${eventTime}:00`;
-    
+
     // Parse the datetime to create end time (1 hour later for meetings/tasks, end of day for deadlines)
     const startDate = new Date(startDateTime);
     const endDate = new Date(startDate);
-    
+
     if (eventType === "deadline" || eventType === "reminder") {
       // For deadlines and reminders, set end time to end of the day
       endDate.setHours(23, 59, 59, 999);
@@ -361,14 +382,14 @@ async function handleEventSubmit(e) {
 
     // Map frontend event type to backend CalendarEventType enum
     const eventTypeMap = {
-      meeting: 1,    // Meeting
-      deadline: 2,   // Deadline
-      task: 3,       // Task
-      reminder: 4    // Reminder
+      meeting: 1, // Meeting
+      deadline: 2, // Deadline
+      task: 3, // Task
+      reminder: 4, // Reminder
     };
 
     const currentUser = auth.getCurrentUser();
-    
+
     const eventData = {
       Title: title,
       Description: description || "",
@@ -378,7 +399,7 @@ async function handleEventSubmit(e) {
       Color: getEventTypeColor(eventType),
       EventType: eventTypeMap[eventType] || 3, // Default to Task
       AttendeeUserIds: currentUser?.UserId ? [currentUser.UserId] : [], // Add current user as attendee
-      Reminders: []
+      Reminders: [],
     };
 
     if (eventId) {
@@ -402,10 +423,10 @@ async function handleEventSubmit(e) {
 // Helper function to get color based on event type
 function getEventTypeColor(type) {
   const colorMap = {
-    meeting: "#3b82f6",    // Blue
-    deadline: "#ef4444",   // Red
-    task: "#f59e0b",       // Orange
-    reminder: "#8b5cf6"    // Purple
+    meeting: "#3b82f6", // Blue
+    deadline: "#ef4444", // Red
+    task: "#f59e0b", // Orange
+    reminder: "#8b5cf6", // Purple
   };
   return colorMap[type] || "#7e2d96"; // Default purple
 }
@@ -413,16 +434,16 @@ function getEventTypeColor(type) {
 // Delete event function
 async function deleteEvent() {
   const eventId = document.getElementById("eventId").value;
-  
+
   if (!eventId) {
     showError("No event selected");
     return;
   }
-  
+
   if (!confirm("Are you sure you want to delete this event?")) {
     return;
   }
-  
+
   try {
     await API.Calendar.deleteEvent(eventId);
     showSuccess("Event deleted successfully");
@@ -439,22 +460,22 @@ async function deleteEvent() {
 // Helper functions
 function getStatusText(status) {
   const statuses = {
-    1: "Pending",
+    1: "To Do",
     2: "In Progress",
-    3: "Completed",
-    4: "On Hold",
+    3: "In Review",
+    4: "Completed",
     5: "Cancelled",
   };
-  return statuses[status] || "Pending";
+  return statuses[status] || "To Do";
 }
 
 function getStatusBadgeClass(status) {
   const classes = {
-    1: "warning",
+    1: "secondary",
     2: "info",
-    3: "success",
-    4: "secondary",
-    5: "secondary",
+    3: "warning",
+    4: "success",
+    5: "danger",
   };
   return classes[status] || "secondary";
 }

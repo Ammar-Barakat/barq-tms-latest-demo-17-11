@@ -75,6 +75,9 @@ builder.Services.AddScoped<BarqTMS.API.Services.IClientService, BarqTMS.API.Serv
 // Register task service
 builder.Services.AddScoped<BarqTMS.API.Services.ITaskService, BarqTMS.API.Services.TaskService>();
 
+// Register background services
+builder.Services.AddHostedService<BarqTMS.API.Services.OverdueTaskNotificationService>();
+
 // Add SignalR
 builder.Services.AddSignalR(options =>
 {

@@ -6,14 +6,17 @@ let clientData = null;
 let clientProjects = [];
 let clientTasks = [];
 let currentDate = new Date();
+let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  currentUser = auth.getCurrentUser();
+
   // Get client ID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   clientId = urlParams.get("id");
 
   if (!clientId) {
-    showError();
+    showError("No client ID provided");
     return;
   }
 
@@ -59,8 +62,26 @@ async function loadClientDetails() {
 
     // Load projects for this client using the API endpoint
     try {
-      clientProjects = await API.Clients.getProjects(clientId);
-      console.log("Client projects:", clientProjects);
+      const allClientProjects = await API.Clients.getProjects(clientId);
+      console.log("Client projects:", allClientProjects);
+
+      // SECURITY: Filter to only projects where current user is account manager
+      clientProjects = allClientProjects.filter((project) => {
+        const accountManagerId =
+          project.accountManagerId || project.AccountManagerId;
+        return accountManagerId === currentUser.userId;
+      });
+
+      console.log(
+        `[Client Details] Filtered ${allClientProjects.length} projects to ${clientProjects.length} managed by current user`
+      );
+
+      // If no authorized projects, deny access
+      if (clientProjects.length === 0) {
+        console.warn("[Client Details] User not authorized for this client");
+        showError("You are not authorized to view this client's details.");
+        return;
+      }
     } catch (projectError) {
       console.warn("Error loading projects:", projectError);
       clientProjects = [];
@@ -77,7 +98,7 @@ async function loadClientDetails() {
   } catch (error) {
     console.error("Error loading client details:", error);
     console.error("Error details:", error.message, error.stack);
-    showError();
+    showError("Failed to load client details");
   }
 }
 

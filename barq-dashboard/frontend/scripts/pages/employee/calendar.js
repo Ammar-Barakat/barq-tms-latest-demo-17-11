@@ -132,12 +132,31 @@ function createDayCell(day, otherMonth = false, isToday = false, date = null) {
       eventEl.className = "calendar-event task";
       eventEl.textContent = task.Title;
       eventEl.title = task.Title;
+
+      // Add click handler to view task details
+      eventEl.onclick = (e) => {
+        e.stopPropagation();
+        showTaskInfo(task);
+      };
+
       eventsContainer.appendChild(eventEl);
     });
   }
 
   dayCell.appendChild(eventsContainer);
   return dayCell;
+}
+
+// Show task info
+function showTaskInfo(task) {
+  const message = `Task: ${task.Title}\n\nProject: ${
+    task.ProjectName || "N/A"
+  }\nDue Date: ${
+    task.DueDate ? new Date(task.DueDate).toLocaleDateString() : "Not set"
+  }\nStatus: ${task.StatusName || task.Status || "Pending"}\nPriority: ${
+    task.PriorityLevel || task.Priority || "Medium"
+  }\n\nDescription: ${task.Description || "No description"}`;
+  alert(message);
 }
 
 // Render upcoming events

@@ -20,52 +20,118 @@ async function loadData() {
     // Load tasks assigned to current user
     const allTasks = await API.Tasks.getAll().catch(() => []);
 
-    // Load team leaders for delegation
+    // Load projects for team leader filtering
+    const allProjects = await API.Projects.getAll().catch(() => []);
+    window.projectsData = allProjects; // Store for delegation modal
+
+    // Load team leaders and employees for delegation
     const allUsers = await API.Users.getAll().catch(() => []);
     teamLeaders = allUsers.filter(
       (u) =>
-        u.roleId === 3 ||
-        u.RoleId === 3 || // Team Leader role
+        u.roleId === 4 ||
+        u.RoleId === 4 || // Team Leader role
+        u.roleId === 5 ||
+        u.RoleId === 5 || // Employee role
         u.roleName === "Team Leader" ||
-        u.RoleName === "Team Leader"
+        u.RoleName === "Team Leader" ||
+        u.roleName === "Employee" ||
+        u.RoleName === "Employee"
     );
+    window.allTeamLeaders = teamLeaders; // Store for delegation modal
 
-    // Populate team leader dropdown
+    // Populate team leader/employee dropdown
     populateTeamLeaderSelect();
 
     // Filter and normalize tasks
     tasks = allTasks
       .filter((task) => {
-        const assignedToId = task.assignedToId || task.AssignedToId;
-        const createdById = task.createdById || task.CreatedById;
-        const delegatedById = task.delegatedById || task.DelegatedById;
+        const assignedToId =
+          task.assignedTo ||
+          task.AssignedTo ||
+          task.assignedToId ||
+          task.AssignedToId;
+        const createdById =
+          task.createdBy ||
+          task.CreatedBy ||
+          task.createdById ||
+          task.CreatedById;
+        const delegatedById =
+          task.delegatedBy ||
+          task.DelegatedBy ||
+          task.delegatedById ||
+          task.DelegatedById;
+        const currentUserId = currentUser.UserId || currentUser.userId;
 
-        // Include tasks assigned to me OR delegated by me
+        // Include tasks assigned to me OR delegated by me OR created by me
         return (
-          assignedToId === currentUser.userId ||
-          delegatedById === currentUser.userId ||
-          createdById === currentUser.userId
+          assignedToId === currentUserId ||
+          delegatedById === currentUserId ||
+          createdById === currentUserId
         );
       })
-      .map((task) => ({
-        TaskId: task.taskId || task.TaskId || task.id,
-        Title: task.title || task.Title,
-        Description: task.description || task.Description,
-        ProjectId: task.projectId || task.ProjectId,
-        ProjectName: task.projectName || task.ProjectName || "Unknown Project",
-        Status: task.status || task.Status || "Pending",
-        Priority: task.priority || task.Priority || "Medium",
-        DueDate: task.dueDate || task.DueDate,
-        AssignedToId: task.assignedToId || task.AssignedToId,
-        AssignedToName:
-          task.assignedToName || task.AssignedToName || "Unassigned",
-        CreatedById: task.createdById || task.CreatedById,
-        DelegatedById: task.delegatedById || task.DelegatedById,
-        IsDelegated:
-          (task.delegatedById || task.DelegatedById) === currentUser.userId,
-        IsAssignedToMe:
-          (task.assignedToId || task.AssignedToId) === currentUser.userId,
-      }));
+      .map((task) => {
+        const assignedToId =
+          task.assignedTo ||
+          task.AssignedTo ||
+          task.assignedToId ||
+          task.AssignedToId;
+        const delegatedById =
+          task.delegatedBy ||
+          task.DelegatedBy ||
+          task.delegatedById ||
+          task.DelegatedById;
+        const isAssignedToMe =
+          assignedToId === currentUser.UserId ||
+          assignedToId === currentUser.userId;
+        const iDelegatedThisTask =
+          delegatedById === currentUser.UserId ||
+          delegatedById === currentUser.userId;
+
+        return {
+          TaskId: task.taskId || task.TaskId || task.id,
+          Title: task.title || task.Title,
+          Description: task.description || task.Description,
+          ProjectId: task.projectId || task.ProjectId,
+          ProjectName:
+            task.projectName || task.ProjectName || "Unknown Project",
+          Status:
+            task.statusName ||
+            task.StatusName ||
+            task.status ||
+            task.Status ||
+            "Pending",
+          StatusName:
+            task.statusName ||
+            task.StatusName ||
+            task.status ||
+            task.Status ||
+            "Pending",
+          Priority:
+            task.priorityLevel ||
+            task.PriorityLevel ||
+            task.priority ||
+            task.Priority ||
+            "Medium",
+          PriorityLevel:
+            task.priorityLevel ||
+            task.PriorityLevel ||
+            task.priority ||
+            task.Priority ||
+            "Medium",
+          DueDate: task.dueDate || task.DueDate,
+          AssignedToId: assignedToId,
+          AssignedToName:
+            task.assignedToName || task.AssignedToName || "Unassigned",
+          CreatedById: task.createdById || task.CreatedById,
+          DelegatedById: delegatedById,
+          DelegatedBy: delegatedById,
+          OriginalAssignerId:
+            task.originalAssignerId || task.OriginalAssignerId,
+          // IsDelegated means: I passed this task to someone else (I'm the delegator, NOT the assignee)
+          IsDelegated: iDelegatedThisTask && !isAssignedToMe,
+          IsAssignedToMe: isAssignedToMe,
+        };
+      });
 
     updateStats();
     renderTasks();
@@ -79,14 +145,15 @@ async function loadData() {
 
 function populateTeamLeaderSelect() {
   const select = document.getElementById("teamLeaderSelect");
-  select.innerHTML = '<option value="">Select a team leader...</option>';
+  select.innerHTML = '<option value="">Select a user...</option>';
 
   teamLeaders.forEach((leader) => {
     const option = document.createElement("option");
     option.value = leader.userId || leader.UserId || leader.id;
+    const roleName = leader.roleName || leader.RoleName || "";
     option.textContent = `${leader.firstName || leader.FirstName} ${
       leader.lastName || leader.LastName
-    }`;
+    } (${roleName})`;
     select.appendChild(option);
   });
 }
@@ -107,6 +174,11 @@ function updateStats() {
     (t) => t.IsDelegated && t.Status !== "Completed"
   ).length;
 
+  // Tasks needing review (delegated and in review status)
+  const needingReview = tasks.filter(
+    (t) => t.IsDelegated && t.StatusName === "In Review"
+  ).length;
+
   // Completed tasks
   const completed = tasks.filter((t) => t.Status === "Completed").length;
 
@@ -118,7 +190,9 @@ function updateStats() {
   // Update badges
   document.getElementById("badge-received").textContent = received;
   document.getElementById("badge-assigned").textContent = myActive;
-  document.getElementById("badge-delegated").textContent = delegated;
+  document.getElementById("badge-delegated").textContent = `${delegated}${
+    needingReview > 0 ? ` (${needingReview} ⚠)` : ""
+  }`;
 }
 
 function filterTasks(filter) {
@@ -188,18 +262,29 @@ function renderTasks() {
 
   tbody.innerHTML = filteredTasks
     .map((task) => {
+      // Properly map all fields from backend
+      const title = task.Title || "";
+      const projectName = task.ProjectName || "No Project";
+      const statusName = task.StatusName || task.Status || "Unknown";
+      const priorityLevel = task.PriorityLevel || task.Priority || "Medium";
+      const assignedToName = task.AssignedToName || "Unassigned";
+
       const dueDate = task.DueDate
         ? new Date(task.DueDate).toLocaleDateString()
         : "-";
 
-      const statusClass = getStatusClass(task.Status);
-      const priorityClass = getPriorityClass(task.Priority);
+      const statusClass = getStatusClass(statusName);
+      const priorityClass = getPriorityClass(priorityLevel);
 
+      // Show who it's delegated to if delegated
       const delegatedInfo = task.IsDelegated
-        ? `<span class="badge badge-info">${task.AssignedToName}</span>`
+        ? `<span class="badge badge-info">${assignedToName}</span>`
         : '<span style="color: var(--text-secondary);">Not delegated</span>';
 
       let actionButtons = "";
+
+      // Check if task needs review (status is "In Review" and I delegated it)
+      const needsReview = statusName === "In Review" && task.IsDelegated;
 
       if (currentFilter === "received" || currentFilter === "assigned-to-me") {
         actionButtons = `
@@ -214,14 +299,25 @@ function renderTasks() {
           </button>
         `;
       } else if (currentFilter === "delegated") {
-        actionButtons = `
-          <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${task.TaskId})" title="View Details">
-            <i class="fa-solid fa-eye"></i> View
-          </button>
-          <button class="btn btn-sm btn-info" onclick="followUpTask(${task.TaskId})" title="Follow Up">
-            <i class="fa-solid fa-bell"></i> Follow Up
-          </button>
-        `;
+        if (needsReview) {
+          actionButtons = `
+            <button class="btn btn-sm btn-warning" onclick="showReviewModal(${task.TaskId})" title="Review Completion">
+              <i class="fa-solid fa-clipboard-check"></i> Review
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${task.TaskId})" title="View Details">
+              <i class="fa-solid fa-eye"></i> View
+            </button>
+          `;
+        } else {
+          actionButtons = `
+            <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${task.TaskId})" title="View Details">
+              <i class="fa-solid fa-eye"></i> View
+            </button>
+            <button class="btn btn-sm btn-info" onclick="followUpTask(${task.TaskId})" title="Follow Up">
+              <i class="fa-solid fa-bell"></i> Follow Up
+            </button>
+          `;
+        }
       } else {
         actionButtons = `
           <button class="btn btn-sm btn-success" onclick="viewTaskDetails(${task.TaskId})" title="View Details">
@@ -231,18 +327,23 @@ function renderTasks() {
       }
 
       return `
-        <tr>
+        <tr ${needsReview ? 'style="background-color: #fff3cd;"' : ""}>
           <td>
-            <strong>${task.Title}</strong>
+            <strong>${title}</strong>
             ${
               task.IsDelegated
                 ? '<br><span class="badge badge-warning" style="margin-top: 4px;"><i class="fa-solid fa-share"></i> Delegated</span>'
                 : ""
             }
+            ${
+              needsReview
+                ? '<br><span class="badge badge-danger" style="margin-top: 4px; animation: pulse 2s infinite;"><i class="fa-solid fa-exclamation-circle"></i> Needs Review</span>'
+                : ""
+            }
           </td>
-          <td>${task.ProjectName}</td>
-          <td><span class="badge ${statusClass}">${task.Status}</span></td>
-          <td><span class="badge ${priorityClass}">${task.Priority}</span></td>
+          <td>${projectName}</td>
+          <td><span class="badge ${statusClass}">${statusName}</span></td>
+          <td><span class="badge ${priorityClass}">${priorityLevel}</span></td>
           <td>${dueDate}</td>
           <td>${delegatedInfo}</td>
           <td>
@@ -258,10 +359,10 @@ function renderTasks() {
 
 function getStatusClass(status) {
   const statusMap = {
-    Pending: "badge-secondary",
+    "To Do": "badge-secondary",
     "In Progress": "badge-info",
-    Completed: "badge-success",
-    "On Hold": "badge-warning",
+    "In Review": "badge-warning",
+    Done: "badge-success",
     Cancelled: "badge-danger",
   };
   return statusMap[status] || "badge-secondary";
@@ -272,7 +373,7 @@ function getPriorityClass(priority) {
     Low: "badge-info",
     Medium: "badge-warning",
     High: "badge-danger",
-    Urgent: "badge-danger",
+    Critical: "badge-danger",
   };
   return priorityMap[priority] || "badge-secondary";
 }
@@ -298,6 +399,59 @@ function showDelegateTaskModal(taskId) {
     document.getElementById("delegateDueDate").value = dateStr;
   }
 
+  // Filter team leaders by project
+  const select = document.getElementById("teamLeaderSelect");
+  select.innerHTML = '<option value="">Select a user...</option>';
+
+  // Find project for this task
+  const projectId = task.ProjectId;
+  if (projectId && window.projectsData) {
+    const project = window.projectsData.find(
+      (p) => (p.ProjectId || p.projectId) === projectId
+    );
+    if (project && project.TeamLeaderId) {
+      // Show only the team leader assigned to this project
+      const teamLeader = window.allTeamLeaders.find(
+        (tl) => (tl.UserId || tl.userId) === project.TeamLeaderId
+      );
+      if (teamLeader) {
+        const option = document.createElement("option");
+        option.value = teamLeader.UserId || teamLeader.userId;
+        option.textContent = `${
+          teamLeader.Name || teamLeader.name || "Team Leader"
+        } (Team Leader)`;
+        select.appendChild(option);
+      }
+
+      // Also show employees under this team leader
+      const teamEmployees = window.allTeamLeaders.filter(
+        (emp) =>
+          (emp.RoleId || emp.roleId) === 5 &&
+          (emp.TeamLeaderId || emp.teamLeaderId) === project.TeamLeaderId
+      );
+      teamEmployees.forEach((emp) => {
+        const option = document.createElement("option");
+        option.value = emp.UserId || emp.userId;
+        option.textContent = `${emp.Name || emp.name || "Employee"} (Employee)`;
+        select.appendChild(option);
+      });
+    }
+  }
+
+  // If no team leader found, show all
+  if (select.options.length === 1) {
+    window.allTeamLeaders.forEach((leader) => {
+      const option = document.createElement("option");
+      option.value = leader.userId || leader.UserId;
+      const roleName =
+        (leader.RoleId || leader.roleId) === 4 ? "Team Leader" : "Employee";
+      option.textContent = `${
+        leader.Name || leader.name || "User"
+      } (${roleName})`;
+      select.appendChild(option);
+    });
+  }
+
   document.getElementById("delegateModal").classList.remove("d-none");
 }
 
@@ -321,7 +475,6 @@ async function handleDelegateSubmit(e) {
   const taskId = document.getElementById("taskIdToDelegate").value;
   const teamLeaderId = document.getElementById("teamLeaderSelect").value;
   const notes = document.getElementById("delegateNotes").value;
-  const dueDate = document.getElementById("delegateDueDate").value;
 
   if (!taskId || !teamLeaderId) {
     utils.showError("Please select a team leader");
@@ -331,20 +484,11 @@ async function handleDelegateSubmit(e) {
   try {
     utils.showLoading();
 
-    // Update task assignment
-    await API.Tasks.update(taskId, {
-      AssignedToId: parseInt(teamLeaderId),
-      DelegatedById: currentUser.userId,
-      DueDate: dueDate || undefined,
+    // Use the new pass task API endpoint
+    await API.Tasks.passTask(parseInt(taskId), {
+      assignToUserId: parseInt(teamLeaderId),
+      notes: notes || null,
     });
-
-    // Add comment about delegation
-    if (notes) {
-      await API.Tasks.addComment(
-        taskId,
-        `Delegated to team leader with instructions: ${notes}`
-      );
-    }
 
     const teamLeader = teamLeaders.find(
       (l) => (l.userId || l.UserId) == teamLeaderId
@@ -355,21 +499,123 @@ async function handleDelegateSubmit(e) {
         }`
       : "team leader";
 
-    console.log("Task delegated:", {
+    console.log("Task passed:", {
       taskId,
       teamLeaderId,
       notes,
-      dueDate,
     });
 
-    // TODO: Send notification to team leader
-    utils.showSuccess(`Task delegated to ${teamLeaderName}`);
+    utils.showSuccess(`Task passed to ${teamLeaderName}`);
 
     closeDelegateModal();
     await loadData();
   } catch (error) {
-    console.error("Error delegating task:", error);
-    utils.showError("Failed to delegate task");
+    console.error("Error passing task:", error);
+    utils.showError(error.message || "Failed to pass task");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Review Modal Functions
+async function showReviewModal(taskId) {
+  const task = tasks.find((t) => t.TaskId === taskId);
+  if (!task) return;
+
+  currentTaskForAction = task;
+
+  // Show task details in review modal
+  document.getElementById("reviewTaskDetails").innerHTML = `
+    <h4 style="margin-bottom: var(--space-3);"><i class="fa-solid fa-clipboard-list"></i> ${
+      task.Title
+    }</h4>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3);">
+      <div>
+        <strong>Project:</strong> ${task.ProjectName}
+      </div>
+      <div>
+        <strong>Assigned To:</strong> ${task.AssignedToName}
+      </div>
+      <div>
+        <strong>Status:</strong> <span class="badge ${getStatusClass(
+          task.StatusName
+        )}">${task.StatusName}</span>
+      </div>
+      <div>
+        <strong>Priority:</strong> <span class="badge ${getPriorityClass(
+          task.PriorityLevel
+        )}">${task.PriorityLevel}</span>
+      </div>
+    </div>
+    ${
+      task.Description
+        ? `<div style="margin-top: var(--space-3);"><strong>Description:</strong><p>${task.Description}</p></div>`
+        : ""
+    }
+  `;
+
+  // Setup form handler
+  const form = document.getElementById("reviewForm");
+  form.onsubmit = handleReviewSubmit;
+
+  // Show/hide due date field based on action
+  const actionSelect = document.getElementById("reviewAction");
+  const dueDateGroup = document.getElementById("newDueDateGroup");
+  actionSelect.onchange = function () {
+    dueDateGroup.style.display = this.value === "reject" ? "block" : "none";
+  };
+
+  document.getElementById("reviewModal").classList.remove("d-none");
+}
+
+function closeReviewModal() {
+  document.getElementById("reviewModal").classList.add("d-none");
+  document.getElementById("reviewForm").reset();
+  currentTaskForAction = null;
+}
+
+async function handleReviewSubmit(e) {
+  e.preventDefault();
+
+  if (!currentTaskForAction) return;
+
+  const action = document.getElementById("reviewAction").value;
+  const notes = document.getElementById("reviewNotes").value.trim();
+  const newDueDate = document.getElementById("reviewNewDueDate").value;
+
+  if (!action) {
+    utils.showError("Please select an action");
+    return;
+  }
+
+  if (action === "reject" && !notes) {
+    if (
+      !confirm("You haven't provided rejection notes. Continue without notes?")
+    ) {
+      return;
+    }
+  }
+
+  try {
+    utils.showLoading();
+
+    await API.Tasks.reviewCompletion(currentTaskForAction.TaskId, {
+      approve: action === "approve",
+      notes: notes || null,
+      newDueDate: action === "reject" && newDueDate ? newDueDate : null,
+    });
+
+    utils.showSuccess(
+      action === "approve"
+        ? "Task approved and marked as complete"
+        : "Task sent back for revision"
+    );
+
+    closeReviewModal();
+    await loadData();
+  } catch (error) {
+    console.error("Error reviewing task:", error);
+    utils.showError(error.message || "Failed to review task");
   } finally {
     utils.hideLoading();
   }
@@ -421,14 +667,14 @@ function renderTaskDetails(task, comments) {
       <div class="detail-item">
         <label class="detail-label"><i class="fa-solid fa-flag"></i> Priority</label>
         <div class="detail-value"><span class="badge ${getPriorityClass(
-          task.priority || task.Priority
-        )}">${task.priority || task.Priority}</span></div>
+          task.priorityLevel || task.PriorityLevel
+        )}">${task.priorityLevel || task.PriorityLevel}</span></div>
       </div>
       <div class="detail-item">
         <label class="detail-label"><i class="fa-solid fa-info-circle"></i> Status</label>
         <div class="detail-value"><span class="badge ${getStatusClass(
-          task.status || task.Status
-        )}">${task.status || task.Status}</span></div>
+          task.statusName || task.StatusName
+        )}">${task.statusName || task.StatusName}</span></div>
       </div>
       <div class="detail-item">
         <label class="detail-label"><i class="fa-solid fa-folder"></i> Project</label>
@@ -470,6 +716,26 @@ function renderTaskDetails(task, comments) {
         : ""
     }
   `;
+
+  // Determine if current user can add comments (is a reviewer)
+  const userId = currentUser.UserId || currentUser.userId;
+  const isReviewer =
+    (task.DelegatedBy && task.DelegatedBy === userId) ||
+    (task.OriginalAssignerId && task.OriginalAssignerId === userId) ||
+    (task.CreatedBy && task.CreatedBy === userId);
+
+  // Show/hide comment section based on reviewer status
+  const commentGroup = document.querySelector("#taskDetailsModal .form-group");
+  const addCommentBtn = document.querySelector(
+    '#taskDetailsModal button[onclick="addTaskComment()"]'
+  );
+
+  if (commentGroup) {
+    commentGroup.style.display = isReviewer ? "block" : "none";
+  }
+  if (addCommentBtn) {
+    addCommentBtn.style.display = isReviewer ? "inline-block" : "none";
+  }
 }
 
 function closeTaskDetailsModal() {
@@ -506,41 +772,44 @@ async function addTaskComment() {
 async function markTaskComplete() {
   if (!currentTaskForAction) return;
 
-  if (!confirm("Are you sure you want to mark this task as complete?")) return;
+  if (!confirm("Are you sure you want to request completion for this task?"))
+    return;
 
   try {
     utils.showLoading();
 
-    await API.Tasks.updateStatus(currentTaskForAction.TaskId, {
-      Status: "Completed",
-    });
+    await API.Tasks.requestComplete(currentTaskForAction.TaskId);
 
-    utils.showSuccess("Task marked as complete");
+    utils.showSuccess("Task completion requested. Waiting for review.");
     closeTaskDetailsModal();
     await loadData();
   } catch (error) {
     console.error("Error completing task:", error);
-    utils.showError("Failed to complete task");
+    utils.showError("Failed to request task completion");
   } finally {
     utils.hideLoading();
   }
 }
 
 async function completeTask(taskId) {
-  if (!confirm("Mark this task as complete?")) return;
+  if (
+    !confirm(
+      "Request review for this task? The task will be sent to the manager for approval."
+    )
+  )
+    return;
 
   try {
     utils.showLoading();
 
-    await API.Tasks.updateStatus(taskId, {
-      Status: "Completed",
-    });
+    // Use request-complete endpoint for proper workflow
+    await API.Tasks.requestComplete(taskId);
 
-    utils.showSuccess("Task completed successfully");
+    utils.showSuccess("Task sent for review");
     await loadData();
   } catch (error) {
-    console.error("Error completing task:", error);
-    utils.showError("Failed to complete task");
+    console.error("Error requesting completion:", error);
+    utils.showError("Failed to request task completion");
   } finally {
     utils.hideLoading();
   }

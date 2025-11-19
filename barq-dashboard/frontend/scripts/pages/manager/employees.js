@@ -15,13 +15,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadData() {
   try {
     utils.showLoading();
-    employees = await API.Employees.getAll().catch(() => []);
+    employees = await API.Users.getAll().catch(() => []);
     departments = await API.Departments.getAll().catch(() => []);
     clients = await API.Clients.getAll().catch(() => []);
-    
-    // Filter team leaders from employees
-    teamLeaders = employees.filter(emp => (emp.Role || emp.RoleId) === 4);
-    
+
+    // Filter team leaders from employees (RoleId = 4)
+    teamLeaders = employees.filter((emp) => {
+      const roleId = emp.RoleId || emp.Role;
+      return roleId === 4;
+    });
+
     renderEmployees();
     populateDepartmentDropdown();
   } catch (error) {
@@ -65,7 +68,7 @@ function renderEmployees() {
   if (employees.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center" style="padding: 40px;">
+        <td colspan="6" class="text-center" style="padding: 40px;">
           <div class="empty-state">
             <i class="fa-solid fa-inbox"></i>
             <h3>No employees found</h3>
@@ -78,21 +81,17 @@ function renderEmployees() {
   }
 
   tbody.innerHTML = employees
-    .map(
-      (emp) => {
-        const roleName = getRoleName(emp.Role || emp.RoleId);
-        const teamLeaderName = emp.TeamLeaderName || "";
-        const teamLeaderBadge = teamLeaderName ? `<br><small class="text-muted">Team Leader: ${teamLeaderName}</small>` : "";
-        
-        return `
+    .map((emp) => {
+      const roleName = getRoleName(emp.Role || emp.RoleId);
+      const teamLeaderName = emp.TeamLeaderName || "Not assigned";
+
+      return `
     <tr>
-      <td>
-        <strong>${emp.Name || emp.Username || "Unknown"}</strong>
-        ${teamLeaderBadge}
-      </td>
+      <td><strong>${emp.Name || emp.Username || "Unknown"}</strong></td>
       <td>${emp.Username || "N/A"}</td>
       <td>${emp.Email || "N/A"}</td>
       <td><span class="badge badge-info">${roleName}</span></td>
+      <td>${teamLeaderName}</td>
       <td>
         <div class="table-actions">
           <button class="btn btn-sm btn-primary" onclick="editEmployee(${
@@ -109,8 +108,7 @@ function renderEmployees() {
       </td>
     </tr>
   `;
-      }
-    )
+    })
     .join("");
 }
 
@@ -139,6 +137,15 @@ function showCreateModal() {
   document.getElementById("employeeForm").reset();
   document.getElementById("employeeId").value = "";
   document.getElementById("role").value = "5"; // Default to Employee
+
+  // Make password required for new employee
+  const passwordInput = document.getElementById("password");
+  passwordInput.required = true;
+  passwordInput.placeholder = "Enter password (min 6 characters)";
+  document
+    .getElementById("passwordGroup")
+    .querySelector(".form-text").style.display = "none";
+
   handleRoleChange(); // Update conditional fields
   document.getElementById("employeeModal").classList.remove("d-none");
 }
@@ -149,12 +156,12 @@ function closeModal() {
   document.getElementById("modalTitle").textContent = "Add Employee";
   document.getElementById("employeeId").value = "";
   document.getElementById("username").value = "";
-  
+
   // Hide all conditional groups
   document.getElementById("teamLeaderGroup").style.display = "none";
   document.getElementById("managedEmployeesGroup").style.display = "none";
   document.getElementById("managedClientsGroup").style.display = "none";
-  
+
   document.getElementById("employeeModal").classList.add("d-none");
 }
 
@@ -162,14 +169,16 @@ function closeModal() {
 function handleRoleChange() {
   const role = parseInt(document.getElementById("role").value);
   const teamLeaderGroup = document.getElementById("teamLeaderGroup");
-  const managedEmployeesGroup = document.getElementById("managedEmployeesGroup");
+  const managedEmployeesGroup = document.getElementById(
+    "managedEmployeesGroup"
+  );
   const managedClientsGroup = document.getElementById("managedClientsGroup");
-  
+
   // Hide all conditional fields first
   teamLeaderGroup.style.display = "none";
   managedEmployeesGroup.style.display = "none";
   managedClientsGroup.style.display = "none";
-  
+
   // Show relevant fields based on role
   if (role === 5) {
     // Employee - show team leader selection
@@ -190,7 +199,7 @@ function handleRoleChange() {
 function populateTeamLeaderDropdown() {
   const teamLeaderSelect = document.getElementById("teamLeader");
   teamLeaderSelect.innerHTML = '<option value="">No Team Leader</option>';
-  
+
   teamLeaders.forEach((tl) => {
     const option = document.createElement("option");
     option.value = tl.UserId || tl.Id;
@@ -203,14 +212,14 @@ function populateTeamLeaderDropdown() {
 function populateManagedEmployeesDropdown() {
   const managedEmployeesSelect = document.getElementById("managedEmployees");
   managedEmployeesSelect.innerHTML = "";
-  
+
   // Get all employees (role 5) that don't have this team leader yet or have no team leader
-  const availableEmployees = employees.filter(emp => {
+  const availableEmployees = employees.filter((emp) => {
     const empRole = emp.Role || emp.RoleId;
     const empId = emp.UserId || emp.Id;
     return empRole === 5 && empId !== currentEditId; // Don't include self
   });
-  
+
   availableEmployees.forEach((emp) => {
     const option = document.createElement("option");
     option.value = emp.UserId || emp.Id;
@@ -223,7 +232,7 @@ function populateManagedEmployeesDropdown() {
 function populateManagedClientsDropdown() {
   const managedClientsSelect = document.getElementById("managedClients");
   managedClientsSelect.innerHTML = "";
-  
+
   clients.forEach((client) => {
     const option = document.createElement("option");
     option.value = client.ClientId || client.Id;
@@ -245,27 +254,40 @@ async function editEmployee(id) {
   document.getElementById("position").value = employee.Position || "";
   document.getElementById("role").value = employee.Role || employee.RoleId || 5;
 
+  // Make password optional for editing
+  const passwordInput = document.getElementById("password");
+  passwordInput.value = "";
+  passwordInput.required = false;
+  passwordInput.placeholder = "Leave blank to keep current password";
+  document
+    .getElementById("passwordGroup")
+    .querySelector(".form-text").style.display = "block";
+
   // Update conditional fields based on role
   handleRoleChange();
-  
+
   // Set team leader if employee
   if ((employee.Role || employee.RoleId) === 5 && employee.TeamLeaderId) {
     document.getElementById("teamLeader").value = employee.TeamLeaderId;
   }
-  
+
   // Set managed employees if team leader
   if ((employee.Role || employee.RoleId) === 4 && employee.ManagedEmployeeIds) {
     const managedEmployeesSelect = document.getElementById("managedEmployees");
-    Array.from(managedEmployeesSelect.options).forEach(option => {
-      option.selected = employee.ManagedEmployeeIds.includes(parseInt(option.value));
+    Array.from(managedEmployeesSelect.options).forEach((option) => {
+      option.selected = employee.ManagedEmployeeIds.includes(
+        parseInt(option.value)
+      );
     });
   }
-  
+
   // Set managed clients if account manager
   if ((employee.Role || employee.RoleId) === 3 && employee.ManagedClientIds) {
     const managedClientsSelect = document.getElementById("managedClients");
-    Array.from(managedClientsSelect.options).forEach(option => {
-      option.selected = employee.ManagedClientIds.includes(parseInt(option.value));
+    Array.from(managedClientsSelect.options).forEach((option) => {
+      option.selected = employee.ManagedClientIds.includes(
+        parseInt(option.value)
+      );
     });
   }
 
@@ -276,7 +298,8 @@ async function handleSubmit(e) {
   e.preventDefault();
 
   const role = parseInt(document.getElementById("role").value);
-  
+  const password = document.getElementById("password").value;
+
   const formData = {
     Name: document.getElementById("name").value,
     Username: document.getElementById("username").value,
@@ -285,6 +308,11 @@ async function handleSubmit(e) {
     Role: role,
     DepartmentIds: [], // Empty for now, can be enhanced later
   };
+
+  // Add password if provided (required for new, optional for edit)
+  if (password) {
+    formData.Password = password;
+  }
 
   // Add TeamLeaderId for employees (optional)
   if (role === 5) {
@@ -297,9 +325,9 @@ async function handleSubmit(e) {
   // Add ManagedEmployeeIds for team leaders (optional)
   if (role === 4) {
     const managedEmployeesSelect = document.getElementById("managedEmployees");
-    const selectedEmployees = Array.from(managedEmployeesSelect.selectedOptions).map(
-      option => parseInt(option.value)
-    );
+    const selectedEmployees = Array.from(
+      managedEmployeesSelect.selectedOptions
+    ).map((option) => parseInt(option.value));
     if (selectedEmployees.length > 0) {
       formData.ManagedEmployeeIds = selectedEmployees;
     }
@@ -308,9 +336,9 @@ async function handleSubmit(e) {
   // Add ManagedClientIds for account managers (optional)
   if (role === 3) {
     const managedClientsSelect = document.getElementById("managedClients");
-    const selectedClients = Array.from(managedClientsSelect.selectedOptions).map(
-      option => parseInt(option.value)
-    );
+    const selectedClients = Array.from(
+      managedClientsSelect.selectedOptions
+    ).map((option) => parseInt(option.value));
     if (selectedClients.length > 0) {
       formData.ManagedClientIds = selectedClients;
     }

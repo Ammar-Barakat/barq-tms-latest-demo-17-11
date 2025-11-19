@@ -26,10 +26,11 @@ function formatDateTime(dateString) {
 // Status & Priority Labels
 function getStatusBadge(status) {
   const statusMap = {
-    1: { label: "Pending", class: "badge-warning" },
+    1: { label: "To Do", class: "badge-secondary" },
     2: { label: "In Progress", class: "badge-info" },
-    3: { label: "Completed", class: "badge-success" },
-    4: { label: "Cancelled", class: "badge-danger" },
+    3: { label: "In Review", class: "badge-warning" },
+    4: { label: "Completed", class: "badge-success" },
+    5: { label: "Cancelled", class: "badge-danger" },
   };
   const statusInfo = statusMap[status] || {
     label: "Unknown",

@@ -44,7 +44,7 @@ function updateStats(tasks, projects) {
   const pendingTasks = tasks.filter(
     (t) => t.StatusId === 1 || t.StatusId === 2
   ).length;
-  const completedTasks = tasks.filter((t) => t.StatusId === 3).length;
+  const completedTasks = tasks.filter((t) => t.StatusId === 4).length;
 
   document.getElementById("totalTasks").textContent = tasks.length;
   document.getElementById("pendingTasks").textContent = pendingTasks;

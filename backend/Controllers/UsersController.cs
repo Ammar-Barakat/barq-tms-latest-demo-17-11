@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using BarqTMS.API.Data;
 using BarqTMS.API.Models;
 using BarqTMS.API.DTOs;
+using BarqTMS.API.Helpers;
 
 namespace BarqTMS.API.Controllers
 {
@@ -25,12 +26,23 @@ namespace BarqTMS.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
-            var users = await _context.Users
+            var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+
+            if (currentUser == null)
+            {
+                return Unauthorized("User not found.");
+            }
+
+            var query = _context.Users
                 .Include(u => u.UserDepartments)
                     .ThenInclude(ud => ud.Department)
                 .Include(u => u.TeamLeader)
                 .Include(u => u.ManagedEmployees)
                 .Include(u => u.ManagedClients)
+                .AsQueryable();
+
+            var users = await query
                 .Select(u => new UserDto
                 {
                     UserId = u.UserId,
@@ -39,6 +51,8 @@ namespace BarqTMS.API.Controllers
                     Email = u.Email,
                     Position = u.Position,
                     Role = u.Role,
+                    RoleId = (int)u.Role,
+                    RoleName = u.Role.ToString(),
                     TeamLeaderId = u.TeamLeaderId,
                     TeamLeaderName = u.TeamLeader != null ? u.TeamLeader.Name : null,
                     Departments = u.UserDepartments.Select(ud => new DepartmentDto
@@ -73,6 +87,8 @@ namespace BarqTMS.API.Controllers
                     Email = u.Email,
                     Position = u.Position,
                     Role = u.Role,
+                    RoleId = (int)u.Role,
+                    RoleName = u.Role.ToString(),
                     TeamLeaderId = u.TeamLeaderId,
                     TeamLeaderName = u.TeamLeader != null ? u.TeamLeader.Name : null,
                     Departments = u.UserDepartments.Select(ud => new DepartmentDto

@@ -34,11 +34,17 @@ namespace BarqTMS.API.Models
     [Column("assigned_to")]
     public int? AssignedTo { get; set; }
 
+    [Column("original_assigner_id")]
+    public int? OriginalAssignerId { get; set; }
+
+    [Column("delegated_by")]
+    public int? DelegatedBy { get; set; }
+
     [Column("dept_id")]
     public int DeptId { get; set; }
 
     [Column("project_id")]
-        public int ProjectId { get; set; }
+        public int? ProjectId { get; set; }
 
         [Column("category_id")]
         public int? CategoryId { get; set; }
@@ -84,6 +90,12 @@ namespace BarqTMS.API.Models
         
         [ForeignKey("AssignedTo")]
         public virtual User? AssignedUser { get; set; }
+
+        [ForeignKey("OriginalAssignerId")]
+        public virtual User? OriginalAssigner { get; set; }
+
+        [ForeignKey("DelegatedBy")]
+        public virtual User? Delegator { get; set; }
         
         [ForeignKey("DeptId")]
         public virtual Department Department { get; set; } = null!;

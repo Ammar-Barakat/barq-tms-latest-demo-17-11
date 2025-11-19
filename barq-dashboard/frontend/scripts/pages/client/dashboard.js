@@ -35,7 +35,7 @@ function updateStats(data) {
     (p) => p.StatusId === 1 || p.StatusId === 2
   ).length;
   const completedProjects = data.projects.filter(
-    (p) => p.StatusId === 3
+    (p) => p.StatusId === 4
   ).length;
 
   document.getElementById("totalProjects").textContent = data.projects.length;

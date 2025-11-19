@@ -1,503 +1,289 @@
 // Team Leader My Tasks Page
-let currentFilter = "received";
-let allTasks = [];
-let currentReviewTask = null;
-
-// Initialize
 auth.requireRole([USER_ROLES.TEAM_LEADER]);
 
-// Load initial data
-loadTasks();
-loadEmployees();
+let allTasks = [];
+let projects = [];
+let employees = [];
+let currentUser = null;
+let currentTaskForAction = null;
 
-// Load tasks
-async function loadTasks() {
+// Initialize
+document.addEventListener("DOMContentLoaded", async () => {
+  currentUser = auth.getCurrentUser();
+  await loadData();
+});
+
+// Load tasks and employees
+async function loadData() {
   try {
-    const data = await API.Tasks.getAll();
-    allTasks = data.tasks || data || [];
+    utils.showLoading();
+    const [tasksResponse, projectsResponse, usersResponse] = await Promise.all([
+      API.Tasks.getAll(),
+      API.Projects.getAll().catch(() => []),
+      API.Users.getAll().catch(() => []),
+    ]);
 
-    // Get current user
-    const currentUser = auth.getUser();
+    allTasks = tasksResponse || [];
+    projects = projectsResponse || [];
 
-    // Filter tasks relevant to team leader
-    allTasks = allTasks.map((task) => {
-      // Categorize tasks
-      if (
-        task.status === "SubmittedForReview" &&
-        task.assignedTo === currentUser.id
-      ) {
-        task.category = "employee-review";
-      } else if (
-        task.assignedTo === currentUser.id &&
-        task.status !== "Completed"
-      ) {
-        task.category = "received";
-      } else if (
-        task.status === "InProgress" &&
-        task.assignedTo === currentUser.id
-      ) {
-        task.category = "in-progress";
-      } else if (
-        task.status === "Completed" &&
-        task.assignedTo === currentUser.id
-      ) {
-        task.category = "completed";
-      }
-
-      return task;
+    // Filter employees (Role 5) who are in this team leader's team
+    employees = usersResponse.filter((u) => {
+      const roleId = u.Role || u.RoleId || u.role;
+      const teamLeaderId = u.TeamLeaderId || u.teamLeaderId;
+      return roleId === 5 && teamLeaderId === currentUser.UserId;
     });
 
-    updateStatistics();
+    updateStats();
     renderTasks();
   } catch (error) {
-    console.error("Failed to load tasks:", error);
-    showNotification("Failed to load tasks", "error");
+    console.error("Failed to load data:", error);
+    utils.showError("Failed to load tasks");
+  } finally {
+    utils.hideLoading();
   }
 }
 
-// Update statistics
-function updateStatistics() {
-  const currentUser = auth.getUser();
+// Update stats
+function updateStats() {
+  // Get project IDs where this team leader is assigned
+  const myProjectIds = projects
+    .filter((p) => (p.TeamLeaderId || p.teamLeaderId) === currentUser.UserId)
+    .map((p) => p.ProjectId || p.projectId);
 
-  const received = allTasks.filter(
-    (t) =>
-      t.assignedTo === currentUser.id &&
-      t.status !== "Completed" &&
-      t.status !== "SubmittedForReview"
-  ).length;
-
-  const employeeSubmissions = allTasks.filter(
-    (t) => t.status === "SubmittedForReview" && t.assignedTo === currentUser.id
-  ).length;
-
-  const inProgress = allTasks.filter(
-    (t) => t.assignedTo === currentUser.id && t.status === "InProgress"
-  ).length;
-
-  const completed = allTasks.filter(
-    (t) => t.assignedTo === currentUser.id && t.status === "Completed"
-  ).length;
-
-  document.getElementById("receivedTasks").textContent = received;
-  document.getElementById("employeeSubmissions").textContent =
-    employeeSubmissions;
-  document.getElementById("inProgress").textContent = inProgress;
-  document.getElementById("completedCount").textContent = completed;
-
-  // Update badges
-  document.getElementById("badge-received").textContent = received;
-  document.getElementById("badge-employee-review").textContent =
-    employeeSubmissions;
-  document.getElementById("badge-in-progress").textContent = inProgress;
-}
-
-// Filter tasks
-function filterTasks(filter) {
-  currentFilter = filter;
-
-  // Update active tab
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.classList.remove("active");
+  // Filter tasks from projects assigned to this team leader
+  const myTasks = allTasks.filter((t) => {
+    const taskProjectId = t.ProjectId || t.projectId;
+    return myProjectIds.includes(taskProjectId);
   });
-  document.querySelector(`[data-filter="${filter}"]`).classList.add("active");
 
-  // Update table title
-  const titles = {
-    received: "Received Tasks from Managers",
-    "employee-review": "Employee Submissions for Review",
-    "in-progress": "Tasks In Progress",
-    completed: "Completed Tasks",
-  };
-  document.getElementById("tableTitle").textContent = titles[filter];
+  const received = myTasks.filter(
+    (t) => t.StatusId === 1 || t.StatusId === 2
+  ).length;
+  const submissions = myTasks.filter((t) => t.StatusId === 3).length; // In Review
+  const inProgress = myTasks.filter((t) => t.StatusId === 2).length;
+  const completed = myTasks.filter((t) => t.StatusId === 4).length;
 
-  renderTasks();
+  const receivedEl = document.getElementById("receivedTasks");
+  const submissionsEl = document.getElementById("employeeSubmissions");
+  const inProgressEl = document.getElementById("inProgress");
+  const completedEl = document.getElementById("completedCount");
+
+  if (receivedEl) receivedEl.textContent = received;
+  if (submissionsEl) submissionsEl.textContent = submissions;
+  if (inProgressEl) inProgressEl.textContent = inProgress;
+  if (completedEl) completedEl.textContent = completed;
 }
 
 // Render tasks
 function renderTasks() {
   const tbody = document.getElementById("tasksBody");
-  const currentUser = auth.getUser();
+  if (!tbody) return;
 
-  let filteredTasks = [];
+  // Get project IDs where this team leader is assigned
+  const myProjectIds = projects
+    .filter((p) => (p.TeamLeaderId || p.teamLeaderId) === currentUser.UserId)
+    .map((p) => p.ProjectId || p.projectId);
 
-  if (currentFilter === "received") {
-    filteredTasks = allTasks.filter(
-      (t) =>
-        t.assignedTo === currentUser.id &&
-        t.status !== "Completed" &&
-        t.status !== "SubmittedForReview"
-    );
-  } else if (currentFilter === "employee-review") {
-    filteredTasks = allTasks.filter(
-      (t) =>
-        t.status === "SubmittedForReview" && t.assignedTo === currentUser.id
-    );
-  } else if (currentFilter === "in-progress") {
-    filteredTasks = allTasks.filter(
-      (t) => t.assignedTo === currentUser.id && t.status === "InProgress"
-    );
-  } else if (currentFilter === "completed") {
-    filteredTasks = allTasks.filter(
-      (t) => t.assignedTo === currentUser.id && t.status === "Completed"
-    );
-  }
+  // Show tasks from projects where this team leader is assigned
+  // This includes tasks assigned to the team leader AND tasks assigned to their team members
+  const myTasks = allTasks.filter((t) => {
+    const taskProjectId = t.ProjectId || t.projectId;
+    return myProjectIds.includes(taskProjectId);
+  });
 
-  if (filteredTasks.length === 0) {
+  if (!myTasks || myTasks.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center" style="padding: 40px; color: var(--text-secondary)">
-          <i class="fa-solid fa-inbox" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 16px"></i>
-          No tasks found
+        <td colspan="7" class="text-center" style="padding: 40px;">
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <h3>No tasks in your projects</h3>
+            <p>There are no tasks in projects assigned to you</p>
+          </div>
         </td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = filteredTasks
-    .map(
-      (task) => `
+  tbody.innerHTML = myTasks
+    .map((task) => {
+      const needsReview = task.StatusId === 3;
+      const isAssignedToMe = task.AssignedTo === currentUser.UserId;
+
+      return `
     <tr>
+      <td><strong>${task.Title || "Untitled Task"}</strong>${
+        needsReview
+          ? '<span class="badge badge-warning" style="margin-left: 8px;">Needs Review</span>'
+          : ""
+      }</td>
+      <td>${task.ProjectName || "N/A"}</td>
+      <td>${utils.getPriorityBadge(task.PriorityId)}</td>
+      <td>${utils.getStatusBadge(task.StatusId)}</td>
+      <td>${task.AssignedToName || "Unassigned"}</td>
+      <td>${utils.formatDate(task.DueDate)}</td>
       <td>
-        <strong>${task.name}</strong>
+        <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${
+          task.TaskId
+        })" title="View Details">
+          <i class="fa-solid fa-eye"></i>
+        </button>
         ${
-          task.description
-            ? `<br><small style="color: var(--text-secondary)">${task.description.substring(
-                0,
-                80
-              )}...</small>`
+          isAssignedToMe && !needsReview
+            ? `
+          <button class="btn btn-sm btn-secondary" onclick="showPassTaskModal(${task.TaskId})" title="Pass to Employee">
+            <i class="fa-solid fa-share"></i>
+          </button>
+          <button class="btn btn-sm btn-success" onclick="requestCompletion(${task.TaskId})" title="Request Completion">
+            <i class="fa-solid fa-check"></i>
+          </button>
+        `
+            : ""
+        }
+        ${
+          needsReview
+            ? `
+          <button class="btn btn-sm btn-warning" onclick="reviewTask(${task.TaskId})" title="Review Task">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </button>
+        `
             : ""
         }
       </td>
-      <td>${task.projectName || "N/A"}</td>
-      <td>
-        <span class="badge badge-${getPriorityClass(task.priority)}">
-          ${task.priority || "Medium"}
-        </span>
-      </td>
-      <td>
-        <span class="badge badge-${getStatusClass(task.status)}">
-          ${formatStatus(task.status)}
-        </span>
-      </td>
-      <td>${task.assignedToName || "Unassigned"}</td>
-      <td>
-        ${
-          task.dueDate
-            ? `
-          <span style="color: ${
-            isOverdue(task.dueDate) ? "var(--color-danger)" : "inherit"
-          }">
-            ${formatDate(task.dueDate)}
-          </span>
-        `
-            : "N/A"
-        }
-      </td>
-      <td>
-        <div style="display: flex; gap: var(--space-2)">
-          ${
-            task.status === "SubmittedForReview"
-              ? `
-            <button class="btn btn-sm btn-primary" onclick="reviewTask(${task.id})">
-              <i class="fa-solid fa-clipboard-check"></i> Review
-            </button>
-          `
-              : currentFilter === "received"
-              ? `
-            <button class="btn btn-sm btn-primary" onclick="assignTask(${task.id})">
-              <i class="fa-solid fa-user-plus"></i> Assign
-            </button>
-          `
-              : currentFilter === "in-progress"
-              ? `
-            <button class="btn btn-sm btn-success" onclick="markComplete(${task.id})">
-              <i class="fa-solid fa-check"></i> Complete
-            </button>
-          `
-              : ""
-          }
-          <button class="btn btn-sm btn-secondary" onclick="viewTaskDetails(${
-            task.id
-          })">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
-      </td>
     </tr>
-  `
-    )
+  `;
+    })
     .join("");
 }
 
-// Review employee task submission
-function reviewTask(taskId) {
-  currentReviewTask = allTasks.find((t) => t.id === taskId);
-  if (!currentReviewTask) return;
+// Show pass task modal
+function showPassTaskModal(taskId) {
+  const task = allTasks.find((t) => t.TaskId === taskId);
+  if (!task) return;
 
-  document.getElementById("taskDetailsReview").innerHTML = `
-    <div class="details-grid">
-      <div class="detail-item">
-        <span class="detail-label">Task Name</span>
-        <span class="detail-value">${currentReviewTask.name}</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Project</span>
-        <span class="detail-value">${
-          currentReviewTask.projectName || "N/A"
-        }</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Assigned To</span>
-        <span class="detail-value">${
-          currentReviewTask.assignedToName || "N/A"
-        }</span>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Status</span>
-        <span class="detail-value">
-          <span class="badge badge-${getStatusClass(currentReviewTask.status)}">
-            ${formatStatus(currentReviewTask.status)}
-          </span>
-        </span>
-      </div>
-      <div class="detail-item" style="grid-column: 1 / -1">
-        <span class="detail-label">Description</span>
-        <span class="detail-value">${
-          currentReviewTask.description || "No description"
-        }</span>
-      </div>
-      <div class="detail-item" style="grid-column: 1 / -1">
-        <span class="detail-label">Employee Notes</span>
-        <span class="detail-value" style="background: var(--surface-secondary); padding: var(--space-3); border-radius: var(--radius-md);">
-          ${currentReviewTask.completionNotes || "No notes provided"}
-        </span>
-      </div>
-    </div>
-  `;
+  currentTaskForAction = task;
 
-  document.getElementById("reviewModal").classList.remove("d-none");
-}
-
-// Close review modal
-function closeReviewModal() {
-  document.getElementById("reviewModal").classList.add("d-none");
-  document.getElementById("reviewNotes").value = "";
-  currentReviewTask = null;
-}
-
-// Approve submission
-async function approveSubmission() {
-  if (!currentReviewTask) return;
-
-  const notes = document.getElementById("reviewNotes").value;
-
-  try {
-    // Update task status to completed
-    await API.Tasks.update(currentReviewTask.id, {
-      status: "Completed",
-      reviewNotes: notes,
-    });
-
-    // Add comment
-    if (notes) {
-      await API.Tasks.addComment(currentReviewTask.id, {
-        comment: `Task approved by Team Leader: ${notes}`,
-      });
-    }
-
-    showNotification("Task approved successfully", "success");
-    closeReviewModal();
-    loadTasks();
-  } catch (error) {
-    console.error("Failed to approve task:", error);
-    showNotification("Failed to approve task", "error");
-  }
-}
-
-// Reject submission
-async function rejectSubmission() {
-  if (!currentReviewTask) return;
-
-  const notes = document.getElementById("reviewNotes").value;
-
-  if (!notes.trim()) {
-    showNotification("Please provide feedback for rejection", "warning");
-    return;
-  }
-
-  try {
-    // Update task status back to in progress
-    await API.Tasks.update(currentReviewTask.id, {
-      status: "InProgress",
-      reviewNotes: notes,
-    });
-
-    // Add comment
-    await API.Tasks.addComment(currentReviewTask.id, {
-      comment: `Task rejected by Team Leader - Needs rework: ${notes}`,
-    });
-
-    showNotification("Task sent back for rework", "info");
-    closeReviewModal();
-    loadTasks();
-  } catch (error) {
-    console.error("Failed to reject task:", error);
-    showNotification("Failed to reject task", "error");
-  }
-}
-
-// Assign task to employee
-let currentAssignTask = null;
-
-function assignTask(taskId) {
-  currentAssignTask = allTasks.find((t) => t.id === taskId);
-  if (!currentAssignTask) return;
-
-  document.getElementById("taskIdToAssign").value = taskId;
-  document.getElementById("assignTaskName").textContent =
-    currentAssignTask.name;
-  document.getElementById("assignModal").classList.remove("d-none");
-}
-
-function closeAssignModal() {
-  document.getElementById("assignModal").classList.add("d-none");
-  document.getElementById("assignForm").reset();
-  currentAssignTask = null;
-}
-
-// Load employees (team members)
-async function loadEmployees() {
-  try {
-    const users = await API.Users.getAll();
-    const employees = users.filter((u) => u.role === "EMPLOYEE");
-
-    const select = document.getElementById("employeeSelect");
-    select.innerHTML =
+  // Populate employee dropdown
+  const employeeSelect = document.getElementById("employeeSelect");
+  if (employeeSelect) {
+    employeeSelect.innerHTML =
       '<option value="">Select an employee...</option>' +
       employees
         .map(
           (emp) => `
-        <option value="${emp.id}">${emp.fullName || emp.email}</option>
+        <option value="${emp.UserId || emp.userId}">${
+            emp.Name || emp.name
+          }</option>
       `
         )
         .join("");
-  } catch (error) {
-    console.error("Failed to load employees:", error);
   }
+
+  document.getElementById("passTaskTitle").textContent = task.Title;
+  document.getElementById("passTaskModal").classList.remove("d-none");
 }
 
-// Handle assign form submission
-document.getElementById("assignForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+// Close pass task modal
+function closePassTaskModal() {
+  document.getElementById("passTaskModal").classList.add("d-none");
+  document.getElementById("passTaskNotes").value = "";
+  currentTaskForAction = null;
+}
 
-  const taskId = document.getElementById("taskIdToAssign").value;
+// Handle pass task
+async function handlePassTask() {
+  if (!currentTaskForAction) return;
+
   const employeeId = document.getElementById("employeeSelect").value;
-  const notes = document.getElementById("assignNotes").value;
+  const notes = document.getElementById("passTaskNotes").value;
 
   if (!employeeId) {
-    showNotification("Please select an employee", "warning");
+    utils.showError("Please select an employee");
     return;
   }
 
   try {
-    await API.Tasks.update(taskId, {
-      assignedTo: employeeId,
-      status: "InProgress",
+    utils.showLoading();
+
+    await API.Tasks.passTask(currentTaskForAction.TaskId, {
+      assignToUserId: parseInt(employeeId),
+      notes: notes || null,
     });
 
-    if (notes) {
-      await API.Tasks.addComment(taskId, {
-        comment: `Task assigned by Team Leader: ${notes}`,
-      });
-    }
+    const employee = employees.find(
+      (e) => (e.UserId || e.userId) == employeeId
+    );
+    const employeeName = employee ? employee.Name || employee.name : "employee";
 
-    showNotification("Task assigned successfully", "success");
-    closeAssignModal();
-    loadTasks();
+    utils.showSuccess(`Task passed to ${employeeName}`);
+    closePassTaskModal();
+    await loadData();
   } catch (error) {
-    console.error("Failed to assign task:", error);
-    showNotification("Failed to assign task", "error");
+    console.error("Error passing task:", error);
+    utils.showError(error.message || "Failed to pass task");
+  } finally {
+    utils.hideLoading();
   }
-});
+}
 
-// Mark task as complete
-async function markComplete(taskId) {
-  if (!confirm("Mark this task as complete?")) return;
+// Request completion for task
+async function requestCompletion(taskId) {
+  if (
+    !confirm(
+      "Request review for this task? It will be sent to the manager/account manager for approval."
+    )
+  )
+    return;
 
   try {
-    await API.Tasks.update(taskId, {
-      status: "Completed",
-    });
-
-    showNotification("Task marked as complete", "success");
-    loadTasks();
+    utils.showLoading();
+    await API.Tasks.requestComplete(taskId);
+    utils.showSuccess("Task sent for review");
+    await loadData();
   } catch (error) {
-    console.error("Failed to complete task:", error);
-    showNotification("Failed to complete task", "error");
+    console.error("Error requesting completion:", error);
+    utils.showError("Failed to request task completion");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Review task (placeholder - implement review modal if needed)
+async function reviewTask(taskId) {
+  try {
+    const task = await API.Tasks.getById(taskId);
+    // For now, just show task details
+    utils.showSuccess("Task review functionality - implement modal if needed");
+    console.log("Task to review:", task);
+  } catch (error) {
+    console.error("Failed to load task for review:", error);
+    utils.showError("Failed to load task details");
   }
 }
 
 // View task details
-function viewTaskDetails(taskId) {
-  const task = allTasks.find((t) => t.id === taskId);
-  if (!task) return;
-
-  alert(
-    `Task Details:\n\nName: ${task.name}\nDescription: ${
-      task.description || "N/A"
-    }\nStatus: ${formatStatus(task.status)}\nPriority: ${
-      task.priority
-    }\nDue Date: ${task.dueDate ? formatDate(task.dueDate) : "N/A"}`
-  );
-}
-
-// Helper functions
-function getPriorityClass(priority) {
-  const classes = {
-    Low: "success",
-    Medium: "warning",
-    High: "danger",
-    Critical: "danger",
-  };
-  return classes[priority] || "secondary";
-}
-
-function getStatusClass(status) {
-  const classes = {
-    NotStarted: "secondary",
-    InProgress: "primary",
-    SubmittedForReview: "warning",
-    Completed: "success",
-    Cancelled: "danger",
-  };
-  return classes[status] || "secondary";
-}
-
-function formatStatus(status) {
-  return status.replace(/([A-Z])/g, " $1").trim();
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function isOverdue(dateString) {
-  return new Date(dateString) < new Date();
+async function viewTaskDetails(taskId) {
+  try {
+    const task = await API.Tasks.getById(taskId);
+    utils.showSuccess("Task details loaded");
+    console.log("Task details:", task);
+  } catch (error) {
+    console.error("Failed to load task details:", error);
+    utils.showError("Failed to load task details");
+  }
 }
 
 // Search functionality
-document.getElementById("searchInput").addEventListener("input", (e) => {
-  const searchTerm = e.target.value.toLowerCase();
-  const rows = document.querySelectorAll("#tasksBody tr");
+const searchInput = document.getElementById("searchInput");
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll("#tasksBody tr");
 
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    row.style.display = text.includes(searchTerm) ? "" : "none";
+    rows.forEach((row) => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(searchTerm) ? "" : "none";
+    });
   });
-});
+}

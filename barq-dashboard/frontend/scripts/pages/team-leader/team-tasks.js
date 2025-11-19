@@ -1,12 +1,16 @@
-// Team Leader Team Tasks Script
+// Team Leader Team Tasks
 auth.requireRole([USER_ROLES.TEAM_LEADER]);
 
 let allTasks = [];
 let projects = [];
-let employees = [];
-let currentEditId = null;
+let employees = []; // Will contain only supervised employees
+let priorities = [];
+let statuses = [];
+let departments = [];
+let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  currentUser = auth.getUser();
   await loadTeamTasks();
   setupEventListeners();
 });
@@ -21,15 +25,60 @@ function setupEventListeners() {
 async function loadTeamTasks() {
   try {
     utils.showLoading();
-    [allTasks, projects, employees] = await Promise.all([
-      API.Tasks.getAll(),
-      API.Projects.getAll().catch(() => []),
-      API.Users.getAll().catch(() => []),
-    ]);
+
+    [allTasks, projects, allUsers, priorities, statuses, departments] =
+      await Promise.all([
+        API.Tasks.getAll(),
+        API.Projects.getAll().catch(() => []),
+        API.Users.getAll().catch(() => []),
+        fetch(`${API_CONFIG.BASE_URL}/priorities`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem(
+              API_CONFIG.TOKEN_KEY
+            )}`,
+          },
+        })
+          .then((r) => r.json())
+          .catch(() => []),
+        fetch(`${API_CONFIG.BASE_URL}/statuses`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem(
+              API_CONFIG.TOKEN_KEY
+            )}`,
+          },
+        })
+          .then((r) => r.json())
+          .catch(() => []),
+        fetch(`${API_CONFIG.BASE_URL}/departments`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem(
+              API_CONFIG.TOKEN_KEY
+            )}`,
+          },
+        })
+          .then((r) => r.json())
+          .catch(() => []),
+      ]);
+
+    // Filter employees to only those under this team leader
+    employees = allUsers.filter((u) => {
+      const roleId = u.Role || u.RoleId;
+      const teamLeaderId = u.TeamLeaderId || u.teamLeaderId;
+      return roleId === 5 && teamLeaderId === currentUser.UserId;
+    });
+
+    // Filter tasks from projects where this team leader is assigned
+    const myProjectIds = projects
+      .filter((p) => (p.TeamLeaderId || p.teamLeaderId) === currentUser.UserId)
+      .map((p) => p.ProjectId || p.projectId);
+
+    const teamTasks = allTasks.filter((t) => {
+      const taskProjectId = t.ProjectId || t.projectId;
+      return myProjectIds.includes(taskProjectId);
+    });
 
     populateDropdowns();
-    // TODO: Filter by team members - for now showing all tasks
-    renderTasks(allTasks);
+    renderTasks(teamTasks);
   } catch (error) {
     console.error("Error loading team tasks:", error);
     utils.showError("Failed to load team tasks");
@@ -39,10 +88,10 @@ async function loadTeamTasks() {
 }
 
 function populateDropdowns() {
+  // Projects
   const projectSelect = document.getElementById("projectId");
-  const employeeSelect = document.getElementById("assignedToId");
-
-  projectSelect.innerHTML = '<option value="">Select Project</option>';
+  projectSelect.innerHTML =
+    '<option value="">Select Project (Optional)</option>';
   projects.forEach((project) => {
     const option = document.createElement("option");
     option.value = project.ProjectId;
@@ -50,12 +99,44 @@ function populateDropdowns() {
     projectSelect.appendChild(option);
   });
 
+  // Employees (only supervised)
+  const employeeSelect = document.getElementById("assignedToId");
   employeeSelect.innerHTML = '<option value="">Select Employee</option>';
   employees.forEach((emp) => {
     const option = document.createElement("option");
     option.value = emp.UserId;
     option.textContent = emp.Name || emp.Username;
     employeeSelect.appendChild(option);
+  });
+
+  // Priorities
+  const prioritySelect = document.getElementById("priorityId");
+  prioritySelect.innerHTML = '<option value="">Select Priority</option>';
+  priorities.forEach((priority) => {
+    const option = document.createElement("option");
+    option.value = priority.PriorityId || priority.priorityId;
+    option.textContent = priority.PriorityLevel || priority.priorityLevel;
+    prioritySelect.appendChild(option);
+  });
+
+  // Statuses
+  const statusSelect = document.getElementById("statusId");
+  statusSelect.innerHTML = '<option value="">Select Status</option>';
+  statuses.forEach((status) => {
+    const option = document.createElement("option");
+    option.value = status.StatusId || status.statusId;
+    option.textContent = status.StatusName || status.statusName;
+    statusSelect.appendChild(option);
+  });
+
+  // Departments
+  const deptSelect = document.getElementById("deptId");
+  deptSelect.innerHTML = '<option value="">Select Department</option>';
+  departments.forEach((dept) => {
+    const option = document.createElement("option");
+    option.value = dept.DeptId || dept.deptId;
+    option.textContent = dept.DeptName || dept.deptName;
+    deptSelect.appendChild(option);
   });
 }
 
@@ -104,17 +185,15 @@ function renderTasks(tasks) {
     .join("");
 }
 
-function showCreateModal() {
+function showAddModal() {
   currentEditId = null;
-  document.getElementById("modalTitle").textContent = "Create Task";
   document.getElementById("taskForm").reset();
-  document.getElementById("taskId").value = "";
+  document.getElementById("modalTitle").textContent = "Create New Task";
   document.getElementById("taskModal").classList.remove("d-none");
 }
 
 function closeModal() {
   document.getElementById("taskModal").classList.add("d-none");
-  document.getElementById("taskForm").reset();
   currentEditId = null;
 }
 
@@ -124,17 +203,18 @@ async function handleSubmit(e) {
   const formData = {
     Title: document.getElementById("title").value,
     Description: document.getElementById("description").value,
-    ProjectId: parseInt(document.getElementById("projectId").value) || null,
-    AssignedTo: parseInt(document.getElementById("assignedToId").value) || null,
-    StatusId: parseInt(document.getElementById("status").value),
-    PriorityId: parseInt(document.getElementById("priority").value),
+    PriorityId: parseInt(document.getElementById("priorityId").value),
+    StatusId: parseInt(document.getElementById("statusId").value),
     DueDate: document.getElementById("dueDate").value || null,
-    DeptId: 1,
+    AssignedTo: parseInt(document.getElementById("assignedToId").value) || null,
+    DeptId: parseInt(document.getElementById("deptId").value),
+    ProjectId: parseInt(document.getElementById("projectId").value) || null,
+    DriveFolderLink: document.getElementById("driveFolderLink").value,
+    MaterialDriveFolderLink:
+      document.getElementById("materialDriveFolderLink").value || null,
   };
 
   try {
-    utils.showLoading();
-
     if (currentEditId) {
       await API.Tasks.update(currentEditId, formData);
       utils.showSuccess("Task updated successfully");
@@ -147,8 +227,6 @@ async function handleSubmit(e) {
     await loadTeamTasks();
   } catch (error) {
     console.error("Error saving task:", error);
-    utils.showError("Failed to save task");
-  } finally {
-    utils.hideLoading();
+    utils.showError(error.message || "Failed to save task");
   }
 }

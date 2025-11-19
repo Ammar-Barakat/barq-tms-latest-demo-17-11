@@ -269,9 +269,9 @@
               </div>
 
               <div class="form-group">
-                <label for="teamLeaderSelect">Delegate to Team Leader *</label>
+                <label for="teamLeaderSelect">Delegate to *</label>
                 <select class="form-control" id="teamLeaderSelect" required>
-                  <option value="">Select a team leader...</option>
+                  <option value="">Select a user...</option>
                 </select>
               </div>
 
@@ -356,6 +356,83 @@
                 <i class="fa-solid fa-check"></i> Mark Complete
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Task Modal -->
+    <div id="reviewModal" class="modal-backdrop d-none">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>
+              <i class="fa-solid fa-clipboard-check"></i> Review Task Completion
+            </h3>
+            <button class="btn-icon" onclick="closeReviewModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div
+              id="reviewTaskDetails"
+              style="
+                margin-bottom: var(--space-4);
+                padding: var(--space-4);
+                background: var(--surface-secondary);
+                border-radius: var(--radius-md);
+              "
+            >
+              <!-- Task details will be shown here -->
+            </div>
+
+            <form id="reviewForm">
+              <div class="form-group">
+                <label for="reviewAction"
+                  >Decision
+                  <span style="color: var(--danger-color)">*</span></label
+                >
+                <select class="form-control" id="reviewAction" required>
+                  <option value="">Select action...</option>
+                  <option value="approve">✓ Approve - Mark as Done</option>
+                  <option value="reject">
+                    ✗ Reject - Send back for revision
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reviewNotes">Review Notes</label>
+                <textarea
+                  class="form-control"
+                  id="reviewNotes"
+                  rows="4"
+                  placeholder="Add notes about your decision (optional for approval, recommended for rejection)..."
+                ></textarea>
+              </div>
+
+              <div
+                class="form-group"
+                id="newDueDateGroup"
+                style="display: none"
+              >
+                <label for="reviewNewDueDate">New Due Date (optional)</label>
+                <input type="date" class="form-control" id="reviewNewDueDate" />
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  onclick="closeReviewModal()"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fa-solid fa-check"></i> Submit Review
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

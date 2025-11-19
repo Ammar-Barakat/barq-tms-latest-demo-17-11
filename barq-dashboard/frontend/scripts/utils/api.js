@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: "https://localhost:44383/api",
+  BASE_URL: "http://localhost:5144/api",
   TOKEN_KEY: "auth_token",
   USER_KEY: "user_data",
 };
@@ -208,27 +208,134 @@ const API = {
       const client = new APIClient();
       return client.get(`/Tasks/${id}/latest-decline-comment`);
     },
-    // Account Manager Review Workflow
+    async passTask(id, passData) {
+      const client = new APIClient();
+      return client.put(`/Tasks/${id}/pass`, passData);
+    },
+    // Get tasks by project (helper method)
+    async getByProject(projectId) {
+      const client = new APIClient();
+      return client.get(`/Projects/${projectId}/tasks`);
+    },
+
+    // ========================================================================
+    // ACCOUNT MANAGER REVIEW WORKFLOW - PLACEHOLDER ENDPOINTS
+    // ========================================================================
+    // These endpoints need to be implemented on the backend
+    // Current implementation uses workarounds with existing endpoints
+
+    /**
+     * PLACEHOLDER: Approve task and send to client
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: PUT /api/Tasks/{id}/approve-for-client
+     * Body: { notes: string, accountManagerId: int }
+     * Updates: StatusId, AccountManagerApproved, SentToClient, AccountManagerNotes
+     *
+     * CURRENT WORKAROUND: Use Tasks.update() with status change
+     */
     async approveForClient(id, notes) {
       const client = new APIClient();
-      // Placeholder endpoint
-      return client.put(`/Tasks/${id}/approve-for-client`, { notes });
+      console.warn(
+        "[PLACEHOLDER API] approveForClient - Backend endpoint needed"
+      );
+      console.log(
+        "Expected endpoint: PUT /api/Tasks/" + id + "/approve-for-client"
+      );
+      // return client.put(`/Tasks/${id}/approve-for-client`, { notes });
+      throw new Error(
+        "Backend endpoint not implemented. Use Tasks.update() workaround."
+      );
     },
+
+    /**
+     * PLACEHOLDER: Send task back to team leader for rework
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: PUT /api/Tasks/{id}/send-back-rework
+     * Body: { feedback: string, accountManagerId: int }
+     * Updates: StatusId to IN_PROGRESS, clears approval flags
+     *
+     * CURRENT WORKAROUND: Use Tasks.update() with status change
+     */
     async sendBackForRework(id, feedback) {
       const client = new APIClient();
-      // Placeholder endpoint
-      return client.put(`/Tasks/${id}/send-back-rework`, { feedback });
+      console.warn(
+        "[PLACEHOLDER API] sendBackForRework - Backend endpoint needed"
+      );
+      console.log(
+        "Expected endpoint: PUT /api/Tasks/" + id + "/send-back-rework"
+      );
+      // return client.put(`/Tasks/${id}/send-back-rework`, { feedback });
+      throw new Error(
+        "Backend endpoint not implemented. Use Tasks.update() workaround."
+      );
     },
-    // Client Review Workflow
-    async clientApprove(id, notes) {
+
+    /**
+     * PLACEHOLDER: Client approves task
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: PUT /api/Tasks/{id}/client-approve
+     * Body: { notes: string, clientUserId: int }
+     * Updates: StatusId to CLIENT_APPROVED, ClientApproved = true, ClientReviewDate
+     *
+     * CURRENT WORKAROUND: Use Tasks.update() with status change
+     */
+    async clientApprove(id, notes, clientUserId) {
       const client = new APIClient();
-      // Placeholder endpoint
-      return client.put(`/Tasks/${id}/client-approve`, { notes });
+      console.warn("[PLACEHOLDER API] clientApprove - Backend endpoint needed");
+      console.log(
+        "Expected endpoint: PUT /api/Tasks/" + id + "/client-approve"
+      );
+      // return client.put(`/Tasks/${id}/client-approve`, { notes, clientUserId });
+      throw new Error(
+        "Backend endpoint not implemented. Use Tasks.update() workaround."
+      );
     },
-    async clientReject(id, feedback) {
+
+    /**
+     * PLACEHOLDER: Client rejects task with feedback
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: PUT /api/Tasks/{id}/client-reject
+     * Body: { feedback: string, clientUserId: int }
+     * Updates: StatusId to CLIENT_REJECTED, ClientApproved = false, ClientFeedback
+     *
+     * CURRENT WORKAROUND: Use Tasks.update() with status change
+     */
+    async clientReject(id, feedback, clientUserId) {
       const client = new APIClient();
-      // Placeholder endpoint
-      return client.put(`/Tasks/${id}/client-reject`, { feedback });
+      console.warn("[PLACEHOLDER API] clientReject - Backend endpoint needed");
+      console.log("Expected endpoint: PUT /api/Tasks/" + id + "/client-reject");
+      // return client.put(`/Tasks/${id}/client-reject`, { feedback, clientUserId });
+      throw new Error(
+        "Backend endpoint not implemented. Use Tasks.update() workaround."
+      );
+    },
+
+    /**
+     * PLACEHOLDER: Team leader submits task for account manager review
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: PUT /api/Tasks/{id}/submit-for-review
+     * Body: { notes: string, teamLeaderId: int }
+     * Updates: StatusId to PENDING_AM_REVIEW, SubmittedForReview = true
+     *
+     * CURRENT WORKAROUND: Use Tasks.update() with status change
+     */
+    async submitForReview(id, notes) {
+      const client = new APIClient();
+      console.warn(
+        "[PLACEHOLDER API] submitForReview - Backend endpoint needed"
+      );
+      console.log(
+        "Expected endpoint: PUT /api/Tasks/" + id + "/submit-for-review"
+      );
+      // return client.put(`/Tasks/${id}/submit-for-review`, { notes });
+      throw new Error(
+        "Backend endpoint not implemented. Use Tasks.update() workaround."
+      );
     },
   },
 
@@ -357,6 +464,27 @@ const API = {
     async getProjects(clientId) {
       const client = new APIClient();
       return client.get(`/Clients/${clientId}/projects`);
+    },
+
+    /**
+     * PLACEHOLDER: Get users associated with a client
+     *
+     * BACKEND REQUIREMENT:
+     * Endpoint: GET /api/Clients/{id}/users
+     * Returns: [{ userId, userName, email, role }]
+     *
+     * PURPOSE: To notify client users when tasks are ready for review
+     *
+     * CURRENT WORKAROUND: None - feature unavailable
+     */
+    async getUsers(clientId) {
+      const client = new APIClient();
+      console.warn(
+        "[PLACEHOLDER API] Clients.getUsers - Backend endpoint needed"
+      );
+      console.log("Expected endpoint: GET /api/Clients/" + clientId + "/users");
+      // return client.get(`/Clients/${clientId}/users`);
+      throw new Error("Backend endpoint not implemented");
     },
   },
 

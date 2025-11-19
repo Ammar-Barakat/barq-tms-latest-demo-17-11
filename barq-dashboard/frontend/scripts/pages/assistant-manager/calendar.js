@@ -127,6 +127,13 @@ function createDayCell(day, otherMonth = false, isToday = false, date = null) {
       eventEl.className = "calendar-event task";
       eventEl.textContent = task.Title;
       eventEl.title = task.Title;
+
+      // Add click handler to view/edit task
+      eventEl.onclick = (e) => {
+        e.stopPropagation();
+        showEditTaskModal(task);
+      };
+
       eventsContainer.appendChild(eventEl);
     });
   }
@@ -219,6 +226,26 @@ function showCreateEventModal(date = null) {
   }
 }
 
+function showEditTaskModal(task) {
+  document.getElementById("eventModal").classList.remove("d-none");
+
+  // Populate form with task data
+  document.getElementById("eventTitle").value = task.Title || "";
+  document.getElementById("eventDescription").value = task.Description || "";
+
+  if (task.DueDate) {
+    const dueDate = new Date(task.DueDate);
+    const dateStr = dueDate.toISOString().split("T")[0];
+    const timeStr = dueDate.toISOString().split("T")[1].substring(0, 5);
+    document.getElementById("eventDate").value = dateStr;
+    document.getElementById("eventTime").value = timeStr;
+  }
+
+  // Store task ID for update
+  document.getElementById("eventForm").dataset.taskId =
+    task.TaskId || task.taskId;
+}
+
 function closeEventModal() {
   document.getElementById("eventModal").classList.add("d-none");
   document.getElementById("eventForm").reset();
@@ -270,22 +297,22 @@ async function handleEventSubmit(e) {
 // Helper functions
 function getStatusText(status) {
   const statuses = {
-    1: "Pending",
+    1: "To Do",
     2: "In Progress",
-    3: "Completed",
-    4: "On Hold",
+    3: "In Review",
+    4: "Completed",
     5: "Cancelled",
   };
-  return statuses[status] || "Pending";
+  return statuses[status] || "To Do";
 }
 
 function getStatusBadgeClass(status) {
   const classes = {
-    1: "warning",
+    1: "secondary",
     2: "info",
-    3: "success",
-    4: "secondary",
-    5: "secondary",
+    3: "warning",
+    4: "success",
+    5: "danger",
   };
   return classes[status] || "secondary";
 }
