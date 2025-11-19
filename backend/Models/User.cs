@@ -56,7 +56,18 @@ namespace BarqTMS.API.Models
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
         
+        [StringLength(100)]
+        [Column("position")]
+        public string? Position { get; set; }
+        
+        [Column("team_leader_id")]
+        public int? TeamLeaderId { get; set; }
+        
         // Navigation properties
+        [ForeignKey(nameof(TeamLeaderId))]
+        public virtual User? TeamLeader { get; set; }
+        
+        public virtual ICollection<User> ManagedEmployees { get; set; } = new List<User>(); // Employees under this Team Leader
         public virtual ICollection<UserDepartment> UserDepartments { get; set; } = new List<UserDepartment>();
         public virtual ICollection<WorkTask> AssignedTasks { get; set; } = new List<WorkTask>();
         public virtual ICollection<WorkTask> CreatedTasks { get; set; } = new List<WorkTask>();

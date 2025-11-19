@@ -1,4 +1,4 @@
-// Accountant Projects Page Script
+// Account Manager Projects Page Script
 auth.requireRole([USER_ROLES.ACCOUNTANT]);
 
 let projects = [];

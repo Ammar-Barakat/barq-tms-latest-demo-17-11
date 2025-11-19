@@ -1,4 +1,4 @@
-// Accountant Dashboard Script
+// Account Manager Dashboard Script
 auth.requireRole([USER_ROLES.ACCOUNTANT]);
 
 document.addEventListener("DOMContentLoaded", async () => {

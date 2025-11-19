@@ -1,4 +1,4 @@
-// Accountant Clients Page Script
+// Account Manager Clients Page Script
 auth.requireRole([USER_ROLES.ACCOUNTANT]);
 
 let clients = [];

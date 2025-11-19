@@ -454,7 +454,7 @@ class NotificationPanel {
             // Assistant Manager
             tasksPage = "tasks.html";
           } else if (role === 3) {
-            // Accountant
+            // Account Manager
             tasksPage = "tasks.html";
           } else if (role === 4) {
             // Team Leader
