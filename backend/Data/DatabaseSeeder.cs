@@ -19,26 +19,24 @@ namespace BarqTMS.API.Data
             await SeedStatuses(context);
             await SeedRoles(context);
             await SeedDepartments(context);
-            //await SeedTaskCategories(context);
-            //await SeedClients(context);
             await SeedUsers(context, authService);
+            await SeedClients(context);
+            await SeedProjects(context);
+            await SeedTasks(context);
+            await SeedTaskComments(context);
+            await SeedNotifications(context);
             await SeedUserSettings(context);
-            //await SeedProjects(context);
-            //await SeedProjectMilestones(context);
-            //await SeedTasks(context);
-            //await SeedTaskDependencies(context);
-            //await SeedTimeLogs(context);
-            //await SeedCalendarEvents(context);
-            //await SeedCalendarAttendees(context);
-            //await SeedCalendarReminders(context);
-            //await SeedAttachments(context);
-            //await SeedNotifications(context);
-
+            
             await context.SaveChangesAsync();
         }
 
         private static async Task SeedPriorities(BarqTMSDbContext context)
         {
+            if (await context.Priorities.AnyAsync())
+            {
+                return;
+            }
+
             var priorities = new[]
             {
                 new Priority { Level = "Critical" },
@@ -53,6 +51,11 @@ namespace BarqTMS.API.Data
 
         private static async Task SeedStatuses(BarqTMSDbContext context)
         {
+            if (await context.Statuses.AnyAsync())
+            {
+                return;
+            }
+
             var statuses = new[]
             {
                 new Status { StatusName = "To Do" },
@@ -68,6 +71,11 @@ namespace BarqTMS.API.Data
 
         private static async Task SeedRoles(BarqTMSDbContext context)
         {
+            if (await context.Roles.AnyAsync())
+            {
+                return;
+            }
+
             var roles = new[]
             {
                 new Role { RoleName = "Manager" },
@@ -84,6 +92,11 @@ namespace BarqTMS.API.Data
 
         private static async Task SeedDepartments(BarqTMSDbContext context)
         {
+            if (await context.Departments.AnyAsync())
+            {
+                return;
+            }
+
             var departments = new[]
             {
                 new Department { DeptName = "Information Technology" },
@@ -100,544 +113,448 @@ namespace BarqTMS.API.Data
             await context.SaveChangesAsync();
         }
 
-        private static async Task SeedClients(BarqTMSDbContext context)
-        {
-            var clients = new[]
-            {
-                new Client { Name = "TechCorp Solutions", Email = "contact@techcorp.com" },
-                new Client { Name = "Global Industries", Email = "info@globalind.com" },
-            };
-
-            await context.Clients.AddRangeAsync(clients);
-            await context.SaveChangesAsync();
-        }
-
         private static async Task SeedUsers(BarqTMSDbContext context, AuthService authService)
+    {
+        if (await context.Users.AnyAsync()) return;
+
+        // Get departments
+        var itDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Information Technology");
+        var hrDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Human Resources");
+        var marketingDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Marketing");
+        var salesDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Sales");
+        var financeDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Finance");
+        var operationsDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Operations");
+
+        // 1. Manager (Admin) - Full access
+        var admin = new User
         {
-            var users = new[]
-            {
-                // Default Admin Account
-                new User
-                {
-                    Name = "System Administrator",
-                    Username = "admin",
-                    Email = "admin@barqtms.com",
-                    Role = UserRole.Manager,
-                    PasswordHash = authService.HashPassword("Admin@123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-400),
-                    UpdatedAt = DateTime.UtcNow,
-                    LastLogin = DateTime.UtcNow,
-                    IsActive = true
-                },
-                // CEO
-                new User
-                {
-                    Name = "Sarah Johnson",
-                    Username = "sarah.johnson",
-                    Email = "ceo@barqtms.com",
-                    Role = UserRole.Manager,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-365),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-30),
-                    LastLogin = DateTime.UtcNow.AddHours(-2),
-                    IsActive = true
-                },
-                // Owner
-                new User
-                {
-                    Name = "Ahmed Al-Rashid",
-                    Username = "ahmed.alrashid",
-                    Email = "owner@barqtms.com",
-                    Role = UserRole.AssistantManager,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-350),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-15),
-                    LastLogin = DateTime.UtcNow.AddHours(-1),
-                    IsActive = true
-                },
-                // Managers
-                new User
-                {
-                    Name = "Michael Chen",
-                    Username = "michael.chen",
-                    Email = "m.chen@barqtms.com",
-                    Role = UserRole.AccountManager,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-300),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-10),
-                    LastLogin = DateTime.UtcNow.AddMinutes(-30),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Fatima Al-Zahra",
-                    Username = "fatima.alzahra",
-                    Email = "f.alzahra@barqtms.com",
-                    Role = UserRole.TeamLeader,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-280),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-5),
-                    LastLogin = DateTime.UtcNow.AddHours(-3),
-                    IsActive = true
-                },
-                // Employees
-                new User
-                {
-                    Name = "John Smith",
-                    Username = "john.smith",
-                    Email = "j.smith@barqtms.com",
-                    Role = UserRole.Employee,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-200),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-2),
-                    LastLogin = DateTime.UtcNow.AddMinutes(-15),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Emily Davis",
-                    Username = "emily.davis",
-                    Email = null, // No email provided yet
-                    Role = UserRole.Employee,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-180),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-1),
-                    LastLogin = DateTime.UtcNow.AddMinutes(-45),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Omar Hassan",
-                    Username = "omar.hassan",
-                    Email = "o.hassan@barqtms.com",
-                    Role = UserRole.Employee,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-150),
-                    UpdatedAt = DateTime.UtcNow,
-                    LastLogin = DateTime.UtcNow.AddMinutes(-10),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Lisa Wang",
-                    Username = "lisa.wang",
-                    Email = null, // No email provided yet
-                    Role = UserRole.Employee,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-120),
-                    UpdatedAt = DateTime.UtcNow,
-                    LastLogin = DateTime.UtcNow.AddMinutes(-5),
-                    IsActive = true
-                },
-                // Client Users
-                new User
-                {
-                    Name = "Robert Miller",
-                    Username = "robert.miller",
-                    Email = "r.miller@techcorp.com",
-                    Role = UserRole.Client,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-100),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-3),
-                    LastLogin = DateTime.UtcNow.AddHours(-6),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Jennifer Wilson",
-                    Username = "jennifer.wilson",
-                    Email = null, // No email provided yet
-                    Role = UserRole.Client,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-90),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-7),
-                    LastLogin = DateTime.UtcNow.AddHours(-12),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "David Brown",
-                    Username = "david.brown",
-                    Email = "d.brown@startuphub.com",
-                    Role = UserRole.Client,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-80),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-4),
-                    LastLogin = DateTime.UtcNow.AddHours(-8),
-                    IsActive = true
-                },
-                new User
-                {
-                    Name = "Maria Garcia",
-                    Username = "maria.garcia",
-                    Email = "m.garcia@enterprise.com",
-                    Role = UserRole.Client,
-                    PasswordHash = authService.HashPassword("password123"),
-                    CreatedAt = DateTime.UtcNow.AddDays(-70),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-2),
-                    LastLogin = DateTime.UtcNow.AddHours(-4),
-                    IsActive = true
-                }
-            };
+            Name = "System Administrator",
+            Username = "admin",
+            Email = "admin@barqtms.com",
+            PasswordHash = authService.HashPassword("Admin@123"),
+            Role = UserRole.Manager,
+            IsActive = true,
+            Position = "System Admin",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(admin);
+        await context.SaveChangesAsync();
 
-            await context.Users.AddRangeAsync(users);
-            await context.SaveChangesAsync();
+        if (itDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = admin.UserId, DeptId = itDept.DeptId });
 
-            // Assign departments to users (no more role assignments needed)
-            var departmentAssignments = new List<UserDepartment>();
+        // 2. Account Manager - Should see all clients and their projects
+        var accountManager1 = new User
+        {
+            Name = "Sarah Johnson",
+            Username = "sarah.johnson",
+            Email = "sarah.johnson@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.AccountManager,
+            IsActive = true,
+            Position = "Senior Account Manager",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(accountManager1);
 
-            // Get departments
-            var itDept = await context.Departments.FirstAsync(d => d.DeptName == "Information Technology");
-            var hrDept = await context.Departments.FirstAsync(d => d.DeptName == "Human Resources");
-            var marketingDept = await context.Departments.FirstAsync(d => d.DeptName == "Marketing");
-            var salesDept = await context.Departments.FirstAsync(d => d.DeptName == "Sales");
-            var financeDept = await context.Departments.FirstAsync(d => d.DeptName == "Finance");
+        var accountManager2 = new User
+        {
+            Name = "Michael Chen",
+            Username = "michael.chen",
+            Email = "michael.chen@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.AccountManager,
+            IsActive = true,
+            Position = "Account Manager",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(accountManager2);
+        await context.SaveChangesAsync();
 
-            // Admin (System Administrator - User ID 1)
-            departmentAssignments.Add(new UserDepartment { UserId = 1, DeptId = itDept.DeptId });
-
-            // CEO (Sarah Johnson - User ID 2)
-            departmentAssignments.Add(new UserDepartment { UserId = 2, DeptId = itDept.DeptId });
-
-            // Owner (Ahmed Al-Rashid - User ID 3)
-            departmentAssignments.Add(new UserDepartment { UserId = 3, DeptId = itDept.DeptId });
-
-            // Managers
-            departmentAssignments.Add(new UserDepartment { UserId = 4, DeptId = itDept.DeptId });
-            departmentAssignments.Add(new UserDepartment { UserId = 5, DeptId = hrDept.DeptId });
-
-            // Employees
-            departmentAssignments.Add(new UserDepartment { UserId = 6, DeptId = itDept.DeptId });
-            departmentAssignments.Add(new UserDepartment { UserId = 7, DeptId = marketingDept.DeptId });
-            departmentAssignments.Add(new UserDepartment { UserId = 8, DeptId = salesDept.DeptId });
-            departmentAssignments.Add(new UserDepartment { UserId = 9, DeptId = financeDept.DeptId });
-
-            // Clients
-            for (int i = 10; i <= 13; i++)
-            {
-                departmentAssignments.Add(new UserDepartment { UserId = i, DeptId = salesDept.DeptId });
-            }
-
-            await context.UserDepartments.AddRangeAsync(departmentAssignments);
-            await context.SaveChangesAsync();
+        if (salesDept != null)
+        {
+            context.UserDepartments.Add(new UserDepartment { UserId = accountManager1.UserId, DeptId = salesDept.DeptId });
+            context.UserDepartments.Add(new UserDepartment { UserId = accountManager2.UserId, DeptId = salesDept.DeptId });
         }
 
-        //private static async Task SeedProjects(BarqTMSDbContext context)
-        //{
-        //    var projects = new[]
-        //    {
-        //        new Project
-        //        {
-        //            ProjectName = "E-Commerce Platform Development",
-        //            Description = "Complete e-commerce solution with payment integration and inventory management",
-        //            ClientId = 1,
-        //            StartDate = DateTime.UtcNow.AddDays(-120),
-        //            EndDate = DateTime.UtcNow.AddDays(60)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Mobile App for Customer Service",
-        //            Description = "iOS and Android app for customer support and ticket management",
-        //            ClientId = 2,
-        //            StartDate = DateTime.UtcNow.AddDays(-90),
-        //            EndDate = DateTime.UtcNow.AddDays(90)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Data Analytics Dashboard",
-        //            Description = "Real-time analytics dashboard with advanced reporting features",
-        //            ClientId = 3,
-        //            StartDate = DateTime.UtcNow.AddDays(-60),
-        //            EndDate = DateTime.UtcNow.AddDays(120)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Enterprise Resource Planning System",
-        //            Description = "Comprehensive ERP system for resource management and planning",
-        //            ClientId = 4,
-        //            StartDate = DateTime.UtcNow.AddDays(-150),
-        //            EndDate = DateTime.UtcNow.AddDays(30)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Cloud Migration Initiative",
-        //            Description = "Migration of legacy systems to cloud infrastructure",
-        //            ClientId = 5,
-        //            StartDate = DateTime.UtcNow.AddDays(-30),
-        //            EndDate = DateTime.UtcNow.AddDays(180)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "AI-Powered Recommendation Engine",
-        //            Description = "Machine learning system for personalized product recommendations",
-        //            ClientId = 6,
-        //            StartDate = DateTime.UtcNow.AddDays(-45),
-        //            EndDate = DateTime.UtcNow.AddDays(150)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Security Audit and Compliance",
-        //            Description = "Comprehensive security assessment and compliance implementation",
-        //            ClientId = 7,
-        //            StartDate = DateTime.UtcNow.AddDays(-75),
-        //            EndDate = DateTime.UtcNow.AddDays(45)
-        //        },
-        //        new Project
-        //        {
-        //            ProjectName = "Digital Marketing Platform",
-        //            Description = "Multi-channel digital marketing automation platform",
-        //            ClientId = 8,
-        //            StartDate = DateTime.UtcNow.AddDays(-100),
-        //            EndDate = DateTime.UtcNow.AddDays(80)
-        //        }
-        //    };
+        // 3. Team Leaders - Should see their team's tasks and projects
+        var teamLeader1 = new User
+        {
+            Name = "John Smith",
+            Username = "john.smith",
+            Email = "john.smith@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.TeamLeader,
+            IsActive = true,
+            Position = "IT Team Leader",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(teamLeader1);
 
-        //    await context.Projects.AddRangeAsync(projects);
-        //    await context.SaveChangesAsync();
-        //}
+        var teamLeader2 = new User
+        {
+            Name = "Emily Davis",
+            Username = "emily.davis",
+            Email = "emily.davis@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.TeamLeader,
+            IsActive = true,
+            Position = "Marketing Team Leader",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(teamLeader2);
 
-        //private static async Task SeedTasks(BarqTMSDbContext context)
-        //{
-        //    var random = new Random();
-        //    var priorities = await context.Priorities.ToListAsync();
-        //    var statuses = await context.Statuses.ToListAsync();
-        //    var projects = await context.Projects.ToListAsync();
-        //    var departments = await context.Departments.ToListAsync();
-        //    var employeeUserIds = new[] { 3, 4, 5, 6, 7, 8 }; // Managers and employees
+        var teamLeader3 = new User
+        {
+            Name = "David Wilson",
+            Username = "david.wilson",
+            Email = "david.wilson@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.TeamLeader,
+            IsActive = true,
+            Position = "Operations Team Leader",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(teamLeader3);
+        await context.SaveChangesAsync();
 
-        //    var tasks = new List<WorkTask>();
+        if (itDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = teamLeader1.UserId, DeptId = itDept.DeptId });
+        if (marketingDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = teamLeader2.UserId, DeptId = marketingDept.DeptId });
+        if (operationsDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = teamLeader3.UserId, DeptId = operationsDept.DeptId });
 
-        //    var taskTemplates = new[]
-        //    {
-        //        ("Requirements Analysis", "Analyze and document system requirements"),
-        //        ("Database Design", "Design database schema and relationships"),
-        //        ("API Development", "Develop RESTful API endpoints"),
-        //        ("Frontend Implementation", "Implement user interface components"),
-        //        ("Testing and QA", "Conduct comprehensive testing"),
-        //        ("Documentation", "Create technical and user documentation"),
-        //        ("Deployment Setup", "Configure production deployment"),
-        //        ("Performance Optimization", "Optimize system performance"),
-        //        ("Security Implementation", "Implement security measures"),
-        //        ("User Training", "Conduct user training sessions"),
-        //        ("Code Review", "Review and approve code changes"),
-        //        ("Bug Fixes", "Fix reported bugs and issues"),
-        //        ("Feature Enhancement", "Enhance existing features"),
-        //        ("Integration Testing", "Test system integrations"),
-        //        ("System Monitoring", "Set up monitoring and alerts")
-        //    };
+        // 4. Assistant Managers - Should have elevated access
+        var assistantManager1 = new User
+        {
+            Name = "Alice Brown",
+            Username = "alice.brown",
+            Email = "alice.brown@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.AssistantManager,
+            IsActive = true,
+            Position = "Assistant IT Manager",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(assistantManager1);
 
-        //    foreach (var project in projects)
-        //    {
-        //        var tasksForProject = random.Next(8, 15);
-                
-        //        for (int i = 0; i < tasksForProject; i++)
-        //        {
-        //            var template = taskTemplates[random.Next(taskTemplates.Length)];
-        //            var createdBy = employeeUserIds[random.Next(employeeUserIds.Length)];
-        //            var assignedTo = random.Next(10) < 8 ? employeeUserIds[random.Next(employeeUserIds.Length)] : (int?)null;
-                    
-        //            var task = new WorkTask
-        //            {
-        //                Title = $"{template.Item1} - {project.ProjectName}",
-        //                Description = template.Item2,
-        //                PriorityId = priorities[random.Next(priorities.Count)].PriorityId,
-        //                StatusId = statuses[random.Next(statuses.Count)].StatusId,
-        //                DueDate = DateTime.UtcNow.AddDays(random.Next(-30, 90)),
-        //                CreatedBy = createdBy,
-        //                AssignedTo = assignedTo,
-        //                DeptId = departments[random.Next(departments.Count)].DeptId,
-        //                ProjectId = project.ProjectId
-        //            };
+        var assistantManager2 = new User
+        {
+            Name = "Bob Martinez",
+            Username = "bob.martinez",
+            Email = "bob.martinez@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.AssistantManager,
+            IsActive = true,
+            Position = "Assistant Marketing Manager",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(assistantManager2);
+        await context.SaveChangesAsync();
 
-        //            tasks.Add(task);
-        //        }
-        //    }
+        if (itDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = assistantManager1.UserId, DeptId = itDept.DeptId });
+        if (marketingDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = assistantManager2.UserId, DeptId = marketingDept.DeptId });
 
-        //    await context.Tasks.AddRangeAsync(tasks);
-        //    await context.SaveChangesAsync();
+        // 5. Employees - Should only see their own tasks
+        var employee1 = new User
+        {
+            Name = "Tom Anderson",
+            Username = "tom.anderson",
+            Email = "tom.anderson@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.Employee,
+            IsActive = true,
+            Position = "Junior Developer",
+            TeamLeaderId = teamLeader1.UserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(employee1);
 
-        //    // Add some task comments and history
-        //    await SeedTaskComments(context);
-        //    await SeedTaskHistory(context);
-        //}
+        var employee2 = new User
+        {
+            Name = "Lisa Thompson",
+            Username = "lisa.thompson",
+            Email = "lisa.thompson@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.Employee,
+            IsActive = true,
+            Position = "Content Writer",
+            TeamLeaderId = teamLeader2.UserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(employee2);
 
-        //private static async Task SeedTaskComments(BarqTMSDbContext context)
-        //{
-        //    var tasks = await context.Tasks.Take(20).ToListAsync();
-        //    var userIds = new[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-        //    var random = new Random();
+        var employee3 = new User
+        {
+            Name = "Mark Roberts",
+            Username = "mark.roberts",
+            Email = "mark.roberts@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.Employee,
+            IsActive = true,
+            Position = "Operations Coordinator",
+            TeamLeaderId = teamLeader3.UserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(employee3);
+        await context.SaveChangesAsync();
 
-        //    var commentTemplates = new[]
-        //    {
-        //        "Great progress on this task!",
-        //        "Please review the implementation details.",
-        //        "This looks good, ready for testing.",
-        //        "I've updated the requirements document.",
-        //        "Can we schedule a meeting to discuss this?",
-        //        "The deadline might need to be extended.",
-        //        "Excellent work, well done!",
-        //        "Please add more error handling.",
-        //        "The design needs some adjustments.",
-        //        "Ready for deployment to staging."
-        //    };
+        if (itDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = employee1.UserId, DeptId = itDept.DeptId });
+        if (marketingDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = employee2.UserId, DeptId = marketingDept.DeptId });
+        if (operationsDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = employee3.UserId, DeptId = operationsDept.DeptId });
 
-        //    var comments = new List<TaskComment>();
+        // 6. Client Users - Should only see their own projects
+        var client1 = new User
+        {
+            Name = "Rachel Green",
+            Username = "rachel.green",
+            Email = "rachel.green@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.Client,
+            IsActive = true,
+            Position = "Client Contact",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(client1);
 
-        //    foreach (var task in tasks)
-        //    {
-        //        var commentsCount = random.Next(1, 5);
-                
-        //        for (int i = 0; i < commentsCount; i++)
-        //        {
-        //            var comment = new TaskComment
-        //            {
-        //                TaskId = task.TaskId,
-        //                UserId = userIds[random.Next(userIds.Length)],
-        //                Comment = commentTemplates[random.Next(commentTemplates.Length)],
-        //                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 30))
-        //            };
+        var client2 = new User
+        {
+            Name = "James Taylor",
+            Username = "james.taylor",
+            Email = "james.taylor@barqtms.com",
+            PasswordHash = authService.HashPassword("Password@123"),
+            Role = UserRole.Client,
+            IsActive = true,
+            Position = "Client Contact",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        context.Users.Add(client2);
+        await context.SaveChangesAsync();
 
-        //            comments.Add(comment);
-        //        }
-        //    }
+        if (hrDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = client1.UserId, DeptId = hrDept.DeptId });
+        if (financeDept != null)
+            context.UserDepartments.Add(new UserDepartment { UserId = client2.UserId, DeptId = financeDept.DeptId });
 
-        //    await context.TaskComments.AddRangeAsync(comments);
-        //    await context.SaveChangesAsync();
-        //}
+        await context.SaveChangesAsync();
+    }
 
-        //private static async Task SeedTaskHistory(BarqTMSDbContext context)
-        //{
-        //    var tasks = await context.Tasks.Take(15).ToListAsync();
-        //    var userIds = new[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-        //    var random = new Random();
+    private static async Task SeedClients(BarqTMSDbContext context)
+    {
+        if (await context.Clients.AnyAsync()) return;
 
-        //    var historyTemplates = new[]
-        //    {
-        //        "Task created",
-        //        "Status changed to In Progress",
-        //        "Priority updated",
-        //        "Assigned to team member",
-        //        "Description updated",
-        //        "Due date modified",
-        //        "Task completed",
-        //        "Additional comments added"
-        //    };
+        var accountManager1 = await context.Users.FirstOrDefaultAsync(u => u.Username == "sarah.johnson");
+        var accountManager2 = await context.Users.FirstOrDefaultAsync(u => u.Username == "michael.chen");
 
-        //    var histories = new List<AuditLog>();
+        var clients = new[]
+        {
+            new Client { Name = "TechCorp Solutions", Email = "contact@techcorp.com", PhoneNumber = "555-0101", Company = "TechCorp Solutions Inc.", Address = "123 Tech Street", AccountManagerId = accountManager1?.UserId },
+            new Client { Name = "Global Industries", Email = "info@globalind.com", PhoneNumber = "555-0102", Company = "Global Industries Ltd.", Address = "456 Industry Ave", AccountManagerId = accountManager1?.UserId },
+            new Client { Name = "StartupHub", Email = "hello@startuphub.com", PhoneNumber = "555-0103", Company = "StartupHub Co.", Address = "789 Innovation Blvd", AccountManagerId = accountManager2?.UserId },
+            new Client { Name = "Enterprise Partners", Email = "contact@enterprise.com", PhoneNumber = "555-0104", Company = "Enterprise Partners LLC", Address = "321 Business Park", AccountManagerId = accountManager2?.UserId },
+            new Client { Name = "Digital Dynamics", Email = "info@digitaldy.com", PhoneNumber = "555-0105", Company = "Digital Dynamics Corp.", Address = "555 Digital Way", AccountManagerId = accountManager1?.UserId }
+        };
 
-        //    foreach (var task in tasks)
-        //    {
-        //        var historyCount = random.Next(2, 6);
-                
-        //        for (int i = 0; i < historyCount; i++)
-        //        {
-        //            var history = new AuditLog
-        //            {
-        //                EntityType = "Task",
-        //                EntityId = task.TaskId,
-        //                UserId = userIds[random.Next(userIds.Length)],
-        //                Action = historyTemplates[random.Next(historyTemplates.Length)],
-        //                Timestamp = DateTime.UtcNow.AddDays(-random.Next(1, 60))
-        //            };
+        await context.Clients.AddRangeAsync(clients);
+        await context.SaveChangesAsync();
+    }
 
-        //            histories.Add(history);
-        //        }
-        //    }
+    private static async Task SeedProjects(BarqTMSDbContext context)
+    {
+        if (await context.Projects.AnyAsync()) return;
 
-        //    await context.AuditLogs.AddRangeAsync(histories);
-        //    await context.SaveChangesAsync();
-        //}
+        var clients = await context.Clients.ToListAsync();
+        if (clients.Count == 0) return;
 
-        //private static async Task SeedNotifications(BarqTMSDbContext context)
-        //{
-        //    var userIds = new[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-        //    var tasks = await context.Tasks.Take(10).ToListAsync();
-        //    var projects = await context.Projects.Take(5).ToListAsync();
-        //    var random = new Random();
+        var teamLeader1 = await context.Users.FirstOrDefaultAsync(u => u.Username == "john.smith");
+        var teamLeader2 = await context.Users.FirstOrDefaultAsync(u => u.Username == "emily.davis");
+        var teamLeader3 = await context.Users.FirstOrDefaultAsync(u => u.Username == "david.wilson");
 
-        //    var notificationTemplates = new[]
-        //    {
-        //        "You have been assigned a new task",
-        //        "Task status has been updated",
-        //        "Project deadline is approaching",
-        //        "New comment added to your task",
-        //        "Task has been completed",
-        //        "Meeting scheduled for project review",
-        //        "Document uploaded to project",
-        //        "System maintenance scheduled"
-        //    };
+        var projects = new[]
+        {
+            new Project { ProjectName = "E-Commerce Platform", Description = "Build a modern e-commerce platform", ClientId = clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-60), EndDate = DateTime.UtcNow.AddDays(90), TeamLeaderId = teamLeader1?.UserId },
+            new Project { ProjectName = "Mobile App Development", Description = "iOS and Android app for client", ClientId = clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-45), EndDate = DateTime.UtcNow.AddDays(75), TeamLeaderId = teamLeader1?.UserId },
+            new Project { ProjectName = "Marketing Campaign Q1", Description = "Digital marketing campaign for Q1", ClientId = clients.Count > 1 ? clients[1].ClientId : clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-30), EndDate = DateTime.UtcNow.AddDays(60), TeamLeaderId = teamLeader2?.UserId },
+            new Project { ProjectName = "Brand Redesign", Description = "Complete brand identity redesign", ClientId = clients.Count > 2 ? clients[2].ClientId : clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-20), EndDate = DateTime.UtcNow.AddDays(50), TeamLeaderId = teamLeader2?.UserId },
+            new Project { ProjectName = "Operations Optimization", Description = "Improve operational efficiency", ClientId = clients.Count > 3 ? clients[3].ClientId : clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-15), EndDate = DateTime.UtcNow.AddDays(45), TeamLeaderId = teamLeader3?.UserId },
+            new Project { ProjectName = "Cloud Migration", Description = "Migrate infrastructure to cloud", ClientId = clients.Count > 4 ? clients[4].ClientId : clients[0].ClientId, StartDate = DateTime.UtcNow.AddDays(-10), EndDate = DateTime.UtcNow.AddDays(120), TeamLeaderId = teamLeader1?.UserId }
+        };
 
-        //    var notifications = new List<Notification>();
+        await context.Projects.AddRangeAsync(projects);
+        await context.SaveChangesAsync();
+    }
 
-        //    foreach (var userId in userIds)
-        //    {
-        //        var notificationCount = random.Next(5, 12);
-                
-        //        for (int i = 0; i < notificationCount; i++)
-        //        {
-        //            var task = tasks[random.Next(tasks.Count)];
-        //            var project = projects[random.Next(projects.Count)];
-                    
-        //            var notification = new Notification
-        //            {
-        //                UserId = userId,
-        //                Message = notificationTemplates[random.Next(notificationTemplates.Length)],
-        //                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 30)),
-        //                IsRead = random.Next(10) < 6, // 60% chance of being read
-        //                TaskId = random.Next(10) < 7 ? task.TaskId : null, // 70% chance of having task
-        //                ProjectId = random.Next(10) < 4 ? project.ProjectId : null // 40% chance of having project
-        //            };
+    private static async Task SeedTasks(BarqTMSDbContext context)
+    {
+        if (await context.Tasks.AnyAsync()) return;
 
-        //            notifications.Add(notification);
-        //        }
-        //    }
+        var projects = await context.Projects.ToListAsync();
+        var priorities = await context.Priorities.ToListAsync();
+        var statuses = await context.Statuses.ToListAsync();
+        var itDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Information Technology");
+        var marketingDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Marketing");
+        var operationsDept = await context.Departments.FirstOrDefaultAsync(d => d.DeptName == "Operations");
+        
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+        var teamLeader1 = await context.Users.FirstOrDefaultAsync(u => u.Username == "john.smith");
+        var teamLeader2 = await context.Users.FirstOrDefaultAsync(u => u.Username == "emily.davis");
+        var teamLeader3 = await context.Users.FirstOrDefaultAsync(u => u.Username == "david.wilson");
+        var employee1 = await context.Users.FirstOrDefaultAsync(u => u.Username == "tom.anderson");
+        var employee2 = await context.Users.FirstOrDefaultAsync(u => u.Username == "lisa.thompson");
+        var employee3 = await context.Users.FirstOrDefaultAsync(u => u.Username == "mark.roberts");
 
-        //    await context.Notifications.AddRangeAsync(notifications);
-        //    await context.SaveChangesAsync();
-        //}
+        if (itDept == null || marketingDept == null || operationsDept == null || admin == null) return;
 
-        //private static async Task SeedTaskCategories(BarqTMSDbContext context)
-        //{
-        //    var categories = new[]
-        //    {
-        //        new TaskCategory { Name = "Development", Description = "Software development tasks", Color = "#007bff" },
-        //        new TaskCategory { Name = "Testing", Description = "Quality assurance and testing", Color = "#28a745" },
-        //        new TaskCategory { Name = "Design", Description = "UI/UX design tasks", Color = "#e83e8c" },
-        //        new TaskCategory { Name = "Documentation", Description = "Documentation and knowledge base", Color = "#6f42c1" },
-        //        new TaskCategory { Name = "DevOps", Description = "Deployment and infrastructure", Color = "#fd7e14" },
-        //        new TaskCategory { Name = "Research", Description = "Research and analysis", Color = "#20c997" },
-        //        new TaskCategory { Name = "Meeting", Description = "Meetings and discussions", Color = "#6c757d" },
-        //        new TaskCategory { Name = "Bug Fix", Description = "Bug fixes and issues", Color = "#dc3545" },
-        //        new TaskCategory { Name = "Feature", Description = "New feature development", Color = "#17a2b8" },
-        //        new TaskCategory { Name = "Maintenance", Description = "System maintenance tasks", Color = "#ffc107" }
-        //    };
+        var criticalPriority = priorities.FirstOrDefault(p => p.Level == "Critical");
+        var highPriority = priorities.FirstOrDefault(p => p.Level == "High");
+        var mediumPriority = priorities.FirstOrDefault(p => p.Level == "Medium");
+        var lowPriority = priorities.FirstOrDefault(p => p.Level == "Low");
 
-        //    await context.TaskCategories.AddRangeAsync(categories);
-        //    await context.SaveChangesAsync();
-        //}
+        var todoStatus = statuses.FirstOrDefault(s => s.StatusName == "To Do");
+        var inProgressStatus = statuses.FirstOrDefault(s => s.StatusName == "In Progress");
+        var completedStatus = statuses.FirstOrDefault(s => s.StatusName == "Completed");
+        var doneStatus = statuses.FirstOrDefault(s => s.StatusName == "Done");
+
+        if (criticalPriority == null || todoStatus == null || inProgressStatus == null || completedStatus == null || doneStatus == null ||
+            highPriority == null || mediumPriority == null || lowPriority == null || teamLeader1 == null || teamLeader2 == null || teamLeader3 == null) return;
+
+        var tasks = new List<WorkTask>
+        {
+            // IT Department Tasks
+            new WorkTask { Title = "Database Schema Design", Description = "Design and implement database schema", PriorityId = criticalPriority.PriorityId, StatusId = doneStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-5), CreatedBy = teamLeader1.UserId, AssignedTo = employee1?.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 0 ? projects[0].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder1", CreatedAt = DateTime.UtcNow.AddDays(-60), UpdatedAt = DateTime.UtcNow.AddDays(-5) },
+            new WorkTask { Title = "API Development", Description = "Develop RESTful APIs", PriorityId = highPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(10), CreatedBy = teamLeader1.UserId, AssignedTo = employee1?.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 0 ? projects[0].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder2", CreatedAt = DateTime.UtcNow.AddDays(-50), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "Frontend Development", Description = "Build responsive frontend", PriorityId = highPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(15), CreatedBy = teamLeader1.UserId, AssignedTo = teamLeader1.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 0 ? projects[0].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder3", CreatedAt = DateTime.UtcNow.AddDays(-45), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "Payment Gateway", Description = "Integrate payment processing", PriorityId = criticalPriority.PriorityId, StatusId = todoStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(20), CreatedBy = admin.UserId, AssignedTo = employee1?.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 0 ? projects[0].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder4", CreatedAt = DateTime.UtcNow.AddDays(-40), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "iOS App Setup", Description = "Initialize iOS project", PriorityId = highPriority.PriorityId, StatusId = completedStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-10), CreatedBy = teamLeader1.UserId, AssignedTo = teamLeader1.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 1 ? projects[1].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder5", CreatedAt = DateTime.UtcNow.AddDays(-45), UpdatedAt = DateTime.UtcNow.AddDays(-10) },
+            new WorkTask { Title = "Android App Setup", Description = "Initialize Android project", PriorityId = highPriority.PriorityId, StatusId = completedStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-8), CreatedBy = teamLeader1.UserId, AssignedTo = employee1?.UserId, DeptId = itDept.DeptId, ProjectId = projects.Count > 1 ? projects[1].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder6", CreatedAt = DateTime.UtcNow.AddDays(-45), UpdatedAt = DateTime.UtcNow.AddDays(-8) },
+            
+            // Marketing Department Tasks
+            new WorkTask { Title = "Social Media Strategy", Description = "Develop content strategy", PriorityId = highPriority.PriorityId, StatusId = completedStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-7), CreatedBy = teamLeader2.UserId, AssignedTo = employee2?.UserId, DeptId = marketingDept.DeptId, ProjectId = projects.Count > 2 ? projects[2].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder8", CreatedAt = DateTime.UtcNow.AddDays(-30), UpdatedAt = DateTime.UtcNow.AddDays(-7) },
+            new WorkTask { Title = "Content Creation", Description = "Create marketing content", PriorityId = mediumPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(8), CreatedBy = teamLeader2.UserId, AssignedTo = employee2?.UserId, DeptId = marketingDept.DeptId, ProjectId = projects.Count > 2 ? projects[2].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder9", CreatedAt = DateTime.UtcNow.AddDays(-25), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "Email Campaign", Description = "Configure email automation", PriorityId = mediumPriority.PriorityId, StatusId = todoStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(12), CreatedBy = admin.UserId, AssignedTo = teamLeader2.UserId, DeptId = marketingDept.DeptId, ProjectId = projects.Count > 2 ? projects[2].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder10", CreatedAt = DateTime.UtcNow.AddDays(-20), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "Logo Design", Description = "Create new logo", PriorityId = criticalPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(3), CreatedBy = teamLeader2.UserId, AssignedTo = employee2?.UserId, DeptId = marketingDept.DeptId, ProjectId = projects.Count > 3 ? projects[3].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder11", CreatedAt = DateTime.UtcNow.AddDays(-20), UpdatedAt = DateTime.UtcNow },
+            
+            // Operations Department Tasks
+            new WorkTask { Title = "Process Mapping", Description = "Map operational processes", PriorityId = highPriority.PriorityId, StatusId = completedStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-3), CreatedBy = teamLeader3.UserId, AssignedTo = employee3?.UserId, DeptId = operationsDept.DeptId, ProjectId = projects.Count > 4 ? projects[4].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder13", CreatedAt = DateTime.UtcNow.AddDays(-15), UpdatedAt = DateTime.UtcNow.AddDays(-3) },
+            new WorkTask { Title = "Efficiency Analysis", Description = "Analyze bottlenecks", PriorityId = highPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(7), CreatedBy = teamLeader3.UserId, AssignedTo = employee3?.UserId, DeptId = operationsDept.DeptId, ProjectId = projects.Count > 4 ? projects[4].ProjectId : null, DriveFolderLink = "https://drive.google.com/folder14", CreatedAt = DateTime.UtcNow.AddDays(-10), UpdatedAt = DateTime.UtcNow },
+            
+            // Cross-Department Tasks
+            new WorkTask { Title = "Security Audit", Description = "Security audit", PriorityId = criticalPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(4), CreatedBy = admin.UserId, AssignedTo = teamLeader1.UserId, DeptId = itDept.DeptId, ProjectId = null, DriveFolderLink = "https://drive.google.com/folder19", CreatedAt = DateTime.UtcNow.AddDays(-7), UpdatedAt = DateTime.UtcNow },
+            new WorkTask { Title = "Team Training", Description = "Quarterly training", PriorityId = lowPriority.PriorityId, StatusId = todoStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(30), CreatedBy = admin.UserId, AssignedTo = null, DeptId = itDept.DeptId, ProjectId = null, DriveFolderLink = "https://drive.google.com/folder20", CreatedAt = DateTime.UtcNow.AddDays(-3), UpdatedAt = DateTime.UtcNow },
+            
+            // Overdue Tasks
+            new WorkTask { Title = "Overdue IT Task", Description = "Overdue task", PriorityId = highPriority.PriorityId, StatusId = inProgressStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-5), CreatedBy = teamLeader1.UserId, AssignedTo = employee1?.UserId, DeptId = itDept.DeptId, ProjectId = null, DriveFolderLink = "https://drive.google.com/folder22", CreatedAt = DateTime.UtcNow.AddDays(-20), UpdatedAt = DateTime.UtcNow.AddDays(-5) },
+            new WorkTask { Title = "Overdue Marketing Task", Description = "Overdue marketing", PriorityId = criticalPriority.PriorityId, StatusId = todoStatus.StatusId, DueDate = DateTime.UtcNow.AddDays(-3), CreatedBy = teamLeader2.UserId, AssignedTo = employee2?.UserId, DeptId = marketingDept.DeptId, ProjectId = null, DriveFolderLink = "https://drive.google.com/folder23", CreatedAt = DateTime.UtcNow.AddDays(-15), UpdatedAt = DateTime.UtcNow.AddDays(-3) }
+        };
+
+        await context.Tasks.AddRangeAsync(tasks);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedTaskComments(BarqTMSDbContext context)
+    {
+        if (await context.TaskComments.AnyAsync()) return;
+
+        var tasks = await context.Tasks.Take(5).ToListAsync();
+        var users = await context.Users.ToListAsync();
+
+        var comments = new List<TaskComment>();
+        
+        if (tasks.Count > 0 && users.Count > 1)
+        {
+            comments.Add(new TaskComment { TaskId = tasks[0].TaskId, UserId = users[1].UserId, Comment = "Great progress on the database design!", CreatedAt = DateTime.UtcNow.AddDays(-4) });
+        }
+        
+        if (tasks.Count > 1 && users.Count > 1)
+        {
+            comments.Add(new TaskComment { TaskId = tasks[1].TaskId, UserId = users[0].UserId, Comment = "Make sure to follow REST best practices.", CreatedAt = DateTime.UtcNow.AddDays(-2) });
+        }
+
+        if (comments.Any())
+        {
+            await context.TaskComments.AddRangeAsync(comments);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    private static async Task SeedNotifications(BarqTMSDbContext context)
+    {
+        if (await context.Notifications.AnyAsync()) return;
+
+        var users = await context.Users.ToListAsync();
+        var tasks = await context.Tasks.Take(10).ToListAsync();
+
+        var notifications = new List<Notification>();
+
+        foreach (var user in users.Take(5))
+        {
+            notifications.Add(new Notification
+            {
+                UserId = user.UserId,
+                Message = "Welcome to BarqTMS!",
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                IsRead = false
+            });
+        }
+
+        if (tasks.Any())
+        {
+            foreach (var task in tasks.Take(5))
+            {
+                if (task.AssignedTo.HasValue)
+                {
+                    notifications.Add(new Notification
+                    {
+                        UserId = task.AssignedTo.Value,
+                        Message = $"You have been assigned to task: {task.Title}",
+                        TaskId = task.TaskId,
+                        CreatedAt = DateTime.UtcNow.AddHours(-6),
+                        IsRead = false
+                    });
+                }
+            }
+        }
+
+        await context.Notifications.AddRangeAsync(notifications);
+        await context.SaveChangesAsync();
+    }
 
         private static async Task SeedUserSettings(BarqTMSDbContext context)
         {
             var users = await context.Users.ToListAsync();
             var settings = new List<UserSettings>();
-            var random = new Random();
-            
-            var themes = new[] { "light", "dark", "auto" };
-            var languages = new[] { "en", "ar", "es", "fr" };
-            var timezones = new[] { "UTC", "Asia/Dubai", "America/New_York", "Europe/London", "Asia/Tokyo" };
 
             foreach (var user in users)
             {
                 var userSetting = new UserSettings
                 {
                     UserId = user.UserId,
-                    Theme = themes[random.Next(themes.Length)],
-                    Language = languages[random.Next(languages.Length)],
-                    Timezone = timezones[random.Next(timezones.Length)],
-                    EmailNotifications = random.Next(10) < 8, // 80% enable email notifications
-                    PushNotifications = random.Next(10) < 7, // 70% enable push notifications
-                    TaskReminders = random.Next(10) < 9, // 90% enable task reminders
-                    UpdatedAt = DateTime.UtcNow.AddDays(-random.Next(0, 30))
+                    Theme = "light",
+                    Language = "en",
+                    Timezone = "UTC",
+                    EmailNotifications = true,
+                    PushNotifications = true,
+                    TaskReminders = true,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 settings.Add(userSetting);
@@ -646,374 +563,5 @@ namespace BarqTMS.API.Data
             await context.UserSettings.AddRangeAsync(settings);
             await context.SaveChangesAsync();
         }
-
-        //private static async Task SeedProjectMilestones(BarqTMSDbContext context)
-        //{
-        //    var projects = await context.Projects.ToListAsync();
-        //    var milestones = new List<ProjectMilestone>();
-        //    var random = new Random();
-
-        //    var milestoneTemplates = new[]
-        //    {
-        //        ("Project Kickoff", "Initial project setup and team alignment"),
-        //        ("Requirements Complete", "All requirements gathered and documented"),
-        //        ("Design Phase Complete", "System design and architecture finalized"),
-        //        ("Development Phase 1", "Core functionality implementation"),
-        //        ("Alpha Release", "Internal testing version ready"),
-        //        ("Beta Release", "External testing version ready"),
-        //        ("User Acceptance Testing", "Client testing and feedback"),
-        //        ("Go-Live Preparation", "Final deployment preparations"),
-        //        ("Production Release", "System deployed to production"),
-        //        ("Project Closure", "Project completion and handover")
-        //    };
-
-        //    foreach (var project in projects)
-        //    {
-        //        var milestoneCount = random.Next(4, 8);
-        //        var startDate = project.StartDate ?? DateTime.UtcNow.AddDays(-100);
-        //        var endDate = project.EndDate ?? DateTime.UtcNow.AddDays(100);
-        //        var totalDays = (endDate - startDate).Days;
-
-        //        for (int i = 0; i < milestoneCount; i++)
-        //        {
-        //            var template = milestoneTemplates[Math.Min(i, milestoneTemplates.Length - 1)];
-        //            var progressRatio = (double)i / (milestoneCount - 1);
-        //            var dueDate = startDate.AddDays(totalDays * progressRatio);
-                    
-        //            var milestone = new ProjectMilestone
-        //            {
-        //                ProjectId = project.ProjectId,
-        //                Name = template.Item1,
-        //                Description = template.Item2,
-        //                DueDate = dueDate,
-        //                IsCompleted = dueDate < DateTime.UtcNow && random.Next(10) < 7, // 70% chance if due date passed
-        //                CompletionDate = dueDate < DateTime.UtcNow && random.Next(10) < 7 ? 
-        //                    dueDate.AddDays(random.Next(-2, 5)) : null,
-        //                CreatedAt = startDate.AddDays(-random.Next(1, 10))
-        //            };
-
-        //            milestones.Add(milestone);
-        //        }
-        //    }
-
-        //    await context.ProjectMilestones.AddRangeAsync(milestones);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedTaskDependencies(BarqTMSDbContext context)
-        //{
-        //    var tasks = await context.Tasks.ToListAsync();
-        //    var dependencies = new List<TaskDependency>();
-        //    var random = new Random();
-
-        //    // Create some logical dependencies
-        //    var tasksByProject = tasks.GroupBy(t => t.ProjectId).ToList();
-
-        //    foreach (var projectTasks in tasksByProject)
-        //    {
-        //        var projectTaskList = projectTasks.ToList();
-        //        var dependencyCount = Math.Min(projectTaskList.Count / 2, random.Next(2, 6));
-
-        //        for (int i = 0; i < dependencyCount; i++)
-        //        {
-        //            var dependentTask = projectTaskList[random.Next(projectTaskList.Count)];
-        //            var prerequisiteTask = projectTaskList[random.Next(projectTaskList.Count)];
-
-        //            // Ensure we don't create circular dependencies
-        //            if (dependentTask.TaskId != prerequisiteTask.TaskId &&
-        //                !dependencies.Any(d => d.TaskId == prerequisiteTask.TaskId && d.PrerequisiteTaskId == dependentTask.TaskId))
-        //            {
-        //                var dependency = new TaskDependency
-        //                {
-        //                    TaskId = dependentTask.TaskId,
-        //                    PrerequisiteTaskId = prerequisiteTask.TaskId,
-        //                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 60))
-        //                };
-
-        //                dependencies.Add(dependency);
-        //            }
-        //        }
-        //    }
-
-        //    await context.TaskDependencies.AddRangeAsync(dependencies);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedTimeLogs(BarqTMSDbContext context)
-        //{
-        //    var tasks = await context.Tasks.Take(30).ToListAsync();
-        //    var users = await context.Users.Where(u => new[] { 3, 4, 5, 6, 7, 8 }.Contains(u.UserId)).ToListAsync();
-        //    var timeLogs = new List<TimeLog>();
-        //    var random = new Random();
-
-        //    var workDescriptions = new[]
-        //    {
-        //        "Initial analysis and planning",
-        //        "Code implementation",
-        //        "Testing and debugging",
-        //        "Code review and optimization",
-        //        "Documentation updates",
-        //        "Client meeting and discussion",
-        //        "Research and investigation",
-        //        "Bug fixing and troubleshooting",
-        //        "Feature development",
-        //        "System integration work"
-        //    };
-
-        //    foreach (var task in tasks)
-        //    {
-        //        var logCount = random.Next(1, 8);
-                
-        //        for (int i = 0; i < logCount; i++)
-        //        {
-        //            var user = users[random.Next(users.Count)];
-        //            var workDate = DateTime.UtcNow.AddDays(-random.Next(1, 30));
-        //            var startTime = workDate.Date.AddHours(8 + random.Next(0, 8)); // Work hours 8AM-4PM
-        //            var durationMinutes = random.Next(15, 480); // 15 minutes to 8 hours
-        //            var endTime = startTime.AddMinutes(durationMinutes);
-
-        //            var timeLog = new TimeLog
-        //            {
-        //                TaskId = task.TaskId,
-        //                UserId = user.UserId,
-        //                StartTime = startTime,
-        //                EndTime = endTime,
-        //                DurationMinutes = durationMinutes,
-        //                Description = workDescriptions[random.Next(workDescriptions.Length)],
-        //                IsBillable = random.Next(10) < 8, // 80% billable
-        //                CreatedAt = startTime.AddMinutes(durationMinutes + random.Next(1, 60))
-        //            };
-
-        //            timeLogs.Add(timeLog);
-        //        }
-        //    }
-
-        //    await context.TimeLogs.AddRangeAsync(timeLogs);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedCalendarEvents(BarqTMSDbContext context)
-        //{
-        //    var users = await context.Users.ToListAsync();
-        //    var tasks = await context.Tasks.Take(20).ToListAsync();
-        //    var projects = await context.Projects.ToListAsync();
-        //    var departments = await context.Departments.ToListAsync();
-        //    var events = new List<CalendarEvent>();
-        //    var random = new Random();
-
-        //    var eventTitles = new[]
-        //    {
-        //        ("Team Standup", "Daily team synchronization meeting"),
-        //        ("Project Review", "Weekly project progress review"),
-        //        ("Client Meeting", "Meeting with client to discuss requirements"),
-        //        ("Sprint Planning", "Plan upcoming sprint tasks and goals"),
-        //        ("Code Review Session", "Review and discuss code changes"),
-        //        ("Training Session", "Team training and skill development"),
-        //        ("System Maintenance", "Scheduled system maintenance window"),
-        //        ("Deadline Reminder", "Important project deadline approaching"),
-        //        ("Team Building", "Team building and social activities"),
-        //        ("Architecture Discussion", "Technical architecture planning"),
-        //        ("User Demo", "Demonstrate new features to users"),
-        //        ("Retrospective", "Sprint retrospective and improvement"),
-        //        ("Technical Workshop", "Technical learning workshop"),
-        //        ("Performance Review", "Individual performance review meeting"),
-        //        ("Budget Meeting", "Project budget and resource planning")
-        //    };
-
-        //    var colors = new[] { "#007bff", "#28a745", "#dc3545", "#ffc107", "#17a2b8", "#6f42c1", "#e83e8c", "#fd7e14" };
-        //    var eventTypes = Enum.GetValues<CalendarEventType>();
-
-        //    foreach (var user in users)
-        //    {
-        //        var eventCount = random.Next(5, 15);
-                
-        //        for (int i = 0; i < eventCount; i++)
-        //        {
-        //            var eventData = eventTitles[random.Next(eventTitles.Length)];
-        //            var startDate = DateTime.UtcNow.AddDays(random.Next(-30, 60)).Date
-        //                .AddHours(random.Next(8, 17)) // Business hours
-        //                .AddMinutes(random.Next(0, 4) * 15); // 15-minute intervals
-                    
-        //            var duration = random.Next(1, 5) * 30; // 30 minutes to 2.5 hours
-        //            var endDate = startDate.AddMinutes(duration);
-        //            var isAllDay = random.Next(10) < 2; // 20% chance all-day
-
-        //            if (isAllDay)
-        //            {
-        //                startDate = startDate.Date;
-        //                endDate = startDate.AddDays(1).AddSeconds(-1);
-        //            }
-
-        //            var calendarEvent = new CalendarEvent
-        //            {
-        //                Title = eventData.Item1,
-        //                Description = eventData.Item2,
-        //                StartDate = startDate,
-        //                EndDate = endDate,
-        //                IsAllDay = isAllDay,
-        //                Color = colors[random.Next(colors.Length)],
-        //                EventType = eventTypes[random.Next(eventTypes.Length)],
-        //                UserId = user.UserId,
-        //                CreatedByUserId = user.UserId,
-        //                CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 10))
-        //            };
-
-        //            // Randomly assign to task, project, or department
-        //            var assignmentType = random.Next(4);
-        //            switch (assignmentType)
-        //            {
-        //                case 0:
-        //                    calendarEvent.TaskId = tasks[random.Next(tasks.Count)].TaskId;
-        //                    break;
-        //                case 1:
-        //                    calendarEvent.ProjectId = projects[random.Next(projects.Count)].ProjectId;
-        //                    break;
-        //                case 2:
-        //                    calendarEvent.DepartmentId = departments[random.Next(departments.Count)].DeptId;
-        //                    break;
-        //                // case 3: No assignment (personal event)
-        //            }
-
-        //            // Add recurrence for some events
-        //            if (random.Next(10) < 3) // 30% recurring
-        //            {
-        //                calendarEvent.IsRecurring = true;
-        //                calendarEvent.RecurrencePattern = (RecurrencePattern)random.Next(1, 6);
-        //                calendarEvent.RecurrenceInterval = random.Next(1, 4);
-        //                calendarEvent.RecurrenceEndDate = startDate.AddMonths(random.Next(3, 12));
-        //            }
-
-        //            events.Add(calendarEvent);
-        //        }
-        //    }
-
-        //    await context.CalendarEvents.AddRangeAsync(events);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedCalendarAttendees(BarqTMSDbContext context)
-        //{
-        //    var events = await context.CalendarEvents.Take(50).ToListAsync();
-        //    var users = await context.Users.ToListAsync();
-        //    var attendees = new List<CalendarEventAttendee>();
-        //    var random = new Random();
-
-        //    var responseStatuses = new[] { "Pending", "Accepted", "Declined", "Tentative" };
-
-        //    foreach (var calendarEvent in events)
-        //    {
-        //        var attendeeCount = random.Next(1, Math.Min(6, users.Count));
-        //        var selectedUsers = users.OrderBy(x => random.Next()).Take(attendeeCount);
-
-        //        foreach (var user in selectedUsers)
-        //        {
-        //            var attendee = new CalendarEventAttendee
-        //            {
-        //                CalendarEventId = calendarEvent.Id,
-        //                UserId = user.UserId,
-        //                Status = (AttendeeStatus)random.Next(1, 6), // 1-5 for enum values
-        //                ResponseDate = random.Next(10) < 7 ? 
-        //                    calendarEvent.CreatedAt.AddDays(random.Next(0, 3)) : null,
-        //                IsOrganizer = user.UserId == calendarEvent.CreatedByUserId,
-        //                CreatedAt = calendarEvent.CreatedAt
-        //            };
-
-        //            attendees.Add(attendee);
-        //        }
-        //    }
-
-        //    await context.CalendarEventAttendees.AddRangeAsync(attendees);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedCalendarReminders(BarqTMSDbContext context)
-        //{
-        //    var events = await context.CalendarEvents.Take(40).ToListAsync();
-        //    var reminders = new List<CalendarReminder>();
-        //    var random = new Random();
-
-        //    var reminderMinutes = new[] { 5, 10, 15, 30, 60, 120, 1440 }; // 5 min to 1 day
-
-        //    foreach (var calendarEvent in events)
-        //    {
-        //        // 70% of events have reminders
-        //        if (random.Next(10) < 7)
-        //        {
-        //            var reminderCount = random.Next(1, 3); // 1-2 reminders per event
-                    
-        //            for (int i = 0; i < reminderCount; i++)
-        //            {
-        //                var minutesBefore = reminderMinutes[random.Next(reminderMinutes.Length)];
-        //                var reminderTime = calendarEvent.StartDate.AddMinutes(-minutesBefore);
-
-        //                var reminder = new CalendarReminder
-        //                {
-        //                    CalendarEventId = calendarEvent.Id,
-        //                    UserId = calendarEvent.UserId ?? calendarEvent.CreatedByUserId,
-        //                    MinutesBefore = minutesBefore,
-        //                    Type = (ReminderType)random.Next(1, 4),
-        //                    SentAt = reminderTime < DateTime.UtcNow ? reminderTime : null,
-        //                    CreatedAt = calendarEvent.CreatedAt
-        //                };
-
-        //                reminders.Add(reminder);
-        //            }
-        //        }
-        //    }
-
-        //    await context.CalendarReminders.AddRangeAsync(reminders);
-        //    await context.SaveChangesAsync();
-        //}
-
-        //private static async Task SeedAttachments(BarqTMSDbContext context)
-        //{
-        //    var tasks = await context.Tasks.Take(25).ToListAsync();
-        //    var users = await context.Users.ToListAsync();
-        //    var attachments = new List<Attachment>();
-        //    var random = new Random();
-
-        //    var fileNames = new[]
-        //    {
-        //        "requirements.pdf",
-        //        "design-mockup.png", 
-        //        "technical-spec.docx",
-        //        "database-schema.sql",
-        //        "api-documentation.md",
-        //        "test-results.xlsx",
-        //        "architecture-diagram.png",
-        //        "user-manual.pdf",
-        //        "source-code.zip",
-        //        "meeting-notes.txt"
-        //    };
-
-        //    // Task attachments only (based on the current Attachment model)
-        //    foreach (var task in tasks)
-        //    {
-        //        if (random.Next(10) < 6) // 60% of tasks have attachments
-        //        {
-        //            var attachmentCount = random.Next(1, 4);
-                    
-        //            for (int i = 0; i < attachmentCount; i++)
-        //            {
-        //                var fileName = fileNames[random.Next(fileNames.Length)];
-        //                var uploader = users[random.Next(users.Count)];
-                        
-        //                var attachment = new Attachment
-        //                {
-        //                    FileName = fileName,
-        //                    FileUrl = $"/uploads/tasks/{task.TaskId}/{Guid.NewGuid()}-{fileName}",
-        //                    TaskId = task.TaskId,
-        //                    UploadedBy = uploader.UserId,
-        //                    UploadedAt = DateTime.UtcNow.AddDays(-random.Next(1, 30))
-        //                };
-
-        //                attachments.Add(attachment);
-        //            }
-        //        }
-        //    }
-
-        //    await context.Attachments.AddRangeAsync(attachments);
-        //    await context.SaveChangesAsync();
-        //}
     }
 }

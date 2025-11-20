@@ -67,18 +67,9 @@ async function loadTeamTasks() {
       return roleId === 5 && teamLeaderId === currentUser.UserId;
     });
 
-    // Filter tasks from projects where this team leader is assigned
-    const myProjectIds = projects
-      .filter((p) => (p.TeamLeaderId || p.teamLeaderId) === currentUser.UserId)
-      .map((p) => p.ProjectId || p.projectId);
-
-    const teamTasks = allTasks.filter((t) => {
-      const taskProjectId = t.ProjectId || t.projectId;
-      return myProjectIds.includes(taskProjectId);
-    });
-
+    // Backend already filters tasks correctly, just render them
     populateDropdowns();
-    renderTasks(teamTasks);
+    renderTasks(allTasks);
   } catch (error) {
     console.error("Error loading team tasks:", error);
     utils.showError("Failed to load team tasks");
@@ -157,7 +148,7 @@ function renderTasks(tasks) {
   if (tasks.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center" style="padding: 40px;">
+        <td colspan="7" class="text-center" style="padding: 40px;">
           <div class="empty-state">
             <i class="fa-solid fa-inbox"></i>
             <h3>No team tasks found</h3>
@@ -170,22 +161,48 @@ function renderTasks(tasks) {
   }
 
   tbody.innerHTML = tasks
-    .map(
-      (task) => `
-    <tr>
-      <td><strong>${task.Title || "Untitled Task"}</strong></td>
+    .map((task) => {
+      const taskId = task.taskId || task.TaskId || task.Id;
+      const statusId = task.statusId || task.StatusId;
+      
+      // Check if task needs review (StatusId 3 = "In Review")
+      const needsReview = statusId === 3;
+      
+      const reviewBadge = needsReview
+        ? '<span class="badge badge-warning" style="margin-left: 5px;">Needs Review</span>'
+        : "";
+      
+      return `
+    <tr style="${needsReview ? "border-left: 4px solid #ff9800;" : ""}">
+      <td><strong>${task.Title || "Untitled Task"}</strong>${reviewBadge}</td>
       <td>${task.ProjectName || "N/A"}</td>
       <td>${task.AssignedToName || "Unassigned"}</td>
       <td>${utils.getStatusBadge(task.StatusId)}</td>
       <td>${utils.getPriorityBadge(task.PriorityId)}</td>
       <td>${utils.formatDate(task.DueDate)}</td>
+      <td>
+        <div class="btn-group">
+          ${
+            needsReview
+              ? `
+          <button class="btn btn-sm btn-warning" onclick="openReviewModal(${taskId})" title="Review completed task">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </button>
+          `
+              : ""
+          }
+          <button class="btn btn-sm btn-primary" onclick="viewTask(${taskId})" title="View details">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </td>
     </tr>
-  `
-    )
+  `;
+    })
     .join("");
 }
 
-function showAddModal() {
+function showCreateModal() {
   currentEditId = null;
   document.getElementById("taskForm").reset();
   document.getElementById("modalTitle").textContent = "Create New Task";
@@ -228,5 +245,146 @@ async function handleSubmit(e) {
   } catch (error) {
     console.error("Error saving task:", error);
     utils.showError(error.message || "Failed to save task");
+  }
+}
+
+// View task details
+function viewTask(taskId) {
+  window.location.href = `task-details.html?id=${taskId}`;
+}
+
+// Open review modal
+async function openReviewModal(taskId) {
+  const task = allTasks.find((t) => (t.taskId || t.TaskId || t.Id) == taskId);
+  if (!task) return;
+
+  currentEditId = taskId;
+
+  try {
+    utils.showLoading();
+
+    // Populate modal with task details
+    document.getElementById("reviewTaskTitle").textContent =
+      task.title || task.Title || "Untitled";
+    document.getElementById("reviewDescription").textContent =
+      task.description || task.Description || "No description";
+    document.getElementById("reviewAssignee").textContent =
+      task.assignedToName ||
+      task.AssignedToName ||
+      task.AssignedTo ||
+      "Unknown";
+    document.getElementById("reviewCompletedDate").textContent =
+      utils.formatDate(
+        task.completedDate ||
+          task.CompletedDate ||
+          task.CompletedAt ||
+          new Date()
+      );
+
+    // Show/hide upload link
+    const uploadLinkGroup = document.getElementById("reviewUploadLinkGroup");
+    const uploadHref =
+      task.driveFolderLink ||
+      task.DriveFolderLink ||
+      task.DriveUploadLink ||
+      task.driveUploadLink ||
+      null;
+    if (uploadHref) {
+      uploadLinkGroup.style.display = "block";
+      document.getElementById("reviewUploadLink").href = uploadHref;
+    } else {
+      uploadLinkGroup.style.display = "none";
+    }
+
+    // Hide employee notes section
+    const employeeNotesGroup = document.getElementById(
+      "reviewEmployeeNotesGroup"
+    );
+    if (employeeNotesGroup) {
+      employeeNotesGroup.style.display = "none";
+    }
+
+    document.getElementById("reviewAction").value = "approve";
+    document.getElementById("managerNotes").value = "";
+    document.getElementById("newDueDate").value = "";
+
+    // Show/hide notes and due date fields based on action
+    toggleReviewFields();
+
+    // Add event listener for action change
+    document.getElementById("reviewAction").onchange = toggleReviewFields;
+
+    document.getElementById("reviewModal").classList.remove("d-none");
+  } catch (error) {
+    console.error("Error loading review modal:", error);
+    utils.showError("Failed to load task details for review");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Toggle review fields based on action
+function toggleReviewFields() {
+  const action = document.getElementById("reviewAction").value;
+  const notesGroup = document.getElementById("managerNotesGroup");
+  const dueDateGroup = document.getElementById("newDueDateGroup");
+
+  if (action === "revise") {
+    notesGroup.style.display = "block";
+    dueDateGroup.style.display = "block";
+  } else {
+    notesGroup.style.display = "none";
+    dueDateGroup.style.display = "none";
+  }
+}
+
+// Close review modal
+function closeReviewModal() {
+  document.getElementById("reviewModal").classList.add("d-none");
+  currentEditId = null;
+}
+
+// Submit review
+async function submitReview() {
+  if (!currentEditId) return;
+
+  const action = document.getElementById("reviewAction").value;
+  const notes = document.getElementById("managerNotes").value;
+
+  if (action === "revise" && !notes.trim()) {
+    utils.showError("Please provide revision notes");
+    return;
+  }
+
+  try {
+    utils.showLoading();
+
+    const newDueDate = document.getElementById("newDueDate").value;
+
+    const reviewData = {
+      approve: action === "approve",
+      notes: notes || null,
+      newDueDate: newDueDate || null,
+    };
+
+    await API.Tasks.reviewCompletion(currentEditId, reviewData);
+
+    // Close modal first
+    closeReviewModal();
+
+    // Show success message
+    utils.showSuccess(
+      action === "approve"
+        ? "Task approved successfully! Task removed from employee's list."
+        : "Revision request sent to employee with notes."
+    );
+
+    // Reload tasks to refresh the list
+    await loadTeamTasks();
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    utils.showError("Failed to submit review");
+  } finally {
+    utils.hideLoading();
   }
 }

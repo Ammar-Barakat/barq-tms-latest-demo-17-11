@@ -69,6 +69,10 @@ namespace BarqTMS.API.Services
         {
             if (await _context.Clients.AnyAsync(c => c.Email.ToLower() == dto.Email.ToLower()))
                 throw new ArgumentException("A client with this email already exists.");
+            
+            // Check if username already exists
+            if (await _context.Users.AnyAsync(u => u.Username.ToLower() == dto.Username.ToLower()))
+                throw new ArgumentException("A user with this username already exists.");
 
             User? accountManager = null;
             if (dto.AccountManagerId.HasValue)
@@ -77,6 +81,23 @@ namespace BarqTMS.API.Services
                 if (accountManager == null)
                     throw new ArgumentException("Invalid AccountManagerId. User must exist and have AccountManager role.");
             }
+            
+            // Create user account for the client
+            var clientUser = new User
+            {
+                Name = dto.Name,
+                Username = dto.Username,
+                Email = dto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Role = UserRole.Client,
+                IsActive = true,
+                Position = "Client",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.Users.Add(clientUser);
+            await _context.SaveChangesAsync();
 
             var client = new Client
             {

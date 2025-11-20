@@ -152,61 +152,52 @@
       </main>
     </div>
 
-    <!-- Create/Edit Employee Modal -->
+    <!-- Employee Details Modal -->
     <div id="employeeModal" class="modal-backdrop d-none">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 id="modalTitle">Add Employee</h3>
+            <h3><i class="fa-solid fa-user"></i> Employee Details</h3>
             <button class="btn-icon" onclick="closeModal()">
               <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
           <div class="modal-body">
-            <form id="employeeForm">
-              <input type="hidden" id="employeeId" />
-              <div class="form-group">
-                <label for="name">Name *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="name"
-                  name="name"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label for="email">Email *</label>
-                <input
-                  type="email"
-                  class="form-control"
-                  id="email"
-                  name="email"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label for="role">Role *</label>
-                <select class="form-control" id="role" name="role" required>
-                  <option value="2">Assistant Manager</option>
-                  <option value="3">Account Manager</option>
-                  <option value="4">Team Leader</option>
-                  <option value="5">Employee</option>
-                </select>
-              </div>
-              <div class="form-actions">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  onclick="closeModal()"
-                >
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary">
-                  Save Employee
-                </button>
-              </div>
-            </form>
+            <div class="form-group">
+              <label><strong>Name:</strong></label>
+              <p id="detailName" style="margin: 5px 0; font-size: 16px">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Username:</strong></label>
+              <p id="detailUsername" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Email:</strong></label>
+              <p id="detailEmail" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Position:</strong></label>
+              <p id="detailPosition" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Role:</strong></label>
+              <p id="detailRole" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Team Leader:</strong></label>
+              <p id="detailTeamLeader" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group" id="detailDepartmentsGroup">
+              <label><strong>Departments:</strong></label>
+              <div id="detailDepartments" style="margin: 5px 0"></div>
+            </div>
+            <div class="form-group">
+              <label><strong>Status:</strong></label>
+              <p id="detailStatus" style="margin: 5px 0">-</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
           </div>
         </div>
       </div>

@@ -86,17 +86,34 @@ function viewEmployee(userId) {
   const employee = employees.find((e) => e.UserId === userId);
   if (!employee) return;
 
-  const message = `
-Employee Details:
+  // Populate modal with employee details
+  document.getElementById("detailName").textContent = employee.Name || "N/A";
+  document.getElementById("detailUsername").textContent = employee.Username || "N/A";
+  document.getElementById("detailEmail").textContent = employee.Email || "N/A";
+  document.getElementById("detailPosition").textContent = employee.Position || "N/A";
+  document.getElementById("detailRole").textContent = getRoleName(employee.Role);
+  document.getElementById("detailTeamLeader").textContent = employee.TeamLeaderName || "N/A";
+  document.getElementById("detailStatus").textContent = employee.IsActive ? "Active" : "Inactive";
 
-Name: ${employee.Name || "N/A"}
-Email: ${employee.Email || "N/A"}
-Position: ${employee.Position || "N/A"}
-Role: ${getRoleName(employee.Role)}
-Team Leader: ${employee.TeamLeaderName || "N/A"}
-  `;
+  // Show departments if available
+  const departmentsGroup = document.getElementById("detailDepartmentsGroup");
+  const departmentsDiv = document.getElementById("detailDepartments");
+  
+  if (employee.Departments && employee.Departments.length > 0) {
+    departmentsGroup.style.display = "block";
+    departmentsDiv.innerHTML = employee.Departments
+      .map((d) => `<span class="badge badge-info" style="margin-right: 5px;">${d.DeptName || d.deptName}</span>`)
+      .join("");
+  } else {
+    departmentsGroup.style.display = "none";
+  }
 
-  alert(message);
+  // Show modal
+  document.getElementById("employeeModal").classList.remove("d-none");
+}
+
+function closeModal() {
+  document.getElementById("employeeModal").classList.add("d-none");
 }
 
 function setupSearch() {

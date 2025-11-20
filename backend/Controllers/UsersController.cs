@@ -42,6 +42,14 @@ namespace BarqTMS.API.Controllers
                 .Include(u => u.ManagedClients)
                 .AsQueryable();
 
+            // Filter users based on role
+            if (currentUser.Role == UserRole.TeamLeader)
+            {
+                // Team Leaders only see their supervised employees
+                query = query.Where(u => u.TeamLeaderId == currentUserId);
+            }
+            // Managers, Assistant Managers, and Account Managers see all users (no filter)
+
             var users = await query
                 .Select(u => new UserDto
                 {
@@ -156,7 +164,7 @@ namespace BarqTMS.API.Controllers
                 Position = createUserDto.Position,
                 Role = createUserDto.Role,
                 TeamLeaderId = createUserDto.TeamLeaderId,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("tempPassword123") // Default password
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password)
             };
 
             _context.Users.Add(user);

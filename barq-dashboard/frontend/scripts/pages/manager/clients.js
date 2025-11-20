@@ -119,6 +119,19 @@ function showCreateModal() {
   document.getElementById("modalTitle").textContent = "Add New Client";
   document.getElementById("clientForm").reset();
   document.getElementById("accountant").value = "";
+  
+  // Show username and password fields for new clients
+  const usernameGroup = document.getElementById("usernameGroup");
+  const passwordGroup = document.getElementById("passwordGroup");
+  if (usernameGroup) usernameGroup.style.display = "block";
+  if (passwordGroup) passwordGroup.style.display = "block";
+  
+  // Make username and password required for new clients
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  if (usernameInput) usernameInput.required = true;
+  if (passwordInput) passwordInput.required = true;
+  
   document.getElementById("clientModal").classList.remove("d-none");
 }
 
@@ -160,6 +173,18 @@ async function editClient(id) {
     document.getElementById("address").value =
       client.address || client.Address || "";
 
+    // Hide username and password fields when editing (can't change credentials)
+    const usernameGroup = document.getElementById("usernameGroup");
+    const passwordGroup = document.getElementById("passwordGroup");
+    if (usernameGroup) usernameGroup.style.display = "none";
+    if (passwordGroup) passwordGroup.style.display = "none";
+    
+    // Make username and password not required when editing
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    if (usernameInput) usernameInput.required = false;
+    if (passwordInput) passwordInput.required = false;
+
     // Ensure accountant dropdown is populated first; then set value
     if (document.getElementById("accountant")) {
       const acctId =
@@ -191,6 +216,12 @@ async function handleSubmit(e) {
     AccountManagerId:
       parseInt(document.getElementById("accountant").value) || null,
   };
+
+  // Only include Username and Password when creating a new client
+  if (!currentEditId) {
+    clientData.Username = document.getElementById("username").value;
+    clientData.Password = document.getElementById("password").value;
+  }
 
   try {
     utils.showLoading();

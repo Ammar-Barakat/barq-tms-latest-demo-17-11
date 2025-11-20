@@ -65,15 +65,15 @@ namespace BarqTMS.API.Services
                                            t.DelegatedBy == currentUserId);
                     break;
                 case UserRole.TeamLeader:
-                    // Team Leaders see: tasks assigned to them OR tasks they created OR tasks they delegated OR tasks in their departments
-                    var userDepartments = await _context.UserDepartments
-                        .Where(ud => ud.UserId == currentUserId)
-                        .Select(ud => ud.DeptId)
+                    // Team Leaders see: tasks assigned to them OR tasks assigned to their supervised employees OR tasks they created OR tasks they delegated
+                    var supervisedEmployeeIds = await _context.Users
+                        .Where(u => u.TeamLeaderId == currentUserId)
+                        .Select(u => u.UserId)
                         .ToListAsync();
                     query = query.Where(t => t.AssignedTo == currentUserId || 
+                                           (t.AssignedTo.HasValue && supervisedEmployeeIds.Contains(t.AssignedTo.Value)) ||
                                            t.CreatedBy == currentUserId || 
-                                           t.DelegatedBy == currentUserId ||
-                                           (userDepartments.Any() && userDepartments.Contains(t.DeptId)));
+                                           t.DelegatedBy == currentUserId);
                     break;
                 case UserRole.Client:
                 {

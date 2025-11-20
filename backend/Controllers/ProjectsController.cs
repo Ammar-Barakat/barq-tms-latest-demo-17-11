@@ -55,6 +55,25 @@ namespace BarqTMS.API.Controllers
                     return Ok(new List<ProjectDto>());
                 }
             }
+            else if (currentUser.Role == UserRole.TeamLeader)
+            {
+                // Team Leaders see: projects where they are the TeamLeader OR projects with tasks assigned to them or their supervised employees
+                var supervisedEmployeeIds = await _context.Users
+                    .Where(u => u.TeamLeaderId == currentUserId)
+                    .Select(u => u.UserId)
+                    .ToListAsync();
+                
+                var allRelevantUserIds = new List<int> { currentUserId };
+                allRelevantUserIds.AddRange(supervisedEmployeeIds);
+                
+                var projectIdsWithTasks = await _context.Tasks
+                    .Where(t => t.AssignedTo.HasValue && allRelevantUserIds.Contains(t.AssignedTo.Value) && t.ProjectId.HasValue)
+                    .Select(t => t.ProjectId.Value)
+                    .Distinct()
+                    .ToListAsync();
+                
+                query = query.Where(p => p.TeamLeaderId == currentUserId || projectIdsWithTasks.Contains(p.ProjectId));
+            }
 
             var projects = await query
                 .Select(p => new ProjectDto

@@ -34,6 +34,10 @@ namespace BarqTMS.API.DTOs
         [StringLength(255)]
         public string? Email { get; set; }
         
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string Password { get; set; } = string.Empty;
+        
         [StringLength(100)]
         public string? Position { get; set; }
         

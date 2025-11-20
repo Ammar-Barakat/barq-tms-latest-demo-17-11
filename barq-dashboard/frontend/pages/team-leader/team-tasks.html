@@ -151,11 +151,12 @@
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Due Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="teamTasksBody">
                   <tr>
-                    <td colspan="6" class="text-center" style="padding: 40px">
+                    <td colspan="7" class="text-center" style="padding: 40px">
                       <div class="spinner"></div>
                     </td>
                   </tr>
@@ -216,8 +217,14 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="status">Status *</label>
-                <select class="form-control" id="status" name="status" required>
+                <label for="deptId">Department *</label>
+                <select class="form-control" id="deptId" name="deptId" required>
+                  <option value="">Select Department</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="statusId">Status *</label>
+                <select class="form-control" id="statusId" name="statusId" required>
                   <option value="1">Pending</option>
                   <option value="2">In Progress</option>
                   <option value="3">Completed</option>
@@ -225,11 +232,11 @@
                 </select>
               </div>
               <div class="form-group">
-                <label for="priority">Priority *</label>
+                <label for="priorityId">Priority *</label>
                 <select
                   class="form-control"
-                  id="priority"
-                  name="priority"
+                  id="priorityId"
+                  name="priorityId"
                   required
                 >
                   <option value="1">Low</option>
@@ -246,6 +253,27 @@
                   name="dueDate"
                 />
               </div>
+              <div class="form-group">
+                <label for="driveFolderLink">Drive Folder Link *</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="driveFolderLink"
+                  name="driveFolderLink"
+                  placeholder="https://drive.google.com/..."
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="materialDriveFolderLink">Material Drive Folder Link</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="materialDriveFolderLink"
+                  name="materialDriveFolderLink"
+                  placeholder="https://drive.google.com/... (optional)"
+                />
+              </div>
               <div class="form-actions">
                 <button
                   type="button"
@@ -257,6 +285,117 @@
                 <button type="submit" class="btn btn-primary">Save Task</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Review Modal -->
+    <div id="reviewModal" class="modal-backdrop d-none">
+      <div class="modal-dialog" style="max-width: 700px">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Review Task</h3>
+            <button class="btn-icon" onclick="closeReviewModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label><strong>Task:</strong></label>
+              <p id="reviewTaskTitle" style="margin: 5px 0; font-size: 16px">
+                -
+              </p>
+            </div>
+            <div class="form-group">
+              <label><strong>Description:</strong></label>
+              <p id="reviewDescription" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Assigned To:</strong></label>
+              <p id="reviewAssignee" style="margin: 5px 0">-</p>
+            </div>
+            <div class="form-group">
+              <label><strong>Completed Date:</strong></label>
+              <p id="reviewCompletedDate" style="margin: 5px 0">-</p>
+            </div>
+            <div
+              class="form-group"
+              id="reviewUploadLinkGroup"
+              style="display: none"
+            >
+              <label><strong>Submitted Work (Drive Link):</strong></label>
+              <a
+                id="reviewUploadLink"
+                href="#"
+                target="_blank"
+                class="btn btn-sm btn-success"
+                style="display: inline-block; margin: 5px 0"
+              >
+                <i class="fa-solid fa-folder-open"></i> View Submitted Work
+              </a>
+            </div>
+            <div
+              class="form-group"
+              id="reviewEmployeeNotesGroup"
+              style="display: none"
+            >
+              <label><strong>Employee Notes:</strong></label>
+              <div
+                id="reviewEmployeeNotes"
+                style="
+                  background: #e7f3ff;
+                  padding: 10px;
+                  border-radius: 4px;
+                  margin: 5px 0;
+                  border-left: 4px solid #0d6efd;
+                "
+              ></div>
+            </div>
+            <hr />
+            <div class="form-group">
+              <label for="reviewAction">Action:</label>
+              <select id="reviewAction" class="form-control">
+                <option value="approve">Approve & Close Task</option>
+                <option value="revise">Request Revisions</option>
+              </select>
+            </div>
+            <div
+              class="form-group"
+              id="managerNotesGroup"
+              style="display: none"
+            >
+              <label for="managerNotes">Notes/Revision Requests:</label>
+              <textarea
+                id="managerNotes"
+                class="form-control"
+                rows="4"
+                placeholder="Add notes or specify revisions needed..."
+              ></textarea>
+              <small class="form-text text-muted"
+                >These notes will be sent back to the employee</small
+              >
+            </div>
+            <div class="form-group" id="newDueDateGroup" style="display: none">
+              <label for="newDueDate">New Due Date (Optional):</label>
+              <input
+                type="date"
+                id="newDueDate"
+                class="form-control"
+                placeholder="Select new due date"
+              />
+              <small class="form-text text-muted"
+                >Update the task deadline when requesting revisions</small
+              >
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeReviewModal()">
+              Cancel
+            </button>
+            <button class="btn btn-primary" onclick="submitReview()">
+              <i class="fa-solid fa-paper-plane"></i> Submit Review
+            </button>
           </div>
         </div>
       </div>

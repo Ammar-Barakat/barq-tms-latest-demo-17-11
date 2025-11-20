@@ -124,19 +124,32 @@ namespace BarqTMS.API.Controllers
         }
 
         // PUT: api/tasks/{id}/review-completion
-        // The person who delegated the task OR the original creator can approve/reject
+        // The person who delegated the task OR the original creator OR Team Leader of the assignee can approve/reject
         [HttpPut("{id}/review-completion")]
         [Authorize(Roles = "Manager,AssistantManager,AccountManager,TeamLeader")]
         public async Task<IActionResult> ReviewTaskCompletion(int id, ReviewTaskCompletionDto reviewDto)
         {
             var currentUserId = UserContextHelper.GetCurrentUserIdOrThrow(User);
+            var currentUser = await _context.Users.FindAsync(currentUserId);
+            if (currentUser == null) return Unauthorized("User not found.");
+            
             var task = await _taskService.GetTaskByIdAsync(id, currentUserId);
             if (task == null) return NotFound($"Task with ID {id} not found.");
             
-            // Check if user is the one who delegated the task (DelegatedBy) OR the original creator/assigner
+            // Check if user can review this task
             var canReview = task.CreatedBy == currentUserId || 
                            task.DelegatedBy == currentUserId ||
                            task.OriginalAssignerId == currentUserId;
+            
+            // Team Leaders can review tasks assigned to their supervised employees
+            if (!canReview && currentUser.Role == UserRole.TeamLeader && task.AssignedTo.HasValue)
+            {
+                var assignedUser = await _context.Users.FindAsync(task.AssignedTo.Value);
+                if (assignedUser != null && assignedUser.TeamLeaderId == currentUserId)
+                {
+                    canReview = true;
+                }
+            }
             
             if (!canReview) return Forbid();
             
