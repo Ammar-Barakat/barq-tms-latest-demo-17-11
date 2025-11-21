@@ -43,16 +43,24 @@ namespace BarqTMS.API.Controllers
             
             if (currentUser.Role == UserRole.Client)
             {
-                // Find client record for this user
-                var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == currentUser.Email);
-                if (client != null)
+                // Filter projects by the client's ClientId
+                if (currentUser.ClientId.HasValue)
                 {
-                    query = query.Where(p => p.ClientId == client.ClientId);
+                    query = query.Where(p => p.ClientId == currentUser.ClientId.Value);
                 }
                 else
                 {
-                    // If no client record found, return empty list
-                    return Ok(new List<ProjectDto>());
+                    // If user doesn't have a ClientId, try fallback to email matching (for backward compatibility)
+                    var client = await _context.Clients.FirstOrDefaultAsync(c => c.Email == currentUser.Email);
+                    if (client != null)
+                    {
+                        query = query.Where(p => p.ClientId == client.ClientId);
+                    }
+                    else
+                    {
+                        // If no client record found, return empty list
+                        return Ok(new List<ProjectDto>());
+                    }
                 }
             }
             else if (currentUser.Role == UserRole.TeamLeader)

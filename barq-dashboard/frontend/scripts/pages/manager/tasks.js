@@ -44,8 +44,7 @@ function populateDropdowns() {
     projects
       .map(
         (p) =>
-          `<option value="${p.projectId || p.ProjectId}">${
-            p.projectName || p.ProjectName || p.Name || "Unnamed"
+          `<option value="${p.projectId || p.ProjectId}">${p.projectName || p.ProjectName || p.Name || "Unnamed"
           }</option>`
       )
       .join("");
@@ -56,8 +55,7 @@ function populateDropdowns() {
     employees
       .map(
         (e) =>
-          `<option value="${e.UserId || e.Id}">${
-            e.Name || e.name || e.Username || e.username || "Unknown"
+          `<option value="${e.UserId || e.Id}">${e.Name || e.name || e.Username || e.username || "Unknown"
           }</option>`
       )
       .join("");
@@ -103,9 +101,8 @@ function renderTasks() {
 
       return `
     <tr style="${needsReview ? "border-left: 4px solid #ff9800;" : ""}">
-      <td><strong>${
-        task.Title || task.title || "Untitled"
-      }</strong>${reviewBadge}</td>
+      <td><strong>${task.Title || task.title || "Untitled"
+        }</strong>${reviewBadge}</td>
       <td>${task.ProjectName || task.projectName || "N/A"}</td>
       <td>${task.AssignedToName || task.assignedToName || "Unassigned"}</td>
       <td>${utils.getStatusBadge(statusId)}</td>
@@ -113,15 +110,14 @@ function renderTasks() {
       <td>${utils.formatDate(task.DueDate || task.dueDate)}</td>
       <td>
         <div class="table-actions">
-          ${
-            needsReview
-              ? `
+          ${needsReview
+          ? `
           <button class="btn btn-sm btn-warning" onclick="openReviewModal(${taskId})" title="Review completed task">
             <i class="fa-solid fa-clipboard-check"></i>
           </button>
           `
-              : ""
-          }
+          : ""
+        }
           <button class="btn btn-sm btn-primary" onclick="editTask(${taskId})">
             <i class="fa-solid fa-pen"></i>
           </button>
@@ -220,6 +216,18 @@ async function handleSubmit(e) {
       document.getElementById("driveMaterialLink").value || null,
     deptId: parseInt(document.getElementById("deptId")?.value) || 1,
   };
+
+  // Validate due date
+  const dueDateVal = document.getElementById("dueDate").value;
+  if (dueDateVal) {
+    const selectedDate = new Date(dueDateVal);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    if (selectedDate < today) {
+      utils.showError("Due date cannot be in the past");
+      return;
+    }
+  }
 
   try {
     utils.showLoading();
@@ -367,9 +375,9 @@ async function openReviewModal(taskId) {
     document.getElementById("reviewCompletedDate").textContent =
       utils.formatDate(
         task.completedDate ||
-          task.CompletedDate ||
-          task.CompletedAt ||
-          new Date()
+        task.CompletedDate ||
+        task.CompletedAt ||
+        new Date()
       );
 
     // Show/hide upload link (handle multiple possible property names)

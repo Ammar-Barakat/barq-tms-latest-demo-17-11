@@ -17,7 +17,7 @@ async function loadDashboardData() {
     // Filter projects for current client
     const currentUser = auth.getCurrentUser();
     const myProjects = projects.filter(
-      (p) => p.ClientId === currentUser.UserId
+      (p) => p.ClientId === currentUser.ClientId
     );
 
     updateStats({ projects: myProjects, tasks });

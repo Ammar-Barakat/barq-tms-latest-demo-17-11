@@ -15,6 +15,7 @@ namespace BarqTMS.API.DTOs
         public string RoleName { get; set; } = string.Empty;
         public int? TeamLeaderId { get; set; }
         public string? TeamLeaderName { get; set; }
+        public int? ClientId { get; set; }
         public List<DepartmentDto> Departments { get; set; } = new List<DepartmentDto>();
         public List<int> ManagedEmployeeIds { get; set; } = new List<int>();
         public List<int> ManagedClientIds { get; set; } = new List<int>();

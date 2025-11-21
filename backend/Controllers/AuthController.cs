@@ -62,6 +62,7 @@ namespace BarqTMS.API.Controllers
                     Username = user.Username,
                     Email = user.Email,
                     Role = user.Role,
+                    ClientId = user.ClientId,
                     Departments = user.UserDepartments.Select(ud => new DepartmentDto
                     {
                         DeptId = ud.Department.DeptId,

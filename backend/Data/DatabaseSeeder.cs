@@ -367,7 +367,7 @@ namespace BarqTMS.API.Data
 
         var clients = new[]
         {
-            new Client { Name = "TechCorp Solutions", Email = "contact@techcorp.com", PhoneNumber = "555-0101", Company = "TechCorp Solutions Inc.", Address = "123 Tech Street", AccountManagerId = accountManager1?.UserId },
+            new Client { Name = "TechCorp Solutions", Email = "rachel.green@barqtms.com", PhoneNumber = "555-0101", Company = "TechCorp Solutions Inc.", Address = "123 Tech Street", AccountManagerId = accountManager1?.UserId },
             new Client { Name = "Global Industries", Email = "info@globalind.com", PhoneNumber = "555-0102", Company = "Global Industries Ltd.", Address = "456 Industry Ave", AccountManagerId = accountManager1?.UserId },
             new Client { Name = "StartupHub", Email = "hello@startuphub.com", PhoneNumber = "555-0103", Company = "StartupHub Co.", Address = "789 Innovation Blvd", AccountManagerId = accountManager2?.UserId },
             new Client { Name = "Enterprise Partners", Email = "contact@enterprise.com", PhoneNumber = "555-0104", Company = "Enterprise Partners LLC", Address = "321 Business Park", AccountManagerId = accountManager2?.UserId },
@@ -375,6 +375,21 @@ namespace BarqTMS.API.Data
         };
 
         await context.Clients.AddRangeAsync(clients);
+        await context.SaveChangesAsync();
+        
+        // Link client users to their client records by matching email
+        var rachelUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "rachel.green");
+        var techCorpClient = await context.Clients.FirstOrDefaultAsync(c => c.Email == "rachel.green@barqtms.com");
+        
+        if (rachelUser != null && techCorpClient != null)
+        {
+            rachelUser.ClientId = techCorpClient.ClientId;
+            context.Users.Update(rachelUser);
+        }
+        
+        var jamesUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "james.taylor");
+        // James doesn't have a matching client email, so he won't be linked
+        
         await context.SaveChangesAsync();
     }
 

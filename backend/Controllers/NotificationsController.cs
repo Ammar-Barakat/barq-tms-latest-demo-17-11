@@ -224,6 +224,76 @@ namespace BarqTMS.API.Controllers
             return Ok(notification);
         }
 
+        // POST: api/notifications/test - Test endpoint for real-time notification delivery
+        [HttpPost("test")]
+        public async Task<ActionResult<NotificationDto>> SendTestNotification([FromBody] CreateNotificationDto notificationDto)
+        {
+            // Validate user exists
+            if (!await UserExists(notificationDto.UserId))
+            {
+                return BadRequest($"User with ID {notificationDto.UserId} not found.");
+            }
+
+            var notification = new Notification
+            {
+                UserId = notificationDto.UserId,
+                Message = notificationDto.Message,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false,
+                TaskId = notificationDto.TaskId,
+                ProjectId = notificationDto.ProjectId
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // Build DTO for SignalR
+            var payload = new
+            {
+                NotifId = notification.NotifId,
+                UserId = notification.UserId,
+                Message = notification.Message,
+                CreatedAt = notification.CreatedAt,
+                IsRead = notification.IsRead,
+                TaskId = notification.TaskId,
+                TaskTitle = null as string,
+                ProjectId = notification.ProjectId,
+                ProjectName = null as string
+            };
+
+            // Send via SignalR
+            try
+            {
+                await _realTimeService.SendToUserAsync(notification.UserId, "ReceiveNotification", payload);
+                _logger.LogInformation("Test notification sent to user {UserId} via SignalR", notification.UserId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send test notification via SignalR to user {UserId}", notification.UserId);
+            }
+
+            // Return the created notification
+            var createdNotification = await _context.Notifications
+                .Where(n => n.NotifId == notification.NotifId)
+                .Include(n => n.Task)
+                .Include(n => n.Project)
+                .Select(n => new NotificationDto
+                {
+                    NotifId = n.NotifId,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    CreatedAt = n.CreatedAt,
+                    IsRead = n.IsRead,
+                    TaskId = n.TaskId,
+                    TaskTitle = n.Task != null ? n.Task.Title : null,
+                    ProjectId = n.ProjectId,
+                    ProjectName = n.Project != null ? n.Project.ProjectName : null
+                })
+                .FirstOrDefaultAsync();
+
+            return Ok(createdNotification);
+        }
+
         // POST: api/notifications
         [HttpPost]
         public async Task<ActionResult<NotificationDto>> CreateNotification(CreateNotificationDto notificationDto)

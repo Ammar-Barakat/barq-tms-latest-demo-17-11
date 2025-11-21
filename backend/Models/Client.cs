@@ -41,5 +41,6 @@ namespace BarqTMS.API.Models
         
         // Navigation properties
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
+        public virtual ICollection<User> ClientUsers { get; set; } = new List<User>(); // Users with Client role linked to this client
     }
 }

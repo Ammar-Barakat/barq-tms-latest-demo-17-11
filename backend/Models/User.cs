@@ -63,9 +63,15 @@ namespace BarqTMS.API.Models
         [Column("team_leader_id")]
         public int? TeamLeaderId { get; set; }
         
+        [Column("client_id")]
+        public int? ClientId { get; set; }
+        
         // Navigation properties
         [ForeignKey(nameof(TeamLeaderId))]
         public virtual User? TeamLeader { get; set; }
+        
+        [ForeignKey(nameof(ClientId))]
+        public virtual Client? Client { get; set; }
         
         public virtual ICollection<User> ManagedEmployees { get; set; } = new List<User>(); // Employees under this Team Leader
         public virtual ICollection<UserDepartment> UserDepartments { get; set; } = new List<UserDepartment>();

@@ -180,6 +180,12 @@ namespace BarqTMS.API.Services
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
 
+            // Validate due date is not in the past
+            if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.UtcNow.Date)
+            {
+                throw new ArgumentException("Task due date cannot be in the past.");
+            }
+
             // FIX 2: Validate task due date is within project timeline
             if (dto.DueDate.HasValue && dto.ProjectId.HasValue)
             {
@@ -284,6 +290,15 @@ namespace BarqTMS.API.Services
                 throw new ArgumentException($"Project with ID {dto.ProjectId} not found.");
             if (dto.AssignedTo.HasValue && !await _context.Users.AnyAsync(u => u.UserId == dto.AssignedTo))
                 throw new ArgumentException($"Assigned user with ID {dto.AssignedTo} not found.");
+
+            // Validate due date is not in the past (only if changing)
+            if (dto.DueDate.HasValue && dto.DueDate.Value.Date < DateTime.UtcNow.Date)
+            {
+                if (task.DueDate == null || task.DueDate.Value.Date != dto.DueDate.Value.Date)
+                {
+                     throw new ArgumentException("Task due date cannot be in the past.");
+                }
+            }
 
             // FIX 2: Validate task due date is within project timeline
             if (dto.DueDate.HasValue && dto.ProjectId.HasValue)

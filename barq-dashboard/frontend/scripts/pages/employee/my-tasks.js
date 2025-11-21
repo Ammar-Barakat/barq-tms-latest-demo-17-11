@@ -82,8 +82,7 @@ function renderTasks(tasks) {
       <td>${utils.getPriorityBadge(task.PriorityId || 1)}</td>
       <td>${utils.formatDate(task.DueDate)}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${
-          task.TaskId
+        <button class="btn btn-sm btn-primary" onclick="viewTaskDetails(${task.TaskId
         })">
           <i class="fa-solid fa-eye"></i> View Details
         </button>
@@ -154,6 +153,9 @@ async function viewTaskDetails(taskId) {
 
   // Load and show latest manager review comments
   await loadLatestManagerNotes(taskId);
+
+  // Load and display all comments
+  await loadTaskComments(taskId);
 
   // Show/hide Mark as Done button based on status
   const markDoneBtn = document.getElementById("markDoneBtn");
@@ -276,6 +278,78 @@ async function loadLatestManagerNotes(taskId) {
     managerNotesGroup.style.display = "none";
   }
 }
+
+// Load and display task comments
+async function loadTaskComments(taskId) {
+  const commentsContainer = document.getElementById("commentsContainer");
+  try {
+    const comments = await API.Tasks.getComments(taskId);
+    if (comments && comments.length > 0) {
+      const sortedComments = comments.sort((a, b) => {
+        const dateA = new Date(a.CreatedAt || a.createdAt);
+        const dateB = new Date(b.CreatedAt || b.createdAt);
+        return dateB - dateA;
+      });
+      commentsContainer.innerHTML = sortedComments
+        .map(
+          (comment) => `
+        <div class="comment-item" style="
+          padding: var(--space-3);
+          background: var(--bg-secondary);
+          border-radius: var(--radius-md);
+          margin-bottom: var(--space-3);
+          border-left: 3px solid var(--primary-color);
+        ">
+          <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-2);">
+            <strong style="color: var(--primary-color);">
+              ${comment.UserName || comment.userName || "User"}
+            </strong>
+            <small style="color: var(--text-secondary);">
+              ${utils.formatDate(comment.CreatedAt || comment.createdAt)}
+            </small>
+          </div>
+          <div style="color: var(--text-primary);">
+            ${(comment.Comment || comment.comment || "").replace(/\n/g, "<br>")}
+          </div>
+        </div>
+      `
+        )
+        .join("");
+    } else {
+      commentsContainer.innerHTML = `<p style="color: var(--text-secondary); font-style: italic;">No comments yet. Be the first to add an update!</p>`;
+    }
+  } catch (error) {
+    console.error("Error loading comments:", error);
+    commentsContainer.innerHTML = `<p style="color: var(--text-secondary);">Unable to load comments.</p>`;
+  }
+}
+
+// Add a comment to the current task
+async function addTaskComment() {
+  if (!currentTaskId) {
+    utils.showError("No task selected");
+    return;
+  }
+  const commentInput = document.getElementById("taskComment");
+  const comment = commentInput.value.trim();
+  if (!comment) {
+    utils.showError("Please enter a comment");
+    return;
+  }
+  try {
+    utils.showLoading();
+    await API.Tasks.addComment(currentTaskId, comment);
+    utils.showSuccess("Comment added successfully");
+    commentInput.value = "";
+    await loadTaskComments(currentTaskId);
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    utils.showError("Failed to add comment");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
 
 // Mark task as done and notify manager
 async function markTaskAsDone() {

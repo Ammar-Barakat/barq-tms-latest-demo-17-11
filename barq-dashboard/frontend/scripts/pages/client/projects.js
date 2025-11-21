@@ -16,7 +16,7 @@ async function loadData() {
 
     // Filter projects for current client only
     const currentUser = auth.getCurrentUser();
-    projects = allProjects.filter((p) => p.ClientId === currentUser.UserId);
+    projects = allProjects.filter((p) => p.ClientId === currentUser.ClientId);
 
     renderProjects();
   } catch (error) {
@@ -59,8 +59,7 @@ function renderProjects() {
       <td>${utils.formatDate(project.EndDate)}</td>
       <td>${utils.getStatusBadge(project.StatusId || 1)}</td>
       <td>
-        <button class="btn btn-sm btn-primary" onclick="viewProjectDetails(${
-          project.Id
+        <button class="btn btn-sm btn-primary" onclick="viewProjectDetails(${project.Id
         })">
           <i class="fa-solid fa-eye"></i> View Details
         </button>

@@ -380,14 +380,33 @@ namespace BarqTMS.API.Controllers
                 return NotFound($"User with ID {id} not found.");
             }
 
+            // 1️⃣ Check for active tasks (assigned or created)
+            bool hasTasks = await _context.Tasks.AnyAsync(t => t.AssignedTo == id || t.CreatedBy == id);
+
+            // 2️⃣ Check for any comments posted by the user
+            bool hasComments = await _context.TaskComments.AnyAsync(c => c.UserId == id);
+
+            // 3️⃣ Check for unread notifications
+            bool hasUnreadNotifs = await _context.Notifications.AnyAsync(n => n.UserId == id && !n.IsRead);
+
+            if (hasTasks || hasComments || hasUnreadNotifs)
+            {
+                var reasons = new List<string>();
+                if (hasTasks) reasons.Add("active tasks");
+                if (hasComments) reasons.Add("task comments");
+                if (hasUnreadNotifs) reasons.Add("unread notifications");
+                return BadRequest(new { message = $"Cannot delete user – still has {string.Join(", ", reasons)}." });
+            }
+
+            // Safe to delete
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
         // GET: api/users/5/departments
         [HttpGet("{id}/departments")]
+        [Authorize(Roles = "Manager,AssistantManager,TeamLeader,Employee")]
         public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetUserDepartments(int id)
         {
             if (!await UserExists(id))
