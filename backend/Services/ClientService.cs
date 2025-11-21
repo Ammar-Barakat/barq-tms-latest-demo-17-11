@@ -60,7 +60,7 @@ namespace BarqTMS.API.Services
                     Company = c.Company,
                     Address = c.Address,
                     AccountManagerId = c.AccountManagerId,
-                    AccountManagerName = c.AccountManager.Name
+                    AccountManagerName = c.AccountManager != null ? c.AccountManager.Name : null
                 })
                 .FirstOrDefaultAsync();
         }

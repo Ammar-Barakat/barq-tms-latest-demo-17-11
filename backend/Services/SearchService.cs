@@ -134,7 +134,7 @@ namespace BarqTMS.API.Services
                     searchTerms.Any(term =>
                         p.ProjectName.ToLower().Contains(term) ||
                         (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                        p.Client.Name.ToLower().Contains(term)
+                        (p.Client != null && p.Client.Name.ToLower().Contains(term))
                     )
                 );
             }

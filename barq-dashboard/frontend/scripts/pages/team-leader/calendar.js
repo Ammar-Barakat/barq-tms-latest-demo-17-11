@@ -154,9 +154,8 @@ function createDayCell(day, otherMonth = false, isToday = false, date = null) {
         ? "calendar-event team-task"
         : "calendar-event task";
       eventEl.textContent = task.Title || task.name;
-      eventEl.title = `${task.Title || task.name}${
-        task.isTeamTask ? " (Team)" : " (Personal)"
-      }`;
+      eventEl.title = `${task.Title || task.name}${task.isTeamTask ? " (Team)" : " (Personal)"
+        }`;
       eventEl.style.background = task.isTeamTask
         ? "var(--color-info)"
         : "var(--color-primary)";
@@ -225,9 +224,8 @@ function renderUpcomingEvents() {
             ${task.Title || task.name}
             <span style="font-size: 12px; color: var(--text-secondary); margin-left: 8px;">${taskType}</span>
           </div>
-          <div class="upcoming-event-time">${timeStr} - ${
-        task.Description || task.description || "No description"
-      }</div>
+          <div class="upcoming-event-time">${timeStr} - ${task.Description || task.description || "No description"
+        }</div>
         </div>
         <span class="badge badge-${getStatusBadgeClass(
           task.StatusId || task.status
@@ -290,6 +288,8 @@ async function handleEventSubmit(e) {
     StatusId: 1, // Pending
     PriorityId: 2, // Normal
     AssignedToId: auth.getCurrentUser()?.UserId,
+    DeptId: auth.getCurrentUser()?.Departments?.[0]?.DeptId || 1, // Default to 1 if not found
+    DriveFolderLink: "https://drive.google.com", // Required field placeholder
   };
 
   try {

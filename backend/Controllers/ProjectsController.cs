@@ -68,7 +68,7 @@ namespace BarqTMS.API.Controllers
                 
                 var projectIdsWithTasks = await _context.Tasks
                     .Where(t => t.AssignedTo.HasValue && allRelevantUserIds.Contains(t.AssignedTo.Value) && t.ProjectId.HasValue)
-                    .Select(t => t.ProjectId.Value)
+                    .Select(t => t.ProjectId!.Value)
                     .Distinct()
                     .ToListAsync();
                 

@@ -222,7 +222,7 @@ namespace BarqTMS.API.Controllers
                     ProjectName = p.ProjectName,
                     Description = p.Description,
                     ClientId = p.ClientId,
-                    ClientName = p.Client.Name,
+                    ClientName = p.Client != null ? p.Client.Name : null,
                     StartDate = p.StartDate,
                     EndDate = p.EndDate,
                     TaskCount = p.Tasks.Count()

@@ -132,9 +132,11 @@
                   style="display: inline-block; width: auto; margin-right: 10px"
                 >
                   <option value="">All Status</option>
-                  <option value="1">Pending</option>
+                  <option value="1">To Do</option>
                   <option value="2">In Progress</option>
-                  <option value="3">Completed</option>
+                  <option value="3">In Review</option>
+                  <option value="4">Done</option>
+                  <option value="5">Cancelled</option>
                 </select>
                 <button class="btn btn-primary" onclick="showCreateModal()">
                   <i class="fa-solid fa-plus"></i> New Task
@@ -225,10 +227,11 @@
               <div class="form-group">
                 <label for="statusId">Status *</label>
                 <select class="form-control" id="statusId" name="statusId" required>
-                  <option value="1">Pending</option>
+                  <option value="1">To Do</option>
                   <option value="2">In Progress</option>
-                  <option value="3">Completed</option>
-                  <option value="4">Cancelled</option>
+                  <option value="3">In Review</option>
+                  <option value="4">Done</option>
+                  <option value="5">Cancelled</option>
                 </select>
               </div>
               <div class="form-group">

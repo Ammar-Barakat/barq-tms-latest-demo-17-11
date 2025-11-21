@@ -16,7 +16,7 @@ async function loadTasks() {
     allTasks = data.tasks || data || [];
 
     // Get current user
-    const currentUser = auth.getUser();
+    const currentUser = auth.getCurrentUser();
 
     // Filter tasks that are sent to this client for review
     // Status: AccountManagerApproved, SentToClient, ClientApproved, ClientRejected

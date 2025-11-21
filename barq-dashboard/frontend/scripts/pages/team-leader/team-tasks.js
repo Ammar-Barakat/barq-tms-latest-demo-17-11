@@ -10,7 +10,7 @@ let departments = [];
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  currentUser = auth.getUser();
+  currentUser = auth.getCurrentUser();
   await loadTeamTasks();
   setupEventListeners();
 });
