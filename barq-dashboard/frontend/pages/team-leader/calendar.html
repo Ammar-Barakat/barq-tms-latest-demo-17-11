@@ -1,0 +1,439 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calendar - Barq TMS</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../../styles/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+          <div class="sidebar-logo">
+            <i
+              class="fa-solid fa-briefcase"
+              style="font-size: 32px; color: white"
+            ></i>
+          </div>
+          <div class="sidebar-brand">
+            <h1>Barq TMS</h1>
+            <p>Task Management</p>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav">
+          <div class="nav-section">
+            <a href="dashboard.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-gauge"></i
+              ></span>
+              <span class="nav-item-text">Dashboard</span>
+            </a>
+            <a href="my-tasks.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-tasks"></i
+              ></span>
+              <span class="nav-item-text">My Tasks</span>
+            </a>
+            <a href="team-tasks.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-users-gear"></i
+              ></span>
+              <span class="nav-item-text">Team Tasks</span>
+            </a>
+            <a href="team-members.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-users"></i
+              ></span>
+              <span class="nav-item-text">Team Members</span>
+            </a>
+            <a href="calendar.html" class="nav-item active">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-calendar"></i
+              ></span>
+              <span class="nav-item-text">Calendar</span>
+            </a>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Settings</div>
+            <a href="settings.html" class="nav-item">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-gear"></i
+              ></span>
+              <span class="nav-item-text">Settings</span>
+            </a>
+            <a href="#" class="nav-item" onclick="auth.logout(); return false;">
+              <span class="nav-item-icon"
+                ><i class="fa-solid fa-right-from-bracket"></i
+              ></span>
+              <span class="nav-item-text">Logout</span>
+            </a>
+          </div>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-user-avatar">U</div>
+            <div>
+              <div class="sidebar-user-name">Loading...</div>
+              <div class="sidebar-user-role">Team Leader</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="main">
+        <!-- Header -->
+        <header class="header">
+          <div class="header-left">
+            <button class="menu-toggle">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="search-bar">
+              <span class="search-icon"
+                ><i class="fa-solid fa-magnifying-glass"></i
+              ></span>
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search tasks..."
+              />
+            </div>
+          </div>
+
+          <div class="header-right">
+            <button class="header-btn notification-btn">
+              <i class="fa-solid fa-bell"></i>
+              <span class="badge">3</span>
+            </button>
+
+            <div class="user-menu">
+              <div class="user-avatar">U</div>
+              <span class="user-name">User Name</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content">
+          <!-- Page Header -->
+          <div
+            style="
+              margin-bottom: var(--space-6);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <div>
+              <h2>Calendar</h2>
+              <p style="color: var(--text-secondary); margin: 0">
+                View and manage your schedule
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateEventModal()">
+              <i class="fa-solid fa-plus"></i> Add Event
+            </button>
+          </div>
+
+          <!-- Calendar Controls -->
+          <div class="card" style="margin-bottom: var(--space-6)">
+            <div
+              class="card-body"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <button class="btn btn-secondary" onclick="previousMonth()">
+                <i class="fa-solid fa-chevron-left"></i> Previous
+              </button>
+              <h3 id="currentMonthYear">Loading...</h3>
+              <button class="btn btn-secondary" onclick="nextMonth()">
+                Next <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Calendar Grid -->
+          <div class="card">
+            <div class="card-body">
+              <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be rendered here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Events -->
+          <div class="card" style="margin-top: var(--space-6)">
+            <div class="card-header">
+              <h3>Upcoming Tasks & Deadlines</h3>
+            </div>
+            <div class="card-body">
+              <div
+                id="upcomingEvents"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: var(--space-3);
+                "
+              >
+                <!-- Events will be rendered here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="modal-backdrop d-none">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add Event</h3>
+            <button class="btn-icon" onclick="closeEventModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="eventForm">
+              <input type="hidden" id="eventId" />
+
+              <div class="form-group">
+                <label for="eventTitle">Title *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="eventTitle"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="eventDescription">Description</label>
+                <textarea
+                  class="form-control"
+                  id="eventDescription"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="eventDate">Date *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="eventDate"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="eventTime">Time</label>
+                  <input type="time" class="form-control" id="eventTime" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="eventType">Type</label>
+                <select class="form-control" id="eventType">
+                  <option value="meeting">Meeting</option>
+                  <option value="deadline">Deadline</option>
+                  <option value="task">Task</option>
+                  <option value="reminder">Reminder</option>
+                </select>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  onclick="closeEventModal()"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Save Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: rgba(242, 240, 217, 0.1);
+        border: 1px solid rgba(242, 240, 217, 0.1);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .calendar-day-header {
+        background: var(--darker-color);
+        padding: var(--space-3);
+        text-align: center;
+        font-weight: 600;
+        font-size: var(--text-sm);
+        color: var(--primary-light);
+      }
+
+      .calendar-day {
+        background: var(--darker-color);
+        min-height: 100px;
+        max-height: 120px;
+        padding: var(--space-2);
+        cursor: pointer;
+        transition: var(--transition-fast);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .calendar-day:hover {
+        background: rgba(126, 45, 150, 0.1);
+      }
+
+      .calendar-day.other-month {
+        opacity: 0.3;
+      }
+
+      .calendar-day.today {
+        background: rgba(126, 45, 150, 0.2);
+        border: 2px solid var(--primary-color);
+      }
+
+      .calendar-day-number {
+        font-weight: 600;
+        margin-bottom: var(--space-2);
+        color: var(--text-main);
+        flex-shrink: 0;
+      }
+
+      .calendar-day-events {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+
+      .calendar-day-events::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-thumb {
+        background: rgba(126, 45, 150, 0.5);
+        border-radius: 2px;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-color);
+      }
+
+      .calendar-day.today .calendar-day-number {
+        color: var(--primary-light);
+      }
+
+      .calendar-event {
+        background: var(--primary-color);
+        padding: var(--space-1) var(--space-2);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        margin-bottom: var(--space-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .calendar-event.meeting {
+        background: var(--info);
+      }
+
+      .calendar-event.deadline {
+        background: var(--error);
+      }
+
+      .calendar-event.task {
+        background: var(--warning);
+      }
+
+      .upcoming-event-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-3);
+        background: rgba(126, 45, 150, 0.1);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .upcoming-event-date {
+        font-weight: 600;
+        color: var(--primary-light);
+        min-width: 80px;
+      }
+
+      .upcoming-event-details {
+        flex: 1;
+      }
+
+      .upcoming-event-title {
+        font-weight: 600;
+        margin-bottom: var(--space-1);
+      }
+
+      .upcoming-event-time {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+      }
+    </style>
+
+    <!-- Scripts -->
+    <!-- SignalR Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
+
+    <script src="../../scripts/utils/utils.js"></script>
+    <script src="../../scripts/utils/components.js"></script>
+    <script src="../../scripts/utils/api.js"></script>
+    <script src="../../scripts/utils/auth.js"></script>
+
+    <!-- Notification System -->
+    <script src="../../scripts/utils/notifications.js"></script>
+    <script src="../../scripts/components/notification-panel.js"></script>
+
+    <script src="../../scripts/pages/team-leader/calendar.js"></script>
+  </body>
+</html>
