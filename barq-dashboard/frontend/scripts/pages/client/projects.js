@@ -14,9 +14,8 @@ async function loadData() {
 
     const allProjects = await API.Projects.getAll().catch(() => []);
 
-    // Filter projects for current client only
-    const currentUser = auth.getCurrentUser();
-    projects = allProjects.filter((p) => p.ClientId === currentUser.ClientId);
+    // Backend now handles filtering for owned clients
+    projects = allProjects;
 
     renderProjects();
   } catch (error) {
@@ -50,6 +49,7 @@ function renderProjects() {
       (project) => `
     <tr>
       <td><strong>${project.Name || "Untitled"}</strong></td>
+      <td>${project.ClientName || "N/A"}</td>
       <td>${utils.truncateText(
         project.Description || "No description",
         50

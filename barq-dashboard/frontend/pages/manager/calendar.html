@@ -276,6 +276,20 @@
               </div>
 
               <div class="form-group">
+                <label for="eventClient">Client (Optional)</label>
+                <select class="form-control" id="eventClient">
+                  <option value="">Select Client</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="eventProject">Project (Optional)</label>
+                <select class="form-control" id="eventProject">
+                  <option value="">Select Project</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label for="eventType">Type</label>
                 <select class="form-control" id="eventType">
                   <option value="meeting">Meeting</option>
@@ -396,27 +410,40 @@
       }
 
       .calendar-event {
-        background: var(--primary-color);
         padding: var(--space-1) var(--space-2);
         border-radius: var(--radius-sm);
         font-size: var(--text-xs);
+        margin-bottom: var(--space-1);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        flex-shrink: 0;
-        line-height: 1.3;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        cursor: pointer;
       }
 
       .calendar-event.meeting {
-        background: var(--info);
+        background-color: #2ecc71 !important; /* Emerald Green */
+        color: white !important;
+        border-left: 3px solid #27ae60;
       }
 
       .calendar-event.deadline {
-        background: var(--error);
+        background-color: #e74c3c !important; /* Alizarin Red */
+        color: white !important;
+        border-left: 3px solid #c0392b;
+      }
+
+      .calendar-event.reminder {
+        background-color: #f1c40f !important; /* Sunflower Yellow */
+        color: #2c3e50 !important; /* Dark Blue/Black text */
+        border-left: 3px solid #f39c12;
       }
 
       .calendar-event.task {
-        background: var(--warning);
+        background-color: #9b59b6 !important; /* Amethyst Purple */
+        color: white !important;
+        border-left: 3px solid #8e44ad;
       }
 
       .upcoming-event-item {
@@ -427,6 +454,24 @@
         background: rgba(126, 45, 150, 0.1);
         border-radius: var(--radius-md);
         border-left: 4px solid var(--primary-color);
+        cursor: pointer;
+      }
+
+      .upcoming-event-item.meeting {
+        border-left-color: #2ecc71;
+        background: rgba(46, 204, 113, 0.1);
+      }
+      .upcoming-event-item.deadline {
+        border-left-color: #e74c3c;
+        background: rgba(231, 76, 60, 0.1);
+      }
+      .upcoming-event-item.reminder {
+        border-left-color: #f1c40f;
+        background: rgba(241, 196, 15, 0.1);
+      }
+      .upcoming-event-item.task {
+        border-left-color: #9b59b6;
+        background: rgba(155, 89, 182, 0.1);
       }
 
       .upcoming-event-date {

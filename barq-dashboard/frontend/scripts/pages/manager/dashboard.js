@@ -14,7 +14,12 @@ async function loadDashboardData() {
     utils.showLoading();
 
     // Fetch dashboard stats from dedicated API
-    const stats = await API.Dashboard.getStats().catch(() => null);
+    const stats = await API.Dashboard.getStats().catch((err) => {
+      console.error("Failed to fetch dashboard stats:", err);
+      return null;
+    });
+
+    console.log("📊 Dashboard Stats:", stats);
 
     if (stats) {
       // Update stats from Dashboard API
@@ -44,12 +49,19 @@ async function loadDashboardData() {
 
 // Update statistics cards from Dashboard API
 function updateStatsFromAPI(stats) {
-  // Dashboard API returns: DashboardStats with PascalCase properties
-  document.getElementById("totalTasks").textContent = stats.TotalTasks || 0;
-  document.getElementById("totalProjects").textContent =
-    stats.TotalProjects || 0;
-  document.getElementById("totalEmployees").textContent = stats.TotalUsers || 0;
-  document.getElementById("totalClients").textContent = stats.TotalClients || 0;
+  console.log("Updating stats with:", stats);
+  
+  // Helper to get value checking both PascalCase and camelCase
+  const getVal = (key1, key2) => {
+    if (stats[key1] !== undefined) return stats[key1];
+    if (stats[key2] !== undefined) return stats[key2];
+    return 0;
+  };
+
+  document.getElementById("totalTasks").textContent = getVal("TotalTasks", "totalTasks");
+  document.getElementById("totalProjects").textContent = getVal("TotalProjects", "totalProjects");
+  document.getElementById("totalEmployees").textContent = getVal("TotalUsers", "totalUsers");
+  document.getElementById("totalClients").textContent = getVal("TotalClients", "totalClients");
 }
 
 // Render recent tasks

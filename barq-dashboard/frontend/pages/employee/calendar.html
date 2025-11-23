@@ -100,7 +100,11 @@
               <span class="search-icon"
                 ><i class="fa-solid fa-magnifying-glass"></i
               ></span>
-              <input type="text" class="search-input" placeholder="Search..." />
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Search tasks..."
+              />
             </div>
           </div>
 
@@ -120,11 +124,26 @@
         <!-- Content Area -->
         <div class="content">
           <!-- Page Header -->
-          <div style="margin-bottom: var(--space-6)">
-            <h2>My Calendar</h2>
-            <p style="color: var(--text-secondary); margin: 0">
-              View your personal task schedule
-            </p>
+          <div
+            style="
+              margin-bottom: var(--space-6);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <div>
+              <h2>Calendar</h2>
+              <p
+                style="color: var(--text-secondary); margin: 0"
+              >
+                View and manage your schedule
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="showCreateEventModal()">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add Event</span>
+            </button>
           </div>
 
           <!-- Calendar Controls -->
@@ -177,6 +196,268 @@
         </div>
       </main>
     </div>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="modal-backdrop d-none">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add Event</h3>
+            <button class="btn-icon" onclick="closeEventModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="eventForm">
+              <input type="hidden" id="eventId" />
+
+              <div class="form-group">
+                <label for="eventTitle">Title *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="eventTitle"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="eventDescription">Description</label>
+                <textarea
+                  class="form-control"
+                  id="eventDescription"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="eventDate">Date *</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="eventDate"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="eventTime">Time</label>
+                  <input type="time" class="form-control" id="eventTime" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="eventType">Type</label>
+                <select class="form-control" id="eventType">
+                  <option value="meeting">Meeting</option>
+                  <option value="deadline">Deadline</option>
+                  <option value="task">Task</option>
+                  <option value="reminder">Reminder</option>
+                </select>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  id="deleteEventBtn"
+                  onclick="deleteEvent()"
+                  style="display: none; margin-right: auto;"
+                >
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  onclick="closeEventModal()"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Save Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: rgba(242, 240, 217, 0.1);
+        border: 1px solid rgba(242, 240, 217, 0.1);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .calendar-day-header {
+        background: var(--darker-color);
+        padding: var(--space-3);
+        text-align: center;
+        font-weight: 600;
+        font-size: var(--text-sm);
+        color: var(--primary-light);
+      }
+
+      .calendar-day {
+        background: var(--darker-color);
+        min-height: 100px;
+        max-height: 120px;
+        padding: var(--space-2);
+        cursor: pointer;
+        transition: var(--transition-fast);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .calendar-day:hover {
+        background: rgba(126, 45, 150, 0.1);
+      }
+
+      .calendar-day.other-month {
+        opacity: 0.3;
+      }
+
+      .calendar-day.today {
+        background: rgba(126, 45, 150, 0.2);
+        border: 2px solid var(--primary-color);
+      }
+
+      .calendar-day-number {
+        font-weight: 600;
+        margin-bottom: var(--space-2);
+        color: var(--text-main);
+        flex-shrink: 0;
+      }
+
+      .calendar-day-events {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+
+      .calendar-day-events::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-thumb {
+        background: rgba(126, 45, 150, 0.3);
+        border-radius: 2px;
+      }
+
+      .calendar-day-events::-webkit-scrollbar-thumb:hover {
+        background: rgba(126, 45, 150, 0.5);
+      }
+
+      .calendar-day.today .calendar-day-number {
+        color: var(--primary-light);
+      }
+
+      .calendar-event {
+        padding: var(--space-1) var(--space-2);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-xs);
+        margin-bottom: var(--space-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        cursor: pointer;
+      }
+
+      .calendar-event.meeting {
+        background-color: #2ecc71 !important; /* Emerald Green */
+        color: white !important;
+        border-left: 3px solid #27ae60;
+      }
+
+      .calendar-event.deadline {
+        background-color: #e74c3c !important; /* Alizarin Red */
+        color: white !important;
+        border-left: 3px solid #c0392b;
+      }
+
+      .calendar-event.reminder {
+        background-color: #f1c40f !important; /* Sunflower Yellow */
+        color: #2c3e50 !important; /* Dark Blue/Black text */
+        border-left: 3px solid #f39c12;
+      }
+
+      .calendar-event.task {
+        background-color: #9b59b6 !important; /* Amethyst Purple */
+        color: white !important;
+        border-left: 3px solid #8e44ad;
+      }
+
+      .upcoming-event-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-3);
+        background: rgba(126, 45, 150, 0.1);
+        border-radius: var(--radius-md);
+        border-left: 4px solid var(--primary-color);
+        cursor: pointer;
+      }
+
+      .upcoming-event-item.meeting {
+        border-left-color: #2ecc71;
+        background: rgba(46, 204, 113, 0.1);
+      }
+      .upcoming-event-item.deadline {
+        border-left-color: #e74c3c;
+        background: rgba(231, 76, 60, 0.1);
+      }
+      .upcoming-event-item.reminder {
+        border-left-color: #f1c40f;
+        background: rgba(241, 196, 15, 0.1);
+      }
+      .upcoming-event-item.task {
+        border-left-color: #9b59b6;
+        background: rgba(155, 89, 182, 0.1);
+      }
+
+      .upcoming-event-date {
+        font-weight: 600;
+        color: var(--primary-light);
+        min-width: 80px;
+      }
+
+      .upcoming-event-details {
+        flex: 1;
+      }
+
+      .upcoming-event-title {
+        font-weight: 600;
+        margin-bottom: var(--space-1);
+      }
+
+      .upcoming-event-time {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-4);
+      }
+    </style>
 
     <!-- Scripts -->
     <!-- SignalR Client -->

@@ -16,11 +16,9 @@ async function loadData() {
     const allTasks = await API.Tasks.getAll().catch(() => []);
     const allProjects = await API.Projects.getAll().catch(() => []);
 
-    // Filter to current client's projects and tasks
-    const currentUser = auth.getCurrentUser();
-    projects = allProjects.filter((p) => p.ClientId === currentUser.ClientId);
-    const projectIds = projects.map((p) => p.ProjectId);
-    tasks = allTasks.filter((t) => projectIds.includes(t.ProjectId));
+    // Backend now handles filtering for owned clients
+    projects = allProjects;
+    tasks = allTasks;
 
     renderTasks();
   } catch (error) {

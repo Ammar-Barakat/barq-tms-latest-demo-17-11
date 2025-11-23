@@ -56,14 +56,21 @@ async function handleLogin(e) {
       }, 500);
     } else {
       // Show error
-      errorMessage.textContent = result.error || "Invalid username or password";
+      let displayError = "Incorrect username or password. Please check your credentials.";
+      
+      // If it's not a credential error (400/401), show the actual error or a generic one
+      if (result.error && !result.error.includes("400") && !result.error.includes("401") && !result.error.includes("Invalid username")) {
+         displayError = "Unable to sign in. Please try again later.";
+      }
+      
+      errorMessage.textContent = displayError;
       errorMessage.classList.add("show");
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
     }
   } catch (error) {
     console.error("Login error:", error);
-    errorMessage.textContent = "An error occurred. Please try again.";
+    errorMessage.textContent = "System error. Please try again later.";
     errorMessage.classList.add("show");
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;

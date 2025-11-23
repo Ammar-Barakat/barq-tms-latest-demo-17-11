@@ -21,6 +21,7 @@
   z-index: var(--z-fixed);
   transition: transform 0.3s ease;
   border-right: 1px solid rgba(242, 240, 217, 0.1);
+  view-transition-name: sidebar;
 }
 
 .sidebar-header {

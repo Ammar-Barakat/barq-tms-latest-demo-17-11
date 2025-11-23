@@ -13,13 +13,14 @@ namespace BarqTMS.API.DTOs
         [StringLength(255)]
         public string Email { get; set; } = string.Empty;
         
-        [Required]
         [StringLength(50)]
-        public string Username { get; set; } = string.Empty;
+        public string? Username { get; set; }
         
-        [Required]
         [StringLength(100, MinimumLength = 6)]
-        public string Password { get; set; } = string.Empty;
+        public string? Password { get; set; }
+
+        [StringLength(100)]
+        public string? OwnerName { get; set; }
 
         [StringLength(50)]
         public string? PhoneNumber { get; set; }
@@ -31,6 +32,8 @@ namespace BarqTMS.API.DTOs
         public string? Address { get; set; }
 
         public int? AccountManagerId { get; set; }
+        
+        public int? OwnerUserId { get; set; }
     }
 
     public class UpdateClientDto

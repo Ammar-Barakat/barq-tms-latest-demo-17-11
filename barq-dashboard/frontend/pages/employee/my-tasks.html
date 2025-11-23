@@ -247,6 +247,19 @@
                 style="margin-top: 10px"
               ></div>
             </div>
+
+            <!-- Comments Section -->
+            <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+              <label><strong>Comments:</strong></label>
+              <div id="commentsContainer" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                <!-- Comments will be loaded here -->
+              </div>
+              
+              <div class="input-group" style="display: flex; gap: 10px;">
+                <input type="text" id="taskComment" class="form-control" placeholder="Add a comment...">
+                <button class="btn btn-primary" onclick="addTaskComment()">Send</button>
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeDetailsModal()">

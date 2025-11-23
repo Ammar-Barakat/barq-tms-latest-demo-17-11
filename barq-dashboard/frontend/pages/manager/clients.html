@@ -159,10 +159,11 @@
               <table class="table" id="clientsTable">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Client Name</th>
+                    <th>Company</th>
+                    <th>Owner</th>
+                    <th>Contact</th>
+                    <th>Account Manager</th>
                     <th>Projects</th>
-                    <th>Source</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -193,8 +194,32 @@
           <div class="modal-body">
             <form id="clientForm">
               <input type="hidden" id="clientId" />
+              
+              <!-- Owner Selection Type -->
+              <div class="form-group" id="ownerTypeGroup">
+                <label>Client Owner</label>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="ownerType" value="new" checked onchange="toggleOwnerFields()">
+                    New User
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="radio" name="ownerType" value="existing" onchange="toggleOwnerFields()">
+                    Existing User
+                  </label>
+                </div>
+              </div>
+
+              <!-- Existing Owner Selection -->
+              <div class="form-group d-none" id="existingOwnerGroup">
+                <label for="existingOwner">Select Owner *</label>
+                <select class="form-control" id="existingOwner" name="existingOwner">
+                  <option value="">Select an existing client user...</option>
+                </select>
+              </div>
+
               <div class="form-group">
-                <label for="name">Name *</label>
+                <label for="name">Company Name *</label>
                 <input
                   type="text"
                   class="form-control"
@@ -213,28 +238,43 @@
                   required
                 />
               </div>
-              <div class="form-group" id="usernameGroup">
-                <label for="username">Username *</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="username"
-                  name="username"
-                  required
-                />
+
+              <!-- New User Credentials -->
+              <div id="newOwnerCredentials">
+                <div class="form-group">
+                  <label for="ownerName">Owner Name *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="ownerName"
+                    name="ownerName"
+                    required
+                  />
+                </div>
+                <div class="form-group" id="usernameGroup">
+                  <label for="username">Username *</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    name="username"
+                    required
+                  />
+                </div>
+                <div class="form-group" id="passwordGroup">
+                  <label for="password">Password *</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    minlength="6"
+                    required
+                  />
+                  <small style="color: var(--text-secondary);">Minimum 6 characters</small>
+                </div>
               </div>
-              <div class="form-group" id="passwordGroup">
-                <label for="password">Password *</label>
-                <input
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  name="password"
-                  minlength="6"
-                  required
-                />
-                <small style="color: var(--text-secondary);">Minimum 6 characters</small>
-              </div>
+
               <div class="form-group">
                 <label for="phoneNumber">Phone Number</label>
                 <input
@@ -244,15 +284,7 @@
                   name="phoneNumber"
                 />
               </div>
-              <div class="form-group">
-                <label for="company">Company</label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="company"
-                  name="company"
-                />
-              </div>
+              <!-- Removed redundant Company field -->
               <div class="form-group">
                 <label for="address">Address</label>
                 <textarea

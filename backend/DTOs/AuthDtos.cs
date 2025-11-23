@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BarqTMS.API.Models;
+using BarqTMS.API.Models.Enums;
 
 namespace BarqTMS.API.DTOs
 {

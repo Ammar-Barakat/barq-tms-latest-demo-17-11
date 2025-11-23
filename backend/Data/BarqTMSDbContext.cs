@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using BarqTMS.API.Models;
+using BarqTMS.API.Models.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace BarqTMS.API.Data
 {
@@ -9,107 +10,88 @@ namespace BarqTMS.API.Data
         {
         }
 
-        // DbSets
         public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
+        public DbSet<Company> Companies { get; set; }
         public DbSet<Department> Departments { get; set; }
-        public DbSet<UserDepartment> UserDepartments { get; set; }
-        public DbSet<Client> Clients { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<ProjectTeamLeader> ProjectTeamLeaders { get; set; }
+        public DbSet<ProjectDepartment> ProjectDepartments { get; set; }
         public DbSet<WorkTask> Tasks { get; set; }
-        public DbSet<Priority> Priorities { get; set; }
-        public DbSet<Status> Statuses { get; set; }
+        public DbSet<TaskAssignee> TaskAssignees { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
-        public DbSet<Attachment> Attachments { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
-        public DbSet<TaskDependency> TaskDependencies { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
         public DbSet<TimeLog> TimeLogs { get; set; }
-        public DbSet<TaskCategory> TaskCategories { get; set; }
-        public DbSet<RecurringTask> RecurringTasks { get; set; }
-        public DbSet<ProjectMilestone> ProjectMilestones { get; set; }
-        public DbSet<UserSettings> UserSettings { get; set; }
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
-        public DbSet<LoginAttempt> LoginAttempts { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
-        public DbSet<CalendarEventAttendee> CalendarEventAttendees { get; set; }
-        public DbSet<CalendarReminder> CalendarReminders { get; set; }
+        public DbSet<EventAttendee> EventAttendees { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<UserChangeRequest> UserChangeRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Explicit table names for calendar entities (consistency with other uppercase table names)
-            modelBuilder.Entity<CalendarEvent>().ToTable("CALENDAR_EVENT");
-            modelBuilder.Entity<CalendarEventAttendee>().ToTable("CALENDAR_EVENT_ATTENDEE");
-            modelBuilder.Entity<CalendarReminder>().ToTable("CALENDAR_REMINDER");
+            // --- Enums as Strings ---
+            modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
+            modelBuilder.Entity<Project>().Property(p => p.Status).HasConversion<string>();
+            modelBuilder.Entity<WorkTask>().Property(t => t.Status).HasConversion<string>();
+            modelBuilder.Entity<WorkTask>().Property(t => t.Priority).HasConversion<string>();
+            modelBuilder.Entity<Attachment>().Property(a => a.RelatedEntityType).HasConversion<string>();
+            modelBuilder.Entity<Notification>().Property(n => n.Type).HasConversion<string>();
+            modelBuilder.Entity<Notification>().Property(n => n.RelatedEntityType).HasConversion<string>();
+            modelBuilder.Entity<UserChangeRequest>().Property(r => r.RequestType).HasConversion<string>();
+            modelBuilder.Entity<UserChangeRequest>().Property(r => r.Status).HasConversion<string>();
+            modelBuilder.Entity<CalendarEvent>().Property(e => e.EventType).HasConversion<string>();
 
-            // Configure UserDepartment relationships
-            modelBuilder.Entity<UserDepartment>()
-                .HasOne(ud => ud.User)
-                .WithMany(u => u.UserDepartments)
-                .HasForeignKey(ud => ud.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // --- Composite Keys (Junction Tables) ---
+            modelBuilder.Entity<ProjectTeamLeader>().HasKey(pt => new { pt.ProjectId, pt.UserId });
+            modelBuilder.Entity<ProjectDepartment>().HasKey(pd => new { pd.ProjectId, pd.DeptId });
+            modelBuilder.Entity<TaskAssignee>().HasKey(ta => new { ta.TaskId, ta.UserId });
+            modelBuilder.Entity<EventAttendee>().HasKey(ea => new { ea.EventId, ea.UserId });
 
-            modelBuilder.Entity<UserDepartment>()
-                .HasOne(ud => ud.Department)
-                .WithMany(d => d.UserDepartments)
-                .HasForeignKey(ud => ud.DeptId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // --- Relationships & Delete Behaviors ---
 
-            // Configure User self-referencing relationship for TeamLeader-Employee
+            // User -> Supervisor (Self-Referencing)
             modelBuilder.Entity<User>()
-                .HasOne(u => u.TeamLeader)
-                .WithMany(u => u.ManagedEmployees)
-                .HasForeignKey(u => u.TeamLeaderId)
-                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when team leader is deleted
-
-            // Configure Client-AccountManager relationship
-            modelBuilder.Entity<Client>()
-                .HasOne(c => c.AccountManager)
-                .WithMany(u => u.ManagedClients)
-                .HasForeignKey(c => c.AccountManagerId)
-                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when account manager is deleted
-
-            // Configure Project relationships
-            modelBuilder.Entity<Project>()
-                .HasOne(p => p.Client)
-                .WithMany(c => c.Projects)
-                .HasForeignKey(p => p.ClientId)
-                .OnDelete(DeleteBehavior.SetNull); // Set to NULL when client is deleted
-
-            // Configure AuditLog relationships
-            modelBuilder.Entity<AuditLog>()
-                .HasOne(al => al.User)
-                .WithMany(u => u.AuditLogs)
-                .HasForeignKey(al => al.UserId)
+                .HasOne(u => u.Supervisor)
+                .WithMany(u => u.Subordinates)
+                .HasForeignKey(u => u.SupervisorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure WorkTask relationships
+            // Company -> Owner / AccountManager
+            modelBuilder.Entity<Company>()
+                .HasOne(c => c.Owner)
+                .WithMany(u => u.OwnedCompanies)
+                .HasForeignKey(c => c.OwnerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Company>()
+                .HasOne(c => c.AccountManager)
+                .WithMany(u => u.ManagedCompanies)
+                .HasForeignKey(c => c.AccountManagerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Project -> Company
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Company)
+                .WithMany(c => c.Projects)
+                .HasForeignKey(p => p.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Task -> Project / Department
             modelBuilder.Entity<WorkTask>()
                 .HasOne(t => t.Project)
                 .WithMany(p => p.Tasks)
                 .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.Creator)
-                .WithMany(u => u.CreatedTasks)
-                .HasForeignKey(t => t.CreatedBy)
+                .HasOne(t => t.Department)
+                .WithMany(d => d.Tasks)
+                .HasForeignKey(t => t.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.AssignedUser)
-                .WithMany(u => u.AssignedTasks)
-                .HasForeignKey(t => t.AssignedTo)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.OriginalAssigner)
-                .WithMany()
-                .HasForeignKey(t => t.OriginalAssignerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // Task -> Users (Creator, Delegator, OriginalAssigner)
             modelBuilder.Entity<WorkTask>()
                 .HasOne(t => t.Delegator)
                 .WithMany()
@@ -117,56 +99,25 @@ namespace BarqTMS.API.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.Department)
-                .WithMany(d => d.Tasks)
-                .HasForeignKey(t => t.DeptId)
+                .HasOne(t => t.OriginalAssigner)
+                .WithMany()
+                .HasForeignKey(t => t.OriginalAssignerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.Priority)
-                .WithMany(p => p.Tasks)
-                .HasForeignKey(t => t.PriorityId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.Status)
-                .WithMany(s => s.Tasks)
-                .HasForeignKey(t => t.StatusId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Configure TaskComment relationships
+            // Task Comments
             modelBuilder.Entity<TaskComment>()
-                .HasOne(tc => tc.Task)
-                .WithMany(t => t.TaskComments)
-                .HasForeignKey(tc => tc.TaskId)
+                .HasOne(c => c.Task)
+                .WithMany(t => t.Comments)
+                .HasForeignKey(c => c.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TaskComment>()
-                .HasOne(tc => tc.User)
-                .WithMany(u => u.TaskComments)
-                .HasForeignKey(tc => tc.UserId)
+                .HasOne(c => c.Author)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure TaskDependency relationships
-            modelBuilder.Entity<TaskDependency>()
-                .HasOne(td => td.Task)
-                .WithMany(t => t.Dependencies)
-                .HasForeignKey(td => td.TaskId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<TaskDependency>()
-                .HasOne(td => td.PrerequisiteTask)
-                .WithMany(t => t.PrerequisiteFor)
-                .HasForeignKey(td => td.PrerequisiteTaskId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Prevent duplicate and self dependencies
-            modelBuilder.Entity<TaskDependency>()
-                .HasIndex(td => new { td.TaskId, td.PrerequisiteTaskId }).IsUnique();
-            modelBuilder.Entity<TaskDependency>()
-                .HasCheckConstraint("CK_TaskDependency_NoSelf", "[prerequisite_task_id] <> [task_id]");
-
-            // Configure TimeLog relationships
+            // TimeLogs
             modelBuilder.Entity<TimeLog>()
                 .HasOne(tl => tl.Task)
                 .WithMany(t => t.TimeLogs)
@@ -175,156 +126,36 @@ namespace BarqTMS.API.Data
 
             modelBuilder.Entity<TimeLog>()
                 .HasOne(tl => tl.User)
-                .WithMany(u => u.TimeLogs)
+                .WithMany()
                 .HasForeignKey(tl => tl.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure TaskCategory relationships
-            modelBuilder.Entity<WorkTask>()
-                .HasOne(t => t.Category)
-                .WithMany(tc => tc.Tasks)
-                .HasForeignKey(t => t.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // Configure RecurringTask relationships
-            modelBuilder.Entity<RecurringTask>()
-                .HasOne(rt => rt.TemplateTask)
-                .WithMany()
-                .HasForeignKey(rt => rt.TemplateTaskId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure ProjectMilestone relationships
-            modelBuilder.Entity<ProjectMilestone>()
-                .HasOne(pm => pm.Project)
-                .WithMany(p => p.Milestones)
-                .HasForeignKey(pm => pm.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure UserSettings relationships
-            modelBuilder.Entity<UserSettings>()
-                .HasOne(us => us.User)
-                .WithOne(u => u.Settings)
-                .HasForeignKey<UserSettings>(us => us.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure Attachment relationships
-            modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.Task)
-                .WithMany(t => t.Attachments)
-                .HasForeignKey(a => a.TaskId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Attachment>()
-                .HasOne(a => a.UploadedByUser)
-                .WithMany(u => u.UploadedAttachments)
-                .HasForeignKey(a => a.UploadedBy)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Configure Notification relationships
+            // Notifications
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
-                .WithMany(u => u.Notifications)
+                .WithMany()
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Notification>()
-                .HasOne(n => n.Task)
-                .WithMany(t => t.Notifications)
-                .HasForeignKey(n => n.TaskId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Notification>()
-                .HasOne(n => n.Project)
-                .WithMany(p => p.Notifications)
-                .HasForeignKey(n => n.ProjectId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // Indexes & constraints
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique()
-                .HasFilter("[email] IS NOT NULL"); // allow multiple NULLs
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
-
-            modelBuilder.Entity<UserDepartment>()
-                .HasIndex(ud => new { ud.UserId, ud.DeptId })
-                .IsUnique();
-
-            modelBuilder.Entity<Department>()
-                .HasIndex(d => d.DeptName)
-                .IsUnique();
-
-            modelBuilder.Entity<Role>()
-                .HasIndex(r => r.RoleName)
-                .IsUnique();
-
-            modelBuilder.Entity<Client>()
-                .HasIndex(c => c.Email)
-                .IsUnique();
-
-            // Configure Calendar relationships
+            // Calendar Events
             modelBuilder.Entity<CalendarEvent>()
-                .HasOne(ce => ce.Task)
+                .HasOne(e => e.Creator)
                 .WithMany()
-                .HasForeignKey(ce => ce.TaskId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CalendarEvent>()
-                .HasOne(ce => ce.Project)
-                .WithMany()
-                .HasForeignKey(ce => ce.ProjectId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CalendarEvent>()
-                .HasOne(ce => ce.User)
-                .WithMany()
-                .HasForeignKey(ce => ce.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CalendarEvent>()
-                .HasOne(ce => ce.Department)
-                .WithMany()
-                .HasForeignKey(ce => ce.DepartmentId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<CalendarEvent>()
-                .HasOne(ce => ce.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(ce => ce.CreatedByUserId)
+                .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<CalendarEventAttendee>()
-                .HasOne(cea => cea.CalendarEvent)
-                .WithMany(ce => ce.Attendees)
-                .HasForeignKey(cea => cea.CalendarEventId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CalendarEventAttendee>()
-                .HasOne(cea => cea.User)
+            // User Change Requests
+            modelBuilder.Entity<UserChangeRequest>()
+                .HasOne(r => r.Requester)
                 .WithMany()
-                .HasForeignKey(cea => cea.UserId)
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<CalendarReminder>()
-                .HasOne(cr => cr.CalendarEvent)
-                .WithMany(ce => ce.Reminders)
-                .HasForeignKey(cr => cr.CalendarEventId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CalendarReminder>()
-                .HasOne(cr => cr.User)
+            modelBuilder.Entity<UserChangeRequest>()
+                .HasOne(r => r.Reviewer)
                 .WithMany()
-                .HasForeignKey(cr => cr.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CalendarEvent>()
-                .HasIndex(ce => ce.StartDate);
-            modelBuilder.Entity<CalendarEvent>()
-                .HasIndex(ce => ce.EndDate);
-            modelBuilder.Entity<CalendarEvent>()
-                .HasIndex(ce => ce.EventType);
+                .HasForeignKey(r => r.ReviewedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

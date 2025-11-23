@@ -3,6 +3,7 @@ auth.requireRole([USER_ROLES.MANAGER]);
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadAnalytics();
+  await loadReportEntities();
 });
 
 async function loadAnalytics() {
@@ -33,8 +34,10 @@ function calculateTaskStats(tasks) {
   const pending = tasks.filter((t) => t.StatusId === 1).length;
   const inProgress = tasks.filter((t) => t.StatusId === 2).length;
   const overdue = tasks.filter((t) => {
-    if (!t.DueDate || t.StatusId === 4) return false;
-    return new Date(t.DueDate) < now;
+    if (!t.DueDate || t.StatusId === 4 || t.StatusId === 5) return false;
+    const dueDate = new Date(t.DueDate);
+    dueDate.setHours(23, 59, 59, 999);
+    return dueDate < now;
   }).length;
 
   document.getElementById("completedTasks").textContent = completed;
@@ -233,4 +236,155 @@ function renderTaskDistributionChart(pending, inProgress, completed, others) {
       },
     },
   });
+}
+
+// Report Generation Logic
+let allUsers = [];
+let allClients = [];
+
+async function loadReportEntities() {
+  try {
+    const [users, clients] = await Promise.all([
+      API.Users.getAll().catch(() => []),
+      API.Clients.getAll().catch(() => [])
+    ]);
+    
+    allUsers = users;
+    allClients = clients;
+    
+    toggleReportEntitySelect(); // Initialize dropdown
+  } catch (error) {
+    console.error("Error loading report entities:", error);
+  }
+}
+
+window.toggleReportEntitySelect = function() {
+  const type = document.getElementById("reportType").value;
+  const select = document.getElementById("reportEntity");
+  select.innerHTML = '<option value="">Select...</option>';
+  
+  if (type === "employee") {
+    allUsers.forEach(user => {
+      const option = document.createElement("option");
+      option.value = user.UserId;
+      option.textContent = user.Name || user.Username;
+      select.appendChild(option);
+    });
+  } else {
+    allClients.forEach(client => {
+      const option = document.createElement("option");
+      option.value = client.ClientId;
+      option.textContent = client.Name;
+      select.appendChild(option);
+    });
+  }
+};
+
+window.generateReport = async function() {
+  const type = document.getElementById("reportType").value;
+  const entityId = document.getElementById("reportEntity").value;
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+  
+  if (!entityId) {
+    utils.showError("Please select an entity");
+    return;
+  }
+  
+  utils.showLoading();
+  const resultsDiv = document.getElementById("reportResults");
+  const contentDiv = document.getElementById("reportContent");
+  const titleEl = document.getElementById("reportTitle");
+  
+  try {
+    let data;
+    if (type === "employee") {
+      data = await API.Reporting.getEmployeeReport(entityId, startDate, endDate);
+      titleEl.textContent = `Performance Report: ${data.UserName}`;
+      renderEmployeeReport(data, contentDiv);
+    } else {
+      data = await API.Reporting.getClientReport(entityId, startDate, endDate);
+      titleEl.textContent = `Client Report: ${data.ClientName}`;
+      renderClientReport(data, contentDiv);
+    }
+    resultsDiv.style.display = "block";
+  } catch (error) {
+    console.error("Error generating report:", error);
+    utils.showError("Failed to generate report");
+    resultsDiv.style.display = "none";
+  } finally {
+    utils.hideLoading();
+  }
+};
+
+function renderEmployeeReport(data, container) {
+  container.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Completion Rate</span>
+          <span class="stat-value">${data.CompletionRate.toFixed(1)}%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Total Tasks</span>
+          <span class="stat-value">${data.TotalTasksAssigned}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Completed</span>
+          <span class="stat-value">${data.CompletedTasks}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Overdue</span>
+          <span class="stat-value" style="color: var(--danger);">${data.OverdueTasks}</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 20px;">
+      <p><strong>Total Hours Logged:</strong> ${data.TotalHoursLogged.toFixed(2)} hrs</p>
+      <p><strong>Projects Worked On:</strong> ${data.ProjectsWorkedOn}</p>
+      <p><strong>Avg Completion Time:</strong> ${data.AverageTaskCompletionDays.toFixed(1)} days</p>
+    </div>
+  `;
+}
+
+function renderClientReport(data, container) {
+  container.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Active Projects</span>
+          <span class="stat-value">${data.ActiveProjects} / ${data.TotalProjects}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Total Tasks</span>
+          <span class="stat-value">${data.TotalTasks}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Completion</span>
+          <span class="stat-value">${data.CompletionPercentage.toFixed(1)}%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Overdue</span>
+          <span class="stat-value" style="color: var(--danger);">${data.OverdueTasks}</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 20px;">
+      <p><strong>Company:</strong> ${data.CompanyName}</p>
+      <p><strong>Estimated Hours:</strong> ${data.TotalEstimatedHours}</p>
+      <p><strong>Actual Hours:</strong> ${data.TotalActualHours}</p>
+    </div>
+  `;
 }

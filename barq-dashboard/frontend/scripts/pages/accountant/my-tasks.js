@@ -648,6 +648,9 @@ function renderTaskDetails(task, comments) {
       ? new Date(task.dueDate || task.DueDate).toLocaleDateString()
       : "Not set";
 
+  const driveFolderLink = task.driveFolderLink || task.DriveFolderLink || "";
+  const materialDriveFolderLink = task.materialDriveFolderLink || task.MaterialDriveFolderLink || "";
+
   detailsContainer.innerHTML = `
     <div class="details-grid" style="margin-bottom: var(--space-4);">
       <div class="detail-item">
@@ -689,6 +692,23 @@ function renderTaskDetails(task, comments) {
         task.description || task.Description || "No description"
       }</div>
     </div>
+    ${(driveFolderLink || materialDriveFolderLink) ? `
+    <div class="detail-item" style="margin-bottom: var(--space-4);">
+      <label class="detail-label"><i class="fa-solid fa-link"></i> Resources</label>
+      <div class="detail-value" style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+        ${driveFolderLink ? `
+        <a href="${driveFolderLink}" target="_blank" class="btn btn-primary" style="text-decoration: none; flex: 1;">
+          <i class="fa-brands fa-google-drive"></i> Open Task Folder
+        </a>
+        ` : ''}
+        ${materialDriveFolderLink ? `
+        <a href="${materialDriveFolderLink}" target="_blank" class="btn btn-secondary" style="text-decoration: none; flex: 1;">
+          <i class="fa-solid fa-folder-open"></i> Open Material Folder
+        </a>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
     ${
       comments && comments.length > 0
         ? `

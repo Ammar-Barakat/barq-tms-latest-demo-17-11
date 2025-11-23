@@ -613,6 +613,24 @@ const API = {
     },
   },
 
+  // Reporting Service
+  Reporting: {
+    async getEmployeeReport(userId, startDate, endDate) {
+      const client = new APIClient();
+      let url = `/Reporting/employee/${userId}?`;
+      if (startDate) url += `startDate=${startDate}&`;
+      if (endDate) url += `endDate=${endDate}`;
+      return client.get(url);
+    },
+    async getClientReport(clientId, startDate, endDate) {
+      const client = new APIClient();
+      let url = `/Reporting/client/${clientId}?`;
+      if (startDate) url += `startDate=${startDate}&`;
+      if (endDate) url += `endDate=${endDate}`;
+      return client.get(url);
+    },
+  },
+
   // Search Service
   Search: {
     async global(query, page = 1, pageSize = 10) {

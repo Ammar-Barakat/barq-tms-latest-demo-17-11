@@ -1,45 +1,35 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BarqTMS.API.Models.Enums;
 
 namespace BarqTMS.API.Models
 {
-    [Table("PROJECT")]
     public class Project
     {
         [Key]
-        [Column("project_id")]
         public int ProjectId { get; set; }
 
-        [Required]
-        [StringLength(200)]
-        [Column("project_name")]
-        public string ProjectName { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
 
-        [StringLength(1000)]
-        [Column("description")]
+        [Required]
+        [StringLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(500)]
         public string? Description { get; set; }
 
-        [Column("client_id")]
-        public int? ClientId { get; set; }
+        public DateTime StartDate { get; set; }
 
-        [Column("start_date")]
-        public DateTime? StartDate { get; set; }
+        public DateTime? DueDate { get; set; }
 
-        [Column("end_date")]
-        public DateTime? EndDate { get; set; }
+        public ProjectStatus Status { get; set; }
 
-        [Column("team_leader_id")]
-        public int? TeamLeaderId { get; set; }
+        // Navigation Properties
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; } = null!;
 
-        // Navigation properties
-        [ForeignKey("ClientId")]
-        public virtual Client? Client { get; set; }
-        
-        [ForeignKey(nameof(TeamLeaderId))]
-        public virtual User? TeamLeader { get; set; }
-        
+        public virtual ICollection<ProjectTeamLeader> TeamLeaders { get; set; } = new List<ProjectTeamLeader>();
+        public virtual ICollection<ProjectDepartment> Departments { get; set; } = new List<ProjectDepartment>();
         public virtual ICollection<WorkTask> Tasks { get; set; } = new List<WorkTask>();
-        public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-        public virtual ICollection<ProjectMilestone> Milestones { get; set; } = new List<ProjectMilestone>();
     }
 }

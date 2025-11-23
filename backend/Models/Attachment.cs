@@ -1,39 +1,41 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BarqTMS.API.Models.Enums;
 
 namespace BarqTMS.API.Models
 {
-    [Table("ATTACHMENT")]
     public class Attachment
     {
         [Key]
-        [Column("file_id")]
-        public int FileId { get; set; }
-
-        [Column("task_id")]
-        public int TaskId { get; set; }
+        public int AttachmentId { get; set; }
 
         [Required]
         [StringLength(255)]
-        [Column("file_name")]
         public string FileName { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(500)]
-        [Column("file_url")]
-        public string FileUrl { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
 
-        [Column("uploaded_by")]
+        [StringLength(50)]
+        public string? FileType { get; set; }
+
+        public long FileSize { get; set; }
+
         public int UploadedBy { get; set; }
 
-        [Column("uploaded_at")]
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties
-        [ForeignKey("TaskId")]
-        public virtual WorkTask Task { get; set; } = null!;
-        
+        public RelatedEntityType RelatedEntityType { get; set; }
+
+        public int RelatedEntityId { get; set; }
+
+        // Navigation Properties
         [ForeignKey("UploadedBy")]
-        public virtual User UploadedByUser { get; set; } = null!;
+        public virtual User Uploader { get; set; } = null!;
+        
+        // Note: Polymorphic relationships are tricky in EF Core. 
+        // We usually don't have a direct navigation property for the "RelatedEntity" 
+        // unless we use TPH or TPT inheritance, or just manual queries.
+        // For now, we keep the ID and Type.
     }
 }

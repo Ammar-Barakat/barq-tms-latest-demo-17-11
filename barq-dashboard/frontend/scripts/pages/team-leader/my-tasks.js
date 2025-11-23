@@ -375,33 +375,9 @@ async function openTaskDetailsModal(taskId) {
       return;
     }
 
-    // Populate task details modal
-    document.getElementById("detailsTaskTitle").textContent = task.Title || "Untitled Task";
-    document.getElementById("detailsDescription").textContent = task.Description || "No description";
-    document.getElementById("detailsProject").textContent = task.ProjectName || "N/A";
-    document.getElementById("detailsPriority").innerHTML = utils.getPriorityBadge(task.PriorityId);
-    document.getElementById("detailsStatus").innerHTML = utils.getStatusBadge(task.StatusId);
-    document.getElementById("detailsAssignee").textContent = task.AssignedToName || "Unassigned";
-    document.getElementById("detailsDueDate").textContent = utils.formatDate(task.DueDate);
-    document.getElementById("detailsCreatedBy").textContent = task.CreatedByName || "Unknown";
-
-    // Show/hide drive links
-    const driveLinkGroup = document.getElementById("detailsDriveLinkGroup");
-    if (task.DriveFolderLink) {
-      driveLinkGroup.style.display = "block";
-      document.getElementById("detailsDriveLink").href = task.DriveFolderLink;
-    } else {
-      driveLinkGroup.style.display = "none";
-    }
-
-    const materialLinkGroup = document.getElementById("detailsMaterialLinkGroup");
-    if (task.MaterialDriveFolderLink) {
-      materialLinkGroup.style.display = "block";
-      document.getElementById("detailsMaterialLink").href = task.MaterialDriveFolderLink;
-    } else {
-      materialLinkGroup.style.display = "none";
-    }
-
+    currentTaskForAction = task;
+    
+    renderTaskDetails(task);
     document.getElementById("taskDetailsModal").classList.remove("d-none");
   } catch (error) {
     console.error("Failed to load task details:", error);
@@ -411,9 +387,77 @@ async function openTaskDetailsModal(taskId) {
   }
 }
 
+function renderTaskDetails(task) {
+  const detailsContainer = document.getElementById("taskDetailsContent");
+
+  const dueDate = task.DueDate
+    ? new Date(task.DueDate).toLocaleDateString()
+    : "Not set";
+
+  const driveFolderLink = task.DriveFolderLink || "";
+  const materialDriveFolderLink = task.MaterialDriveFolderLink || "";
+
+  detailsContainer.innerHTML = `
+    <div class="details-grid" style="margin-bottom: var(--space-4);">
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-heading"></i> Task Title</label>
+        <div class="detail-value">${task.Title || "Untitled Task"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-calendar"></i> Due Date</label>
+        <div class="detail-value">${dueDate}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-user"></i> Assigned To</label>
+        <div class="detail-value">${task.AssignedToName || "Unassigned"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-flag"></i> Priority</label>
+        <div class="detail-value">${utils.getPriorityBadge(task.PriorityId)}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-info-circle"></i> Status</label>
+        <div class="detail-value">${utils.getStatusBadge(task.StatusId)}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-folder"></i> Project</label>
+        <div class="detail-value">${task.ProjectName || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-user-pen"></i> Created By</label>
+        <div class="detail-value">${task.CreatedByName || "Unknown"}</div>
+      </div>
+    </div>
+    
+    <div class="detail-item" style="margin-bottom: var(--space-4);">
+      <label class="detail-label"><i class="fa-solid fa-align-left"></i> Description</label>
+      <div class="detail-value">${task.Description || "No description"}</div>
+    </div>
+
+    ${(driveFolderLink || materialDriveFolderLink) ? `
+    <div class="detail-item" style="margin-bottom: var(--space-4);">
+      <label class="detail-label"><i class="fa-solid fa-link"></i> Resources</label>
+      <div class="detail-value" style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+        ${driveFolderLink ? `
+        <a href="${driveFolderLink}" target="_blank" class="btn btn-primary" style="text-decoration: none; flex: 1;">
+          <i class="fa-brands fa-google-drive"></i> Open Task Folder
+        </a>
+        ` : ''}
+        ${materialDriveFolderLink ? `
+        <a href="${materialDriveFolderLink}" target="_blank" class="btn btn-secondary" style="text-decoration: none; flex: 1;">
+          <i class="fa-solid fa-folder-open"></i> Open Material Folder
+        </a>
+        ` : ''}
+      </div>
+    </div>
+    ` : ''}
+  `;
+}
+
 // Close task details modal
 function closeTaskDetailsModal() {
   document.getElementById("taskDetailsModal").classList.add("d-none");
+  currentTaskForAction = null;
 }
 
 // Search functionality

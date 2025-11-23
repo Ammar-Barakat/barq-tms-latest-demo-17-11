@@ -11,6 +11,9 @@ namespace BarqTMS.API.DTOs
         public int StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
         public DateTime? DueDate { get; set; }
+        public TimeSpan? SpecificTime { get; set; }
+        public decimal? EstimatedHours { get; set; }
+        public string? Tags { get; set; }
         public int CreatedBy { get; set; }
         public string? CreatedByName { get; set; }
         public int? AssignedTo { get; set; }
@@ -37,6 +40,9 @@ namespace BarqTMS.API.DTOs
         public int StatusId { get; set; }
         public string StatusName { get; set; } = string.Empty;
         public DateTime? DueDate { get; set; }
+        public TimeSpan? SpecificTime { get; set; }
+        public decimal? EstimatedHours { get; set; }
+        public string? Tags { get; set; }
         public int CreatedBy { get; set; }
         public string CreatedByName { get; set; } = string.Empty;
         public int? AssignedTo { get; set; }
@@ -71,6 +77,10 @@ namespace BarqTMS.API.DTOs
         public int StatusId { get; set; }
         
         public DateTime? DueDate { get; set; }
+
+        public TimeSpan? SpecificTime { get; set; }
+        public decimal? EstimatedHours { get; set; }
+        public string? Tags { get; set; }
         
         public int? AssignedTo { get; set; }
         
@@ -99,6 +109,9 @@ namespace BarqTMS.API.DTOs
         public int PriorityId { get; set; }
         public int StatusId { get; set; }
         public DateTime? DueDate { get; set; }
+        public TimeSpan? SpecificTime { get; set; }
+        public decimal? EstimatedHours { get; set; }
+        public string? Tags { get; set; }
         public int? AssignedTo { get; set; }
         public int DeptId { get; set; }
         public int? ProjectId { get; set; }

@@ -1,52 +1,44 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using BarqTMS.API.DTOs;
 using BarqTMS.API.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BarqTMS.API.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     [Authorize]
     public class ClientsController : ControllerBase
     {
         private readonly IClientService _clientService;
-        private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(IClientService clientService, ILogger<ClientsController> logger)
+        public ClientsController(IClientService clientService)
         {
             _clientService = clientService;
-            _logger = logger;
         }
 
-        // GET: api/clients
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClientDto>>> GetClients()
+        public async Task<ActionResult<IEnumerable<ClientDto>>> GetAll()
         {
-            var clients = await _clientService.GetClientsAsync();
+            var clients = await _clientService.GetAllClientsAsync();
             return Ok(clients);
         }
 
-        // GET: api/clients/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClientDto>> GetClient(int id)
+        public async Task<ActionResult<ClientDto>> GetById(int id)
         {
             var client = await _clientService.GetClientByIdAsync(id);
-            if (client == null)
-                return NotFound($"Client with ID {id} not found.");
+            if (client == null) return NotFound();
             return Ok(client);
         }
 
-        // POST: api/clients
-        // Only Manager can create clients
         [HttpPost]
-        [Authorize(Roles = "Manager")]
-        public async Task<ActionResult<ClientDto>> CreateClient([FromBody] CreateClientDto dto)
+        public async Task<ActionResult<ClientDto>> Create(CreateClientDto clientDto)
         {
             try
             {
-                var result = await _clientService.CreateClientAsync(dto);
-                return CreatedAtAction(nameof(GetClient), new { id = result.ClientId }, result);
+                var client = await _clientService.CreateClientAsync(clientDto);
+                return CreatedAtAction(nameof(GetById), new { id = client.ClientId }, client);
             }
             catch (ArgumentException ex)
             {
@@ -54,54 +46,20 @@ namespace BarqTMS.API.Controllers
             }
         }
 
-        // PUT: api/clients/{id}
-        // Only Manager can update clients
         [HttpPut("{id}")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> UpdateClient(int id, [FromBody] UpdateClientDto dto)
+        public async Task<ActionResult<ClientDto>> Update(int id, UpdateClientDto clientDto)
         {
-            try
-            {
-                var success = await _clientService.UpdateClientAsync(id, dto);
-                if (!success)
-                    return NotFound($"Client with ID {id} not found.");
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var client = await _clientService.UpdateClientAsync(id, clientDto);
+            if (client == null) return NotFound();
+            return Ok(client);
         }
 
-        // DELETE: api/clients/{id}
-        // Only Manager can delete clients
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> DeleteClient(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var (success, error) = await _clientService.DeleteClientAsync(id);
-            if (!success)
-            {
-                if (error == "notfound")
-                    return NotFound($"Client with ID {id} not found.");
-                return BadRequest(error);
-            }
+            var result = await _clientService.DeleteClientAsync(id);
+            if (!result) return NotFound();
             return NoContent();
-        }
-
-        // GET: api/clients/{id}/projects
-        [HttpGet("{id}/projects")]
-        public async Task<ActionResult<IEnumerable<ProjectDto>>> GetClientProjects(int id)
-        {
-            try
-            {
-                var projects = await _clientService.GetClientProjectsAsync(id);
-                return Ok(projects);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Client with ID {id} not found.");
-            }
         }
     }
 }

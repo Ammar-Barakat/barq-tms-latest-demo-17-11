@@ -442,49 +442,12 @@
             </button>
           </div>
           <div class="modal-body">
-            <div class="form-group">
-              <label><strong>Title:</strong></label>
-              <p id="detailsTaskTitle" style="margin: 5px 0; font-size: 16px">-</p>
-            </div>
-            <div class="form-group">
-              <label><strong>Description:</strong></label>
-              <p id="detailsDescription" style="margin: 5px 0">-</p>
-            </div>
-            <div class="form-group">
-              <label><strong>Project:</strong></label>
-              <p id="detailsProject" style="margin: 5px 0">-</p>
-            </div>
-            <div class="form-group">
-              <label><strong>Priority:</strong></label>
-              <div id="detailsPriority" style="margin: 5px 0"></div>
-            </div>
-            <div class="form-group">
-              <label><strong>Status:</strong></label>
-              <div id="detailsStatus" style="margin: 5px 0"></div>
-            </div>
-            <div class="form-group">
-              <label><strong>Assigned To:</strong></label>
-              <p id="detailsAssignee" style="margin: 5px 0">-</p>
-            </div>
-            <div class="form-group">
-              <label><strong>Due Date:</strong></label>
-              <p id="detailsDueDate" style="margin: 5px 0">-</p>
-            </div>
-            <div class="form-group">
-              <label><strong>Created By:</strong></label>
-              <p id="detailsCreatedBy" style="margin: 5px 0">-</p>
-            </div>
-            <div class="form-group" id="detailsDriveLinkGroup" style="display: none">
-              <label><strong>Task Drive Folder:</strong></label>
-              <a id="detailsDriveLink" href="#" target="_blank" class="btn btn-sm btn-success" style="display: inline-block; margin: 5px 0">
-                <i class="fa-solid fa-folder-open"></i> Open Drive Folder
-              </a>
-            </div>
-            <div class="form-group" id="detailsMaterialLinkGroup" style="display: none">
-              <label><strong>Material Drive Folder:</strong></label>
-              <a id="detailsMaterialLink" href="#" target="_blank" class="btn btn-sm btn-info" style="display: inline-block; margin: 5px 0">
-                <i class="fa-solid fa-folder"></i> Open Material Folder
-              </a>
+            <div id="taskDetailsContent">
+              <!-- Content will be loaded dynamically -->
+              <div class="text-center" style="padding: 20px;">
+                <div class="spinner"></div>
+                <p>Loading details...</p>
+              </div>
             </div>
           </div>
           <div class="modal-footer">

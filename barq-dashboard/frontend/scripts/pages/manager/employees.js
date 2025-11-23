@@ -16,6 +16,13 @@ async function loadData() {
   try {
     utils.showLoading();
     employees = await API.Users.getAll().catch(() => []);
+    
+    // Filter out clients (Role 6) from the employees list
+    employees = employees.filter(emp => {
+      const roleId = emp.RoleId || emp.Role;
+      return roleId !== 6;
+    });
+
     departments = await API.Departments.getAll().catch(() => []);
     clients = await API.Clients.getAll().catch(() => []);
 
@@ -82,17 +89,14 @@ function renderEmployees() {
 
   tbody.innerHTML = employees
     .map((emp) => {
-      const roleName = getRoleName(emp.Role || emp.RoleId);
+      const roleId = emp.Role || emp.RoleId;
+      const roleName = getRoleName(roleId);
       const teamLeaderName = emp.TeamLeaderName || "Not assigned";
 
-      return `
-    <tr>
-      <td><strong>${emp.Name || emp.Username || "Unknown"}</strong></td>
-      <td>${emp.Username || "N/A"}</td>
-      <td>${emp.Email || "N/A"}</td>
-      <td><span class="badge badge-info">${roleName}</span></td>
-      <td>${teamLeaderName}</td>
-      <td>
+      let actionsHtml = "";
+      // Only show actions if the user is NOT a manager (Role ID 1)
+      if (roleId !== 1) {
+        actionsHtml = `
         <div class="table-actions">
           <button class="btn btn-sm btn-primary" onclick="editEmployee(${
             emp.UserId || emp.Id
@@ -105,6 +109,18 @@ function renderEmployees() {
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
+        `;
+      }
+
+      return `
+    <tr>
+      <td><strong>${emp.Name || emp.Username || "Unknown"}</strong></td>
+      <td>${emp.Username || "N/A"}</td>
+      <td>${emp.Email || "N/A"}</td>
+      <td><span class="badge badge-info">${roleName}</span></td>
+      <td>${teamLeaderName}</td>
+      <td>
+        ${actionsHtml}
       </td>
     </tr>
   `;
@@ -300,13 +316,15 @@ async function handleSubmit(e) {
   const role = parseInt(document.getElementById("role").value);
   const password = document.getElementById("password").value;
 
+  const departmentId = parseInt(document.getElementById("department").value);
+
   const formData = {
     Name: document.getElementById("name").value,
     Username: document.getElementById("username").value,
     Email: document.getElementById("email").value || null,
     Position: document.getElementById("position").value || null,
     Role: role,
-    DepartmentIds: [], // Empty for now, can be enhanced later
+    DepartmentIds: departmentId ? [departmentId] : [],
   };
 
   // Add password if provided (required for new, optional for edit)

@@ -33,8 +33,10 @@ function calculateTaskStats(tasks) {
   const pending = tasks.filter((t) => t.StatusId === 1).length;
   const inProgress = tasks.filter((t) => t.StatusId === 2).length;
   const overdue = tasks.filter((t) => {
-    if (!t.DueDate || t.StatusId === 4) return false;
-    return new Date(t.DueDate) < now;
+    if (!t.DueDate || t.StatusId === 4 || t.StatusId === 5) return false;
+    const dueDate = new Date(t.DueDate);
+    dueDate.setHours(23, 59, 59, 999);
+    return dueDate < now;
   }).length;
 
   document.getElementById("completedTasks").textContent = completed;

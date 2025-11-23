@@ -67,6 +67,26 @@ async function loadTeamTasks() {
       return roleId === 5 && teamLeaderId === currentUser.UserId;
     });
 
+    // Fallback for Priorities if API fails
+    if (!priorities || priorities.length === 0) {
+      priorities = [
+        { PriorityId: 1, PriorityLevel: "Low" },
+        { PriorityId: 2, PriorityLevel: "Medium" },
+        { PriorityId: 3, PriorityLevel: "High" }
+      ];
+    }
+
+    // Fallback for Statuses if API fails
+    if (!statuses || statuses.length === 0) {
+      statuses = [
+        { StatusId: 1, StatusName: "To Do" },
+        { StatusId: 2, StatusName: "In Progress" },
+        { StatusId: 3, StatusName: "In Review" },
+        { StatusId: 4, StatusName: "Completed" },
+        { StatusId: 5, StatusName: "Cancelled" }
+      ];
+    }
+
     // Backend already filters tasks correctly, just render them
     populateDropdowns();
     renderTasks(allTasks);
@@ -217,12 +237,26 @@ function closeModal() {
 async function handleSubmit(e) {
   e.preventDefault();
 
+  const dueDateVal = document.getElementById("dueDate").value;
+  
+  // Validate Due Date
+  if (dueDateVal) {
+    const selectedDate = new Date(dueDateVal);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+
+    if (selectedDate < today) {
+      utils.showError("Due date cannot be in the past. Please select today or a future date.");
+      return;
+    }
+  }
+
   const formData = {
     Title: document.getElementById("title").value,
     Description: document.getElementById("description").value,
     PriorityId: parseInt(document.getElementById("priorityId").value),
     StatusId: parseInt(document.getElementById("statusId").value),
-    DueDate: document.getElementById("dueDate").value || null,
+    DueDate: dueDateVal || null,
     AssignedTo: parseInt(document.getElementById("assignedToId").value) || null,
     DeptId: parseInt(document.getElementById("deptId").value),
     ProjectId: parseInt(document.getElementById("projectId").value) || null,
@@ -249,8 +283,88 @@ async function handleSubmit(e) {
 }
 
 // View task details
-function viewTask(taskId) {
-  window.location.href = `task-details.html?id=${taskId}`;
+async function viewTask(taskId) {
+  try {
+    utils.showLoading();
+    const task = await API.Tasks.getById(taskId);
+    
+    if (!task) {
+      utils.showError("Task not found");
+      return;
+    }
+
+    const driveFolderLink = task.driveFolderLink || task.DriveFolderLink || "";
+    const materialDriveFolderLink = task.materialDriveFolderLink || task.MaterialDriveFolderLink || "";
+
+    const detailsContainer = document.getElementById("taskDetailsContent");
+    detailsContainer.innerHTML = `
+      <div class="details-grid" style="margin-bottom: var(--space-4);">
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-heading"></i> Task Title</label>
+          <div class="detail-value">${task.title || task.Title}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-calendar"></i> Due Date</label>
+          <div class="detail-value">${utils.formatDate(task.dueDate || task.DueDate)}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-user"></i> Assigned To</label>
+          <div class="detail-value">${task.assignedToName || task.AssignedToName || "Unassigned"}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-flag"></i> Priority</label>
+          <div class="detail-value">${utils.getPriorityBadge(task.priorityId || task.PriorityId)}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-info-circle"></i> Status</label>
+          <div class="detail-value">${utils.getStatusBadge(task.statusId || task.StatusId)}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-folder"></i> Project</label>
+          <div class="detail-value">${task.projectName || task.ProjectName || "No Project"}</div>
+        </div>
+        <div class="detail-item">
+          <label class="detail-label"><i class="fa-solid fa-user-pen"></i> Created By</label>
+          <div class="detail-value">${task.createdByName || task.CreatedByName || "Unknown"}</div>
+        </div>
+      </div>
+      
+      <div class="detail-item" style="margin-bottom: var(--space-4);">
+        <label class="detail-label"><i class="fa-solid fa-align-left"></i> Description</label>
+        <div class="detail-value">${task.description || task.Description || "No description"}</div>
+      </div>
+
+      ${(driveFolderLink || materialDriveFolderLink) ? `
+      <div class="detail-item" style="margin-bottom: var(--space-4);">
+        <label class="detail-label"><i class="fa-solid fa-link"></i> Resources</label>
+        <div class="detail-value" style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+          ${driveFolderLink ? `
+          <a href="${driveFolderLink}" target="_blank" class="btn btn-primary" style="text-decoration: none; flex: 1;">
+            <i class="fa-brands fa-google-drive"></i> Open Task Folder
+          </a>
+          ` : ''}
+          ${materialDriveFolderLink ? `
+          <a href="${materialDriveFolderLink}" target="_blank" class="btn btn-secondary" style="text-decoration: none; flex: 1;">
+            <i class="fa-solid fa-folder-open"></i> Open Material Folder
+          </a>
+          ` : ''}
+        </div>
+      </div>
+      ` : ''}
+    `;
+
+    document.getElementById("taskDetailsModal").classList.remove("d-none");
+  } catch (error) {
+    console.error("Failed to load task details:", error);
+    utils.showError("Failed to load task details");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+// Close task details modal
+function closeTaskDetailsModal() {
+  document.getElementById("taskDetailsModal").classList.add("d-none");
 }
 
 // Open review modal
@@ -375,7 +489,7 @@ async function submitReview() {
     // Show success message
     utils.showSuccess(
       action === "approve"
-        ? "Task approved successfully! Task removed from employee's list."
+        ? "Task approved successfully! Task marked as done."
         : "Revision request sent to employee with notes."
     );
 

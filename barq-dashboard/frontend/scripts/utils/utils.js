@@ -26,7 +26,7 @@ function formatDateTime(dateString) {
 // Status & Priority Labels
 function getStatusBadge(status) {
   const statusMap = {
-    1: { label: "To Do", class: "badge-secondary" },
+    1: { label: "Pending", class: "badge-pending" },
     2: { label: "In Progress", class: "badge-info" },
     3: { label: "In Review", class: "badge-warning" },
     4: { label: "Completed", class: "badge-success" },
@@ -41,9 +41,10 @@ function getStatusBadge(status) {
 
 function getPriorityBadge(priority) {
   const priorityMap = {
-    1: { label: "Low", class: "badge-success" },
-    2: { label: "Medium", class: "badge-warning" },
-    3: { label: "High", class: "badge-danger" },
+    1: { label: "Critical", class: "badge-danger" },
+    2: { label: "High", class: "badge-warning" },
+    3: { label: "Medium", class: "badge-info" },
+    4: { label: "Low", class: "badge-success" },
   };
   const priorityInfo = priorityMap[priority] || {
     label: "Unknown",
@@ -227,6 +228,51 @@ function truncateText(text, maxLength) {
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + "...";
 }
+
+// Page Transitions
+document.addEventListener('DOMContentLoaded', () => {
+  // Handle internal links for smooth transitions
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    
+    // Check if it's a valid link
+    if (!link || !link.href) return;
+    
+    // Skip if:
+    // 1. It's an external link
+    // 2. It opens in a new tab
+    // 3. It's an anchor link to the same page
+    // 4. It has a 'no-transition' class
+    if (
+      link.hostname !== window.location.hostname ||
+      link.target === '_blank' ||
+      link.href.includes('#') ||
+      link.classList.contains('no-transition')
+    ) {
+      return;
+    }
+
+    // Prevent default navigation
+    e.preventDefault();
+    const href = link.href;
+
+    // Add fade-out class
+    document.body.classList.add('fade-out');
+
+    // Wait for animation then navigate
+    setTimeout(() => {
+      window.location.href = href;
+    }, 300); // Match the CSS transition time
+  });
+  
+  // Ensure body is visible on load (removes fade-out if it stuck from back button)
+  // The CSS default is opacity: 1, but if we navigated back, the browser might restore the state
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      document.body.classList.remove('fade-out');
+    }
+  });
+});
 
 // Export functions to window
 window.utils = {

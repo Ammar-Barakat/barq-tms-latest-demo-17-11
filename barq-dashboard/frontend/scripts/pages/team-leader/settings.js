@@ -19,45 +19,16 @@ async function loadUserSettings() {
     // Populate profile form with API data
     document.getElementById("name").value = user.Name || "";
     document.getElementById("email").value = user.Email || "";
-    document.getElementById("phone").value = user.PhoneNumber || "";
 
-    // Update system info
-    document.getElementById("userRole").textContent = getRoleName(
-      user.RoleId || user.Role || auth.getUserRole()
-    );
-
-    // Update last login if available
-    if (user.LastLogin) {
-      document.getElementById("lastLogin").textContent = utils.formatDate(
-        user.LastLogin
-      );
-    }
   } catch (error) {
     console.error("Error loading user settings:", error);
 
     // Fallback to localStorage data
     document.getElementById("name").value = localUser.Name || "";
     document.getElementById("email").value = localUser.Email || "";
-    document.getElementById("phone").value = localUser.PhoneNumber || "";
-
-    document.getElementById("userRole").textContent = getRoleName(
-      auth.getUserRole()
-    );
   } finally {
     utils.hideLoading();
   }
-}
-
-function getRoleName(roleId) {
-  const roles = {
-    1: "Manager",
-    2: "Assistant Manager",
-    3: "Account Manager",
-    4: "Team Leader",
-    5: "Employee",
-    6: "Client",
-  };
-  return roles[roleId] || "Unknown";
 }
 
 function setupEventListeners() {
@@ -78,7 +49,6 @@ async function handleProfileUpdate(e) {
   const formData = {
     Name: document.getElementById("name").value,
     Email: document.getElementById("email").value,
-    PhoneNumber: document.getElementById("phone").value,
   };
 
   try {
@@ -124,7 +94,11 @@ async function handlePasswordChange(e) {
     utils.showLoading();
 
     // This would call a change password endpoint if available
-    // await API.Auth.changePassword({ currentPassword, newPassword });
+    await API.Auth.changePassword({ 
+      currentPassword, 
+      newPassword,
+      confirmPassword 
+    });
 
     utils.showSuccess("Password changed successfully");
     document.getElementById("passwordForm").reset();
@@ -133,11 +107,5 @@ async function handlePasswordChange(e) {
     utils.showError("Failed to change password");
   } finally {
     utils.hideLoading();
-  }
-}
-
-function handleLogout() {
-  if (utils.confirmAction("Are you sure you want to logout?")) {
-    auth.logout();
   }
 }

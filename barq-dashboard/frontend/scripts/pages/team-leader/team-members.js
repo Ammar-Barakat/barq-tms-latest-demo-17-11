@@ -86,27 +86,49 @@ function viewEmployee(userId) {
   const employee = employees.find((e) => e.UserId === userId);
   if (!employee) return;
 
-  // Populate modal with employee details
-  document.getElementById("detailName").textContent = employee.Name || "N/A";
-  document.getElementById("detailUsername").textContent = employee.Username || "N/A";
-  document.getElementById("detailEmail").textContent = employee.Email || "N/A";
-  document.getElementById("detailPosition").textContent = employee.Position || "N/A";
-  document.getElementById("detailRole").textContent = getRoleName(employee.Role);
-  document.getElementById("detailTeamLeader").textContent = employee.TeamLeaderName || "N/A";
-  document.getElementById("detailStatus").textContent = employee.IsActive ? "Active" : "Inactive";
-
-  // Show departments if available
-  const departmentsGroup = document.getElementById("detailDepartmentsGroup");
-  const departmentsDiv = document.getElementById("detailDepartments");
+  const detailsContainer = document.getElementById("employeeDetailsContent");
   
-  if (employee.Departments && employee.Departments.length > 0) {
-    departmentsGroup.style.display = "block";
-    departmentsDiv.innerHTML = employee.Departments
-      .map((d) => `<span class="badge badge-info" style="margin-right: 5px;">${d.DeptName || d.deptName}</span>`)
-      .join("");
-  } else {
-    departmentsGroup.style.display = "none";
-  }
+  const departmentsHtml = (employee.Departments && employee.Departments.length > 0) 
+    ? employee.Departments.map(d => `<span class="badge badge-info" style="margin-right: 5px;">${d.DeptName || d.deptName}</span>`).join("")
+    : "No Departments";
+
+  detailsContainer.innerHTML = `
+    <div class="details-grid" style="margin-bottom: var(--space-4);">
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-user"></i> Name</label>
+        <div class="detail-value">${employee.Name || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-id-badge"></i> Username</label>
+        <div class="detail-value">${employee.Username || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-envelope"></i> Email</label>
+        <div class="detail-value">${employee.Email || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-briefcase"></i> Position</label>
+        <div class="detail-value">${employee.Position || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-user-tag"></i> Role</label>
+        <div class="detail-value">${getRoleName(employee.Role)}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-user-tie"></i> Team Leader</label>
+        <div class="detail-value">${employee.TeamLeaderName || "N/A"}</div>
+      </div>
+      <div class="detail-item">
+        <label class="detail-label"><i class="fa-solid fa-toggle-on"></i> Status</label>
+        <div class="detail-value">${employee.IsActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</div>
+      </div>
+    </div>
+
+    <div class="detail-item" style="margin-bottom: var(--space-4);">
+      <label class="detail-label"><i class="fa-solid fa-building"></i> Departments</label>
+      <div class="detail-value">${departmentsHtml}</div>
+    </div>
+  `;
 
   // Show modal
   document.getElementById("employeeModal").classList.remove("d-none");

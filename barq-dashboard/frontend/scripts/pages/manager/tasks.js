@@ -108,6 +108,8 @@ function renderTasks() {
       <td>${utils.getStatusBadge(statusId)}</td>
       <td>${utils.getPriorityBadge(priorityId)}</td>
       <td>${utils.formatDate(task.DueDate || task.dueDate)}</td>
+      <td>${task.Tags || task.tags || "-"}</td>
+      <td>${task.CreatedByName || task.createdByName || "System"}</td>
       <td>
         <div class="table-actions">
           ${needsReview
@@ -149,12 +151,35 @@ function handleSearch(e) {
   });
 }
 
+function updateStatusDropdown(isEdit) {
+  const select = document.getElementById("status");
+  
+  let html = `
+    <option value="1">Pending</option>
+    <option value="2">In Progress</option>
+  `;
+
+  if (isEdit) {
+    html += `
+      <option value="3">In Review</option>
+      <option value="4">Completed</option>
+      <option value="5">Cancelled</option>
+    `;
+  }
+
+  select.innerHTML = html;
+}
+
 function showCreateModal() {
   currentEditId = null;
   document.getElementById("modalTitle").textContent = "Create Task";
   document.getElementById("taskForm").reset();
   clearFormErrors(document.getElementById("taskForm"));
   document.getElementById("taskId").value = "";
+  
+  updateStatusDropdown(false);
+  document.getElementById("status").value = "1";
+
   document.getElementById("taskModal").classList.remove("d-none");
 }
 
@@ -180,6 +205,9 @@ async function editTask(id) {
   currentEditId = id;
   document.getElementById("modalTitle").textContent = "Edit Task";
   document.getElementById("taskId").value = id;
+  
+  updateStatusDropdown(true);
+
   // Use detail DTO fields (PascalCase from getById)
   document.getElementById("title").value = task.Title || "";
   document.getElementById("description").value = task.Description || "";
@@ -190,10 +218,18 @@ async function editTask(id) {
   document.getElementById("driveUploadLink").value = task.DriveFolderLink || "";
   document.getElementById("driveMaterialLink").value =
     task.MaterialDriveFolderLink || "";
+    
+  // New fields
+  document.getElementById("specificTime").value = task.SpecificTime || "";
+  document.getElementById("estimatedHours").value = task.EstimatedHours || "";
+  document.getElementById("tags").value = task.Tags || "";
 
   if (task.DueDate) {
-    const date = new Date(task.DueDate);
-    document.getElementById("dueDate").value = date.toISOString().split("T")[0];
+    // Fix Issue 1: Prevent timezone shift by using the date string directly
+    // The API returns ISO string (e.g. 2023-11-23T00:00:00)
+    // We just want the first 10 chars "2023-11-23"
+    const dateStr = String(task.DueDate);
+    document.getElementById("dueDate").value = dateStr.substring(0, 10);
   }
 
   document.getElementById("taskModal").classList.remove("d-none");
@@ -202,6 +238,16 @@ async function editTask(id) {
 async function handleSubmit(e) {
   e.preventDefault();
   clearFormErrors(document.getElementById("taskForm"));
+  
+  // Fix Issue 4: Ensure dueDate is strictly null if empty
+  let dueDateInput = document.getElementById("dueDate").value;
+  if (!dueDateInput) dueDateInput = null;
+
+  let specificTime = document.getElementById("specificTime").value;
+  if (specificTime && specificTime.length === 5) {
+      specificTime += ":00";
+  }
+
   // Build payload matching API `CreateTaskDto` / `UpdateTaskDto` (camelCase)
   const formData = {
     title: document.getElementById("title").value,
@@ -210,17 +256,19 @@ async function handleSubmit(e) {
     assignedTo: parseInt(document.getElementById("assignedToId").value) || null,
     statusId: parseInt(document.getElementById("status").value) || 1,
     priorityId: parseInt(document.getElementById("priority").value) || 1,
-    dueDate: document.getElementById("dueDate").value || null,
-    driveFolderLink: document.getElementById("driveUploadLink").value || null,
+    dueDate: dueDateInput,
+    specificTime: specificTime || null,
+    estimatedHours: parseFloat(document.getElementById("estimatedHours").value) || null,
+    tags: document.getElementById("tags").value || null,
+    driveFolderLink: document.getElementById("driveUploadLink").value || "https://drive.google.com/drive/folders/default", // Provide default if empty to satisfy [Required]
     materialDriveFolderLink:
       document.getElementById("driveMaterialLink").value || null,
     deptId: parseInt(document.getElementById("deptId")?.value) || 1,
   };
 
   // Validate due date
-  const dueDateVal = document.getElementById("dueDate").value;
-  if (dueDateVal) {
-    const selectedDate = new Date(dueDateVal);
+  if (dueDateInput) {
+    const selectedDate = new Date(dueDateInput);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time to start of day
     if (selectedDate < today) {
@@ -481,7 +529,7 @@ async function submitReview() {
     // Show success message
     utils.showSuccess(
       action === "approve"
-        ? "Task approved successfully! Task removed from employee's list."
+        ? "Task approved successfully! Task marked as done."
         : "Revision request sent to employee with notes."
     );
 

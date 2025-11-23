@@ -1,21 +1,88 @@
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
+using BarqTMS.API.Data;
+using BarqTMS.API.DTOs;
 using BarqTMS.API.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using BCrypt.Net;
 
 namespace BarqTMS.API.Services
 {
     public class AuthService
     {
+        private readonly BarqTMSDbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(BarqTMSDbContext context, IConfiguration configuration)
         {
+            _context = context;
             _configuration = configuration;
-            _logger = logger;
+        }
+
+        public async Task<LoginResponseDto?> LoginAsync(LoginDto loginDto)
+        {
+            var user = await _context.Users
+                .Include(u => u.Department)
+                .FirstOrDefaultAsync(u => u.Username == loginDto.UserName);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            {
+                return null;
+            }
+
+            var token = GenerateJwtToken(user);
+
+            return new LoginResponseDto
+            {
+                Token = token,
+                User = new UserDto
+                {
+                    UserId = user.UserId,
+                    Name = user.FullName,
+                    Username = user.Username,
+                    Email = user.Email,
+                    Role = user.Role,
+                    RoleName = user.Role.ToString(),
+                    Departments = user.Department != null ? new List<DepartmentDto> { new DepartmentDto { DeptId = user.Department.DeptId, DeptName = user.Department.Name } } : new List<DepartmentDto>()
+                },
+                ExpiresIn = 1440 * 60 // 24 hours in seconds
+            };
+        }
+
+        public async Task<UserDto> RegisterAsync(RegisterDto registerDto)
+        {
+            if (await _context.Users.AnyAsync(u => u.Username == registerDto.UserName))
+            {
+                throw new Exception("Username already exists");
+            }
+
+            var user = new User
+            {
+                FullName = registerDto.Name,
+                Username = registerDto.UserName,
+                Email = registerDto.Email ?? "",
+                PasswordHash = HashPassword(registerDto.Password),
+                Role = registerDto.Role,
+                DepartmentId = registerDto.DepartmentIds.FirstOrDefault(), // Simple assignment for now
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Name = user.FullName,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                RoleName = user.Role.ToString()
+            };
         }
 
         public string HashPassword(string password)
@@ -23,85 +90,26 @@ namespace BarqTMS.API.Services
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        public bool VerifyPassword(string password, string hashedPassword)
+        private string GenerateJwtToken(User user)
         {
-            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
-        }
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        public string GenerateJwtToken(User user, List<string> roles)
-        {
-            var secretKey = _configuration["Jwt:SecretKey"];
-            if (string.IsNullOrEmpty(secretKey))
-                throw new ArgumentNullException(nameof(secretKey), "JWT secret key is not configured");
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new List<Claim>
+            var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim("username", user.Username),
-                new Claim("user_id", user.UserId.ToString())
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
-
-            // Add email claim only if email is provided
-            if (!string.IsNullOrEmpty(user.Email))
-            {
-                claims.Add(new Claim(ClaimTypes.Email, user.Email));
-            }
-
-            // Add role claims
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var expirationMinutes = _configuration.GetValue<int>("Jwt:ExpirationInMinutes", 1440);
-            var expiration = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: expiration,
-                signingCredentials: credentials
-            );
+                expires: DateTime.Now.AddMinutes(double.Parse(_configuration["Jwt:ExpirationInMinutes"]!)),
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public string GenerateRefreshToken()
-        {
-            var randomNumber = new byte[64];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
-
-        public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
-        {
-            var secretKey = _configuration["Jwt:SecretKey"];
-            if (string.IsNullOrEmpty(secretKey))
-                return null;
-
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                ValidateLifetime = false
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-            
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || 
-                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                return null;
-
-            return principal;
         }
     }
 }

@@ -1,43 +1,36 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using BarqTMS.API.Models.Enums;
 
 namespace BarqTMS.API.Models
 {
-    [Table("NOTIFICATION")]
     public class Notification
     {
         [Key]
-        [Column("notif_id")]
-        public int NotifId { get; set; }
+        public int NotificationId { get; set; }
 
-        [Column("user_id")]
         public int UserId { get; set; }
 
         [Required]
-        [StringLength(1000)]
-        [Column("message")]
+        [StringLength(100)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(500)]
         public string Message { get; set; } = string.Empty;
 
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public NotificationType Type { get; set; }
 
-        [Column("is_read")]
         public bool IsRead { get; set; } = false;
 
-        [Column("task_id")]
-        public int? TaskId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("project_id")]
-        public int? ProjectId { get; set; }
+        public int? RelatedEntityId { get; set; }
 
-        // Navigation properties
+        public RelatedEntityType? RelatedEntityType { get; set; }
+
+        // Navigation Properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;
-        
-        [ForeignKey("TaskId")]
-        public virtual WorkTask? Task { get; set; }
-        
-        [ForeignKey("ProjectId")]
-        public virtual Project? Project { get; set; }
     }
 }

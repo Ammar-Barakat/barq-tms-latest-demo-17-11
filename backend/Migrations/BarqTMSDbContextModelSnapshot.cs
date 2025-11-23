@@ -19,727 +19,372 @@ namespace BarqTMS.API.Migrations
 
             modelBuilder.Entity("BarqTMS.API.Models.Attachment", b =>
                 {
-                    b.Property<int>("FileId")
+                    b.Property<int>("AttachmentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("file_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("file_name");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("FileUrl")
+                    b.Property<string>("FilePath")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("file_url");
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RelatedEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RelatedEntityType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("uploaded_at");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UploadedBy")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("uploaded_by");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("FileId");
+                    b.Property<int?>("WorkTaskTaskId")
+                        .HasColumnType("INTEGER");
 
-                    b.HasIndex("TaskId");
+                    b.HasKey("AttachmentId");
 
                     b.HasIndex("UploadedBy");
 
-                    b.ToTable("ATTACHMENT");
+                    b.HasIndex("WorkTaskTaskId");
+
+                    b.ToTable("Attachments");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.AuditLog", b =>
                 {
-                    b.Property<int>("AuditId")
+                    b.Property<int>("LogId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("audit_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("action");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("Changes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("changes");
+                    b.Property<int>("EntityId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
-
-                    b.Property<int?>("EntityId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("entity_id");
-
-                    b.Property<string>("EntityType")
+                    b.Property<string>("EntityName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("entity_type");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ip_address");
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NewValues")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("new_values");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OldValues")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("old_values");
-
-                    b.Property<string>("TableName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("table_name");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("timestamp");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("user_agent");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("AuditId");
+                    b.HasKey("LogId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AUDIT_LOG");
+                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.CalendarEvent", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("EventId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CreatedByUserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("DepartmentId")
+                    b.Property<int>("CreatedBy")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EventType")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsAllDay")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsRecurring")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("RecurrenceDays")
+                    b.Property<string>("EventType")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("RecurrenceEndDate")
+                    b.Property<int?>("RelatedCompanyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RelatedProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RelatedTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("RecurrenceInterval")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("RecurrencePattern")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("TaskId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("RelatedCompanyId");
+
+                    b.HasIndex("RelatedProjectId");
+
+                    b.HasIndex("RelatedTaskId");
+
+                    b.ToTable("CalendarEvents");
+                });
+
+            modelBuilder.Entity("BarqTMS.API.Models.Company", b =>
+                {
+                    b.Property<int>("CompanyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("AccountManagerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<string>("Country")
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("EndDate");
-
-                    b.HasIndex("EventType");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("StartDate");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CALENDAR_EVENT", (string)null);
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.CalendarEventAttendee", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CalendarEventId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsOrganizer")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Notes")
+                    b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ResponseDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalendarEventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CALENDAR_EVENT_ATTENDEE", (string)null);
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.CalendarReminder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CalendarEventId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MinutesBefore")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("SentAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalendarEventId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CALENDAR_REMINDER", (string)null);
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.Client", b =>
-                {
-                    b.Property<int>("ClientId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("client_id");
-
-                    b.Property<int?>("AccountManagerId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("account_manager_id");
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("address");
-
-                    b.Property<string>("Company")
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("company");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("email");
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("name");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("PhoneNumber")
+                    b.Property<int>("OwnerUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("phone_number");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("ClientId");
+                    b.HasKey("CompanyId");
 
                     b.HasIndex("AccountManagerId");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                    b.HasIndex("OwnerUserId");
 
-                    b.ToTable("CLIENT");
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Department", b =>
                 {
                     b.Property<int>("DeptId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("dept_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("DeptName")
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("dept_name");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("DeptId");
 
-                    b.HasIndex("DeptName")
-                        .IsUnique();
-
-                    b.ToTable("DEPARTMENT");
+                    b.ToTable("Departments");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.LoginAttempt", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.EventAttendee", b =>
                 {
-                    b.Property<int>("AttemptId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("attempt_id");
+                    b.Property<int>("EventId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("AttemptedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("attempted_at");
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("email");
+                    b.HasKey("EventId", "UserId");
 
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("failure_reason");
+                    b.HasIndex("UserId");
 
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasMaxLength(45)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ip_address");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("user_agent");
-
-                    b.Property<bool>("WasSuccessful")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("was_successful");
-
-                    b.HasKey("AttemptId");
-
-                    b.ToTable("LOGIN_ATTEMPT");
+                    b.ToTable("EventAttendees");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Notification", b =>
                 {
-                    b.Property<int>("NotifId")
+                    b.Property<int>("NotificationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("notif_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_read");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("message");
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
 
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("project_id");
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int?>("TaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
+                    b.Property<string>("RelatedEntityType")
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("NotifId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("NOTIFICATION");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.PasswordResetToken", b =>
-                {
-                    b.Property<int>("TokenId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("token_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_used");
-
-                    b.Property<string>("Token")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("token");
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("TokenId");
+                    b.Property<int?>("WorkTaskTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("NotificationId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PASSWORD_RESET_TOKEN");
-                });
+                    b.HasIndex("WorkTaskTaskId");
 
-            modelBuilder.Entity("BarqTMS.API.Models.Priority", b =>
-                {
-                    b.Property<int>("PriorityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("priority_id");
-
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("level");
-
-                    b.HasKey("PriorityId");
-
-                    b.ToTable("PRIORITY");
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Project", b =>
                 {
                     b.Property<int>("ProjectId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("project_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ClientId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("client_id");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("end_date");
-
-                    b.Property<string>("ProjectName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("project_name");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("start_date");
-
-                    b.Property<int?>("TeamLeaderId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("team_leader_id");
-
-                    b.HasKey("ProjectId");
-
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("TeamLeaderId");
-
-                    b.ToTable("PROJECT");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.ProjectMilestone", b =>
-                {
-                    b.Property<int>("MilestoneId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("milestone_id");
-
-                    b.Property<DateTime?>("CompletionDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("completion_date");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
-
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("due_date");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_completed");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("name");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("project_id");
-
-                    b.HasKey("MilestoneId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("PROJECT_MILESTONE");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.RecurringTask", b =>
-                {
-                    b.Property<int>("RecurringId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("recurring_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("end_date");
-
-                    b.Property<int>("FrequencyInterval")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("frequency_interval");
-
-                    b.Property<string>("FrequencyType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("frequency_type");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_active");
-
-                    b.Property<DateTime?>("LastGenerated")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("last_generated");
-
-                    b.Property<DateTime>("NextDueDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("next_due_date");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("start_date");
-
-                    b.Property<int>("TemplateTaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("template_task_id");
-
-                    b.HasKey("RecurringId");
-
-                    b.HasIndex("TemplateTaskId");
-
-                    b.ToTable("RECURRING_TASK");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.Role", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("role_id");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("role_name");
-
-                    b.HasKey("RoleId");
-
-                    b.HasIndex("RoleName")
-                        .IsUnique();
-
-                    b.ToTable("ROLE");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.Status", b =>
-                {
-                    b.Property<int>("StatusId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("status_id");
-
-                    b.Property<string>("StatusName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("status_name");
-
-                    b.HasKey("StatusId");
-
-                    b.ToTable("STATUS");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.TaskCategory", b =>
-                {
-                    b.Property<int>("CategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("category_id");
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("color");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
+                        .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_active");
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("name");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("CategoryId");
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
 
-                    b.ToTable("TASK_CATEGORY");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ProjectId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("BarqTMS.API.Models.ProjectDepartment", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeptId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProjectId", "DeptId");
+
+                    b.HasIndex("DeptId");
+
+                    b.ToTable("ProjectDepartments");
+                });
+
+            modelBuilder.Entity("BarqTMS.API.Models.ProjectTeamLeader", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProjectId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ProjectTeamLeaders");
+                });
+
+            modelBuilder.Entity("BarqTMS.API.Models.TaskAssignee", b =>
+                {
+                    b.Property<int>("TaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TaskId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TaskAssignees");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.TaskComment", b =>
                 {
                     b.Property<int>("CommentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("comment_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Comment")
+                    b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("comment");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRejectionReason")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("TaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("CommentId");
 
@@ -747,389 +392,248 @@ namespace BarqTMS.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TASK_COMMENT");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.TaskDependency", b =>
-                {
-                    b.Property<int>("DependencyId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("dependency_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("PrerequisiteTaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("prerequisite_task_id");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
-
-                    b.HasKey("DependencyId");
-
-                    b.HasIndex("PrerequisiteTaskId");
-
-                    b.HasIndex("TaskId", "PrerequisiteTaskId")
-                        .IsUnique();
-
-                    b.ToTable("TASK_DEPENDENCY", t =>
-                        {
-                            t.HasCheckConstraint("CK_TaskDependency_NoSelf", "[prerequisite_task_id] <> [task_id]");
-                        });
+                    b.ToTable("TaskComments");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.TimeLog", b =>
                 {
-                    b.Property<int>("TimeLogId")
+                    b.Property<int>("LogId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("time_log_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
+                        .HasColumnType("TEXT");
 
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("duration_minutes");
+                    b.Property<double?>("DurationMinutes")
+                        .HasColumnType("REAL");
 
                     b.Property<DateTime?>("EndTime")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("end_time");
-
-                    b.Property<bool>("IsBillable")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_billable");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("StartTime")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("start_time");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("TaskId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("TimeLogId");
+                    b.HasKey("LogId");
 
                     b.HasIndex("TaskId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TIME_LOG");
+                    b.ToTable("TimeLogs");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.User", b =>
                 {
                     b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ClientId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("client_id");
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("email");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_active");
-
-                    b.Property<DateTime?>("LastLogin")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("last_login");
-
-                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("name");
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("password_hash");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("Position")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("position");
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("role");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<int?>("TeamLeaderId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("team_leader_id");
+                    b.Property<string>("SecondaryPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("updated_at");
+                    b.Property<int?>("SupervisorId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("username");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasFilter("[email] IS NOT NULL");
+                    b.HasIndex("SupervisorId");
 
-                    b.HasIndex("TeamLeaderId");
-
-                    b.HasIndex("Username")
-                        .IsUnique();
-
-                    b.ToTable("USER");
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.UserDepartment", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.UserChangeRequest", b =>
                 {
-                    b.Property<int>("UserDeptId")
+                    b.Property<int>("RequestId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_dept_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("DeptId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("dept_id");
+                    b.Property<string>("NewData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NewPasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("UserDeptId");
+                    b.HasKey("RequestId");
 
-                    b.HasIndex("DeptId");
+                    b.HasIndex("ReviewedBy");
 
-                    b.HasIndex("UserId", "DeptId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
-                    b.ToTable("USER_DEPARTMENTS");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.UserSettings", b =>
-                {
-                    b.Property<int>("SettingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("setting_id");
-
-                    b.Property<bool>("EmailNotifications")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("email_notifications");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("language");
-
-                    b.Property<bool>("PushNotifications")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("push_notifications");
-
-                    b.Property<bool>("TaskReminders")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_reminders");
-
-                    b.Property<string>("Theme")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("theme");
-
-                    b.Property<string>("Timezone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("timezone");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("SettingId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("USER_SETTINGS");
+                    b.ToTable("UserChangeRequests");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.WorkTask", b =>
                 {
                     b.Property<int>("TaskId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("task_id");
-
-                    b.Property<decimal?>("ActualHours")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("actual_hours");
-
-                    b.Property<int?>("AssignedTo")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("assigned_to");
-
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("category_id");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("created_by");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("DelegatedBy")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("delegated_by");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("DeptId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("dept_id");
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("description");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DriveFolderLink")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("drive_folder_link");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("due_date");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal?>("EstimatedHours")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("estimated_hours");
-
-                    b.Property<bool>("IsRecurring")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("is_recurring");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("MaterialDriveFolderLink")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("material_drive_folder_link");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("OriginalAssignerId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("original_assigner_id");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("PriorityId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("priority_id");
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("project_id");
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("StatusId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("status_id");
+                    b.Property<TimeSpan?>("SpecificTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("tags");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("title");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("updated_at");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("TaskId");
 
-                    b.HasIndex("AssignedTo");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("DelegatedBy");
 
-                    b.HasIndex("DeptId");
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("OriginalAssignerId");
 
-                    b.HasIndex("PriorityId");
-
                     b.HasIndex("ProjectId");
 
-                    b.HasIndex("StatusId");
-
-                    b.ToTable("TASK");
+                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Attachment", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.WorkTask", "Task")
-                        .WithMany("Attachments")
-                        .HasForeignKey("TaskId")
+                    b.HasOne("BarqTMS.API.Models.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BarqTMS.API.Models.User", "UploadedByUser")
-                        .WithMany("UploadedAttachments")
-                        .HasForeignKey("UploadedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.HasOne("BarqTMS.API.Models.WorkTask", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("WorkTaskTaskId");
 
-                    b.Navigation("Task");
-
-                    b.Navigation("UploadedByUser");
+                    b.Navigation("Uploader");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.AuditLog", b =>
                 {
                     b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany("AuditLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1137,177 +641,146 @@ namespace BarqTMS.API.Migrations
 
             modelBuilder.Entity("BarqTMS.API.Models.CalendarEvent", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.User", "CreatedByUser")
+                    b.HasOne("BarqTMS.API.Models.User", "Creator")
                         .WithMany()
-                        .HasForeignKey("CreatedByUserId")
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("BarqTMS.API.Models.Department", "Department")
+                    b.HasOne("BarqTMS.API.Models.Company", "RelatedCompany")
                         .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RelatedCompanyId");
 
-                    b.HasOne("BarqTMS.API.Models.Project", "Project")
+                    b.HasOne("BarqTMS.API.Models.Project", "RelatedProject")
                         .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RelatedProjectId");
 
-                    b.HasOne("BarqTMS.API.Models.WorkTask", "Task")
+                    b.HasOne("BarqTMS.API.Models.WorkTask", "RelatedTask")
                         .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RelatedTaskId");
 
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.Navigation("Creator");
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("RelatedCompany");
 
-                    b.Navigation("Department");
+                    b.Navigation("RelatedProject");
 
-                    b.Navigation("Project");
-
-                    b.Navigation("Task");
-
-                    b.Navigation("User");
+                    b.Navigation("RelatedTask");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.CalendarEventAttendee", b =>
-                {
-                    b.HasOne("BarqTMS.API.Models.CalendarEvent", "CalendarEvent")
-                        .WithMany("Attendees")
-                        .HasForeignKey("CalendarEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CalendarEvent");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.CalendarReminder", b =>
-                {
-                    b.HasOne("BarqTMS.API.Models.CalendarEvent", "CalendarEvent")
-                        .WithMany("Reminders")
-                        .HasForeignKey("CalendarEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CalendarEvent");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.Client", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.Company", b =>
                 {
                     b.HasOne("BarqTMS.API.Models.User", "AccountManager")
-                        .WithMany("ManagedClients")
+                        .WithMany("ManagedCompanies")
                         .HasForeignKey("AccountManagerId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BarqTMS.API.Models.User", "Owner")
+                        .WithMany("OwnedCompanies")
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("AccountManager");
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("BarqTMS.API.Models.EventAttendee", b =>
+                {
+                    b.HasOne("BarqTMS.API.Models.CalendarEvent", "Event")
+                        .WithMany("Attendees")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BarqTMS.API.Models.User", "User")
+                        .WithMany("EventInvitations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Notification", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.Project", "Project")
-                        .WithMany("Notifications")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BarqTMS.API.Models.WorkTask", "Task")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("Task");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.PasswordResetToken", b =>
-                {
                     b.HasOne("BarqTMS.API.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BarqTMS.API.Models.WorkTask", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("WorkTaskTaskId");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Project", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.Client", "Client")
+                    b.HasOne("BarqTMS.API.Models.Company", "Company")
                         .WithMany("Projects")
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("BarqTMS.API.Models.User", "TeamLeader")
-                        .WithMany()
-                        .HasForeignKey("TeamLeaderId");
-
-                    b.Navigation("Client");
-
-                    b.Navigation("TeamLeader");
+                    b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.ProjectMilestone", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.ProjectDepartment", b =>
                 {
+                    b.HasOne("BarqTMS.API.Models.Department", "Department")
+                        .WithMany("ProjectDepartments")
+                        .HasForeignKey("DeptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BarqTMS.API.Models.Project", "Project")
-                        .WithMany("Milestones")
+                        .WithMany("Departments")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Department");
+
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.RecurringTask", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.ProjectTeamLeader", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.WorkTask", "TemplateTask")
-                        .WithMany()
-                        .HasForeignKey("TemplateTaskId")
+                    b.HasOne("BarqTMS.API.Models.Project", "Project")
+                        .WithMany("TeamLeaders")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TemplateTask");
+                    b.HasOne("BarqTMS.API.Models.User", "TeamLeader")
+                        .WithMany("LedProjects")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("TeamLeader");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.TaskComment", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.TaskAssignee", b =>
                 {
                     b.HasOne("BarqTMS.API.Models.WorkTask", "Task")
-                        .WithMany("TaskComments")
+                        .WithMany("Assignees")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany("TaskComments")
+                        .WithMany("AssignedTasks")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Task");
@@ -1315,21 +788,21 @@ namespace BarqTMS.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.TaskDependency", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.TaskComment", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.WorkTask", "PrerequisiteTask")
-                        .WithMany("PrerequisiteFor")
-                        .HasForeignKey("PrerequisiteTaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("BarqTMS.API.Models.WorkTask", "Task")
-                        .WithMany("Dependencies")
+                        .WithMany("Comments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PrerequisiteTask");
+                    b.HasOne("BarqTMS.API.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
 
                     b.Navigation("Task");
                 });
@@ -1343,7 +816,7 @@ namespace BarqTMS.API.Migrations
                         .IsRequired();
 
                     b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany("TimeLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1355,68 +828,40 @@ namespace BarqTMS.API.Migrations
 
             modelBuilder.Entity("BarqTMS.API.Models.User", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.Client", "Client")
-                        .WithMany("ClientUsers")
-                        .HasForeignKey("ClientId");
+                    b.HasOne("BarqTMS.API.Models.Department", "Department")
+                        .WithMany("Users")
+                        .HasForeignKey("DepartmentId");
 
-                    b.HasOne("BarqTMS.API.Models.User", "TeamLeader")
-                        .WithMany("ManagedEmployees")
-                        .HasForeignKey("TeamLeaderId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.HasOne("BarqTMS.API.Models.User", "Supervisor")
+                        .WithMany("Subordinates")
+                        .HasForeignKey("SupervisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Client");
+                    b.Navigation("Department");
 
-                    b.Navigation("TeamLeader");
+                    b.Navigation("Supervisor");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.UserDepartment", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.UserChangeRequest", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.Department", "Department")
-                        .WithMany("UserDepartments")
-                        .HasForeignKey("DeptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("BarqTMS.API.Models.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithMany("UserDepartments")
+                    b.HasOne("BarqTMS.API.Models.User", "Requester")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Department");
+                    b.Navigation("Requester");
 
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.UserSettings", b =>
-                {
-                    b.HasOne("BarqTMS.API.Models.User", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("BarqTMS.API.Models.UserSettings", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.Navigation("Reviewer");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.WorkTask", b =>
                 {
-                    b.HasOne("BarqTMS.API.Models.User", "AssignedUser")
-                        .WithMany("AssignedTasks")
-                        .HasForeignKey("AssignedTo")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BarqTMS.API.Models.TaskCategory", "Category")
-                        .WithMany("Tasks")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BarqTMS.API.Models.User", "Creator")
-                        .WithMany("CreatedTasks")
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("BarqTMS.API.Models.User", "Delegator")
                         .WithMany()
                         .HasForeignKey("DelegatedBy")
@@ -1424,7 +869,7 @@ namespace BarqTMS.API.Migrations
 
                     b.HasOne("BarqTMS.API.Models.Department", "Department")
                         .WithMany("Tasks")
-                        .HasForeignKey("DeptId")
+                        .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1433,28 +878,11 @@ namespace BarqTMS.API.Migrations
                         .HasForeignKey("OriginalAssignerId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("BarqTMS.API.Models.Priority", "Priority")
-                        .WithMany("Tasks")
-                        .HasForeignKey("PriorityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("BarqTMS.API.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("BarqTMS.API.Models.Status", "Status")
-                        .WithMany("Tasks")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("AssignedUser");
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Creator");
 
                     b.Navigation("Delegator");
 
@@ -1462,94 +890,61 @@ namespace BarqTMS.API.Migrations
 
                     b.Navigation("OriginalAssigner");
 
-                    b.Navigation("Priority");
-
                     b.Navigation("Project");
-
-                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.CalendarEvent", b =>
                 {
                     b.Navigation("Attendees");
-
-                    b.Navigation("Reminders");
                 });
 
-            modelBuilder.Entity("BarqTMS.API.Models.Client", b =>
+            modelBuilder.Entity("BarqTMS.API.Models.Company", b =>
                 {
-                    b.Navigation("ClientUsers");
-
                     b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Department", b =>
                 {
+                    b.Navigation("ProjectDepartments");
+
                     b.Navigation("Tasks");
 
-                    b.Navigation("UserDepartments");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.Priority", b =>
-                {
-                    b.Navigation("Tasks");
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.Project", b =>
                 {
-                    b.Navigation("Milestones");
-
-                    b.Navigation("Notifications");
+                    b.Navigation("Departments");
 
                     b.Navigation("Tasks");
-                });
 
-            modelBuilder.Entity("BarqTMS.API.Models.Status", b =>
-                {
-                    b.Navigation("Tasks");
-                });
-
-            modelBuilder.Entity("BarqTMS.API.Models.TaskCategory", b =>
-                {
-                    b.Navigation("Tasks");
+                    b.Navigation("TeamLeaders");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.User", b =>
                 {
                     b.Navigation("AssignedTasks");
 
-                    b.Navigation("AuditLogs");
+                    b.Navigation("EventInvitations");
 
-                    b.Navigation("CreatedTasks");
+                    b.Navigation("LedProjects");
 
-                    b.Navigation("ManagedClients");
+                    b.Navigation("ManagedCompanies");
 
-                    b.Navigation("ManagedEmployees");
+                    b.Navigation("OwnedCompanies");
 
-                    b.Navigation("Notifications");
-
-                    b.Navigation("Settings");
-
-                    b.Navigation("TaskComments");
-
-                    b.Navigation("TimeLogs");
-
-                    b.Navigation("UploadedAttachments");
-
-                    b.Navigation("UserDepartments");
+                    b.Navigation("Subordinates");
                 });
 
             modelBuilder.Entity("BarqTMS.API.Models.WorkTask", b =>
                 {
+                    b.Navigation("Assignees");
+
                     b.Navigation("Attachments");
 
-                    b.Navigation("Dependencies");
+                    b.Navigation("Comments");
 
                     b.Navigation("Notifications");
-
-                    b.Navigation("PrerequisiteFor");
-
-                    b.Navigation("TaskComments");
 
                     b.Navigation("TimeLogs");
                 });

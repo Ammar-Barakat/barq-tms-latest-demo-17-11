@@ -123,102 +123,77 @@
           <div style="margin-bottom: var(--space-6)">
             <h2>Settings</h2>
             <p style="color: var(--text-secondary); margin: 0">
-              Manage your application preferences
+              Manage your profile and account settings
             </p>
           </div>
 
-          <!-- Notification Settings Card -->
-          <div class="card">
-            <div class="card-header">
-              <h3>Notification Preferences</h3>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="emailNotifications" checked />
-                  <span>Email Notifications</span>
-                </label>
-                <p
-                  style="
-                    color: var(--text-secondary);
-                    margin: 5px 0 0 28px;
-                    font-size: 14px;
-                  "
-                >
-                  Receive email notifications for task updates
-                </p>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-6)">
+            <!-- Profile Settings -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Profile Information</h3>
               </div>
-
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="taskReminders" checked />
-                  <span>Task Reminders</span>
-                </label>
-                <p
-                  style="
-                    color: var(--text-secondary);
-                    margin: 5px 0 0 28px;
-                    font-size: 14px;
-                  "
-                >
-                  Get reminders for upcoming task deadlines
-                </p>
-              </div>
-
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="assignmentNotifications" checked />
-                  <span>Task Assignment Notifications</span>
-                </label>
-                <p
-                  style="
-                    color: var(--text-secondary);
-                    margin: 5px 0 0 28px;
-                    font-size: 14px;
-                  "
-                >
-                  Get notified when tasks are assigned to you
-                </p>
-              </div>
-
-              <div class="form-actions">
-                <button
-                  class="btn btn-primary"
-                  onclick="saveNotificationSettings()"
-                >
-                  <i class="fa-solid fa-save"></i> Save Preferences
-                </button>
+              <div class="card-body">
+                <form id="profileForm">
+                  <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" class="form-control" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" required />
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
-          </div>
 
-          <!-- Display Settings Card -->
-          <div class="card">
-            <div class="card-header">
-              <h3>Display Settings</h3>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label for="theme">Theme</label>
-                <select id="theme" class="form-control">
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="auto">Auto</option>
-                </select>
+            <!-- Security Settings -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Security</h3>
               </div>
-
-              <div class="form-group">
-                <label for="language">Language</label>
-                <select id="language" class="form-control">
-                  <option value="en">English</option>
-                  <option value="ar">Arabic</option>
-                </select>
-              </div>
-
-              <div class="form-actions">
-                <button class="btn btn-primary" onclick="saveDisplaySettings()">
-                  <i class="fa-solid fa-save"></i> Save Settings
-                </button>
+              <div class="card-body">
+                <form id="passwordForm">
+                  <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      class="form-control"
+                      required
+                      minlength="6"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      class="form-control"
+                      required
+                      minlength="6"
+                    />
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fa-solid fa-key"></i> Change Password
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

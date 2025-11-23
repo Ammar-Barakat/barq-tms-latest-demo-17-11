@@ -70,10 +70,16 @@ builder.Services.AddScoped<BarqTMS.API.Services.IRealTimeService, BarqTMS.API.Se
 builder.Services.AddScoped<BarqTMS.API.Services.ICalendarService, BarqTMS.API.Services.CalendarService>();
 builder.Services.AddScoped<BarqTMS.API.Services.IReportingService, BarqTMS.API.Services.ReportingService>();
 builder.Services.AddScoped<BarqTMS.API.Services.ISecurityService, BarqTMS.API.Services.SecurityService>();
+// Register user service
+builder.Services.AddScoped<BarqTMS.API.Services.IUserService, BarqTMS.API.Services.UserService>();
 // Register client service
 builder.Services.AddScoped<BarqTMS.API.Services.IClientService, BarqTMS.API.Services.ClientService>();
 // Register task service
 builder.Services.AddScoped<BarqTMS.API.Services.ITaskService, BarqTMS.API.Services.TaskService>();
+// Register project service
+builder.Services.AddScoped<BarqTMS.API.Services.IProjectService, BarqTMS.API.Services.ProjectService>();
+// Register department service
+builder.Services.AddScoped<BarqTMS.API.Services.IDepartmentService, BarqTMS.API.Services.DepartmentService>();
 
 // Register background services
 builder.Services.AddHostedService<BarqTMS.API.Services.OverdueTaskNotificationService>();

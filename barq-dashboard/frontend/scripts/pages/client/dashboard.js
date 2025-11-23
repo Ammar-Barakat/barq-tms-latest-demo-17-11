@@ -15,10 +15,8 @@ async function loadDashboardData() {
     ]);
 
     // Filter projects for current client
-    const currentUser = auth.getCurrentUser();
-    const myProjects = projects.filter(
-      (p) => p.ClientId === currentUser.ClientId
-    );
+    // Backend now handles filtering for owned clients
+    const myProjects = projects;
 
     updateStats({ projects: myProjects, tasks });
     renderProjects(myProjects);
@@ -67,6 +65,7 @@ function renderProjects(projects) {
       (project) => `
     <tr>
       <td><strong>${project.Name || "Untitled Project"}</strong></td>
+      <td>${project.ClientName || "N/A"}</td>
       <td>${utils.formatDate(project.StartDate)}</td>
       <td>${utils.formatDate(project.EndDate)}</td>
       <td>${utils.getStatusBadge(project.StatusId || 1)}</td>

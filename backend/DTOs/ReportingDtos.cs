@@ -87,4 +87,29 @@ namespace BarqTMS.API.DTOs
         public string? Description { get; set; }
         public bool IsBillable { get; set; }
     }
+
+    public class ClientReportDto
+    {
+        public int ClientId { get; set; }
+        public string ClientName { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public int TotalProjects { get; set; }
+        public int ActiveProjects { get; set; }
+        public int TotalTasks { get; set; }
+        public int CompletedTasks { get; set; }
+        public int InProgressTasks { get; set; }
+        public int PendingTasks { get; set; }
+        public int OverdueTasks { get; set; }
+        public double CompletionPercentage { get; set; }
+        public decimal TotalEstimatedHours { get; set; }
+        public decimal TotalActualHours { get; set; }
+    }
+
+    public class DashboardStatsDto
+    {
+        public int TotalTasks { get; set; }
+        public int TotalProjects { get; set; }
+        public int TotalUsers { get; set; }
+        public int TotalClients { get; set; }
+    }
 }

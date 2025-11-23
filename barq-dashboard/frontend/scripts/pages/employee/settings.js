@@ -1,65 +1,111 @@
-// Employee Settings Script
-
-// Protect page - require Employee role
+// Employee Settings Page Script
 auth.requireRole([USER_ROLES.EMPLOYEE]);
 
-// Initialize page
-document.addEventListener("DOMContentLoaded", () => {
-  loadSettings();
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadUserSettings();
+  setupEventListeners();
 });
 
-// Load saved settings
-function loadSettings() {
-  // Load notification settings
-  const emailNotifications =
-    localStorage.getItem("emailNotifications") !== "false";
-  const taskReminders = localStorage.getItem("taskReminders") !== "false";
-  const assignmentNotifications =
-    localStorage.getItem("assignmentNotifications") !== "false";
+async function loadUserSettings() {
+  const localUser = auth.getCurrentUser();
+  if (!localUser) return;
 
-  document.getElementById("emailNotifications").checked = emailNotifications;
-  document.getElementById("taskReminders").checked = taskReminders;
-  document.getElementById("assignmentNotifications").checked =
-    assignmentNotifications;
+  try {
+    utils.showLoading();
 
-  // Load display settings
-  const theme = localStorage.getItem("theme") || "light";
-  const language = localStorage.getItem("language") || "en";
+    // Fetch fresh user data from API
+    const user = await API.Users.getById(localUser.UserId);
 
-  document.getElementById("theme").value = theme;
-  document.getElementById("language").value = language;
+    // Populate profile form with API data
+    document.getElementById("name").value = user.Name || "";
+    document.getElementById("email").value = user.Email || "";
+
+  } catch (error) {
+    console.error("Error loading user settings:", error);
+
+    // Fallback to localStorage data
+    document.getElementById("name").value = localUser.Name || "";
+    document.getElementById("email").value = localUser.Email || "";
+  } finally {
+    utils.hideLoading();
+  }
 }
 
-// Save notification settings
-function saveNotificationSettings() {
-  const emailNotifications =
-    document.getElementById("emailNotifications").checked;
-  const taskReminders = document.getElementById("taskReminders").checked;
-  const assignmentNotifications = document.getElementById(
-    "assignmentNotifications"
-  ).checked;
-
-  localStorage.setItem("emailNotifications", emailNotifications);
-  localStorage.setItem("taskReminders", taskReminders);
-  localStorage.setItem("assignmentNotifications", assignmentNotifications);
-
-  utils.showSuccess("Notification preferences saved successfully");
+function setupEventListeners() {
+  document
+    .getElementById("profileForm")
+    .addEventListener("submit", handleProfileUpdate);
+  document
+    .getElementById("passwordForm")
+    .addEventListener("submit", handlePasswordChange);
 }
 
-// Save display settings
-function saveDisplaySettings() {
-  const theme = document.getElementById("theme").value;
-  const language = document.getElementById("language").value;
+async function handleProfileUpdate(e) {
+  e.preventDefault();
 
-  localStorage.setItem("theme", theme);
-  localStorage.setItem("language", language);
+  const user = auth.getCurrentUser();
+  if (!user) return;
 
-  utils.showSuccess("Display settings saved successfully");
+  const formData = {
+    Name: document.getElementById("name").value,
+    Email: document.getElementById("email").value,
+  };
 
-  // Apply theme if needed
-  if (theme === "dark") {
-    document.body.classList.add("dark-theme");
-  } else {
-    document.body.classList.remove("dark-theme");
+  try {
+    utils.showLoading();
+
+    // Update via API
+    await API.Users.update(user.UserId, formData);
+
+    // Update local storage
+    const updatedUser = { ...user, ...formData };
+    localStorage.setItem("user_data", JSON.stringify(updatedUser));
+
+    utils.showSuccess("Profile updated successfully");
+
+    // Reload to update UI
+    setTimeout(() => window.location.reload(), 1000);
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    utils.showError("Failed to update profile");
+  } finally {
+    utils.hideLoading();
+  }
+}
+
+async function handlePasswordChange(e) {
+  e.preventDefault();
+
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (newPassword !== confirmPassword) {
+    utils.showError("Passwords do not match");
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    utils.showError("Password must be at least 6 characters");
+    return;
+  }
+
+  try {
+    utils.showLoading();
+
+    // This would call a change password endpoint if available
+    await API.Auth.changePassword({ 
+      currentPassword, 
+      newPassword,
+      confirmPassword 
+    });
+
+    utils.showSuccess("Password changed successfully");
+    document.getElementById("passwordForm").reset();
+  } catch (error) {
+    console.error("Error changing password:", error);
+    utils.showError("Failed to change password");
+  } finally {
+    utils.hideLoading();
   }
 }

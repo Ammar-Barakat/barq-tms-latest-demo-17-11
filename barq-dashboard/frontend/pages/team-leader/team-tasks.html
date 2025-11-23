@@ -293,6 +293,28 @@
       </div>
     </div>
 
+    <!-- Task Details Modal -->
+    <div id="taskDetailsModal" class="modal-backdrop d-none">
+      <div class="modal-dialog" style="max-width: 800px">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fa-solid fa-info-circle"></i> Task Details</h3>
+            <button class="btn-icon" onclick="closeTaskDetailsModal()">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="taskDetailsContent">
+              <!-- Task details will be rendered here -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeTaskDetailsModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Task Review Modal -->
     <div id="reviewModal" class="modal-backdrop d-none">
       <div class="modal-dialog" style="max-width: 700px">

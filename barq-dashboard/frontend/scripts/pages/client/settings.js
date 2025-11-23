@@ -1,46 +1,34 @@
 // Client Settings Page Script
 auth.requireRole([USER_ROLES.CLIENT]);
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadUserSettings();
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadUserSettings();
   setupEventListeners();
 });
 
 async function loadUserSettings() {
+  const localUser = auth.getCurrentUser();
+  if (!localUser) return;
+
   try {
-    const currentUser = auth.getCurrentUser();
-    if (!currentUser) return;
+    utils.showLoading();
 
-    // Fetch full user data from API
-    const userData = await API.Users.getById(currentUser.UserId);
+    // Fetch fresh user data from API
+    const user = await API.Users.getById(localUser.UserId);
 
-    // Populate profile form
-    document.getElementById("name").value =
-      userData.FirstName && userData.LastName
-        ? `${userData.FirstName} ${userData.LastName}`
-        : userData.UserName || "";
-    document.getElementById("email").value = userData.Email || "";
-    document.getElementById("phone").value = userData.Phone || "";
+    // Populate profile form with API data
+    document.getElementById("name").value = user.Name || "";
+    document.getElementById("email").value = user.Email || "";
 
-    // Update system info
-    document.getElementById("userRole").textContent = getRoleName(
-      auth.getUserRole()
-    );
   } catch (error) {
-    console.error("Error loading settings:", error);
-  }
-}
+    console.error("Error loading user settings:", error);
 
-function getRoleName(roleId) {
-  const roles = {
-    1: "Manager",
-    2: "Assistant Manager",
-    3: "Account Manager",
-    4: "Team Leader",
-    5: "Employee",
-    6: "Client",
-  };
-  return roles[roleId] || "Unknown";
+    // Fallback to localStorage data
+    document.getElementById("name").value = localUser.Name || "";
+    document.getElementById("email").value = localUser.Email || "";
+  } finally {
+    utils.hideLoading();
+  }
 }
 
 function setupEventListeners() {
@@ -55,22 +43,28 @@ function setupEventListeners() {
 async function handleProfileUpdate(e) {
   e.preventDefault();
 
-  const currentUser = auth.getCurrentUser();
+  const user = auth.getCurrentUser();
+  if (!user) return;
+
   const formData = {
+    Name: document.getElementById("name").value,
     Email: document.getElementById("email").value,
-    Phone: document.getElementById("phone").value,
   };
 
   try {
     utils.showLoading();
 
-    await API.Users.update(currentUser.UserId, formData);
+    // Update via API
+    await API.Users.update(user.UserId, formData);
 
-    // Update stored user data
-    auth.setAuthData(auth.getToken(), { ...currentUser, ...formData });
+    // Update local storage
+    const updatedUser = { ...user, ...formData };
+    localStorage.setItem("user_data", JSON.stringify(updatedUser));
 
     utils.showSuccess("Profile updated successfully");
-    await loadUserSettings();
+
+    // Reload to update UI
+    setTimeout(() => window.location.reload(), 1000);
   } catch (error) {
     console.error("Error updating profile:", error);
     utils.showError("Failed to update profile");
@@ -99,11 +93,11 @@ async function handlePasswordChange(e) {
   try {
     utils.showLoading();
 
-    const currentUser = auth.getCurrentUser();
-    await API.Auth.changePassword({
-      userId: currentUser.UserId,
-      currentPassword: currentPassword,
-      newPassword: newPassword,
+    // This would call a change password endpoint if available
+    await API.Auth.changePassword({ 
+      currentPassword, 
+      newPassword,
+      confirmPassword 
     });
 
     utils.showSuccess("Password changed successfully");
@@ -113,11 +107,5 @@ async function handlePasswordChange(e) {
     utils.showError("Failed to change password");
   } finally {
     utils.hideLoading();
-  }
-}
-
-function handleLogout() {
-  if (utils.confirmAction("Are you sure you want to logout?")) {
-    auth.logout();
   }
 }

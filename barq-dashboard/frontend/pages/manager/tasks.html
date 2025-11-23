@@ -153,6 +153,8 @@
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Due Date</th>
+                    <th>Tags</th>
+                    <th>Created By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -223,8 +225,6 @@
                 <select class="form-control" id="status" name="status" required>
                   <option value="1">Pending</option>
                   <option value="2">In Progress</option>
-                  <option value="3">Completed</option>
-                  <option value="4">Cancelled</option>
                 </select>
               </div>
               <div class="form-group">
@@ -248,6 +248,36 @@
                   class="form-control"
                   id="dueDate"
                   name="dueDate"
+                />
+              </div>
+              <div class="form-group">
+                <label for="specificTime">Specific Time</label>
+                <input
+                  type="time"
+                  class="form-control"
+                  id="specificTime"
+                  name="specificTime"
+                />
+              </div>
+              <div class="form-group">
+                <label for="estimatedHours">Estimated Hours</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="estimatedHours"
+                  name="estimatedHours"
+                  step="0.5"
+                  min="0"
+                />
+              </div>
+              <div class="form-group">
+                <label for="tags">Tags</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="tags"
+                  name="tags"
+                  placeholder="Comma separated tags"
                 />
               </div>
               <div class="form-group">
