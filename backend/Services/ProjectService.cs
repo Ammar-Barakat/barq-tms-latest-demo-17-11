@@ -30,6 +30,8 @@ namespace BarqTMS.API.Services
                 .Include(p => p.Company)
                 .Include(p => p.TeamLeaders)
                     .ThenInclude(ptl => ptl.TeamLeader)
+                .Include(p => p.Departments)
+                    .ThenInclude(pd => pd.Department)
                 .Include(p => p.Tasks)
                 .ToListAsync();
 
@@ -42,6 +44,8 @@ namespace BarqTMS.API.Services
                 .Include(p => p.Company)
                 .Include(p => p.TeamLeaders)
                     .ThenInclude(ptl => ptl.TeamLeader)
+                .Include(p => p.Departments)
+                    .ThenInclude(pd => pd.Department)
                 .Include(p => p.Tasks)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
 
@@ -63,16 +67,39 @@ namespace BarqTMS.API.Services
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            if (createDto.TeamLeaderId.HasValue)
+            // Handle Team Leaders
+            var teamLeaderIds = createDto.TeamLeaderIds;
+            if (createDto.TeamLeaderId.HasValue && !teamLeaderIds.Contains(createDto.TeamLeaderId.Value))
             {
-                var teamLeader = new ProjectTeamLeader
-                {
-                    ProjectId = project.ProjectId,
-                    UserId = createDto.TeamLeaderId.Value
-                };
-                _context.ProjectTeamLeaders.Add(teamLeader);
-                await _context.SaveChangesAsync();
+                teamLeaderIds.Add(createDto.TeamLeaderId.Value);
             }
+
+            if (teamLeaderIds.Any())
+            {
+                foreach (var tlId in teamLeaderIds)
+                {
+                    _context.ProjectTeamLeaders.Add(new ProjectTeamLeader
+                    {
+                        ProjectId = project.ProjectId,
+                        UserId = tlId
+                    });
+                }
+            }
+
+            // Handle Departments
+            if (createDto.DepartmentIds.Any())
+            {
+                foreach (var deptId in createDto.DepartmentIds)
+                {
+                    _context.ProjectDepartments.Add(new ProjectDepartment
+                    {
+                        ProjectId = project.ProjectId,
+                        DeptId = deptId
+                    });
+                }
+            }
+            
+            await _context.SaveChangesAsync();
 
             return (await GetProjectByIdAsync(project.ProjectId))!;
         }
@@ -81,6 +108,7 @@ namespace BarqTMS.API.Services
         {
             var project = await _context.Projects
                 .Include(p => p.TeamLeaders)
+                .Include(p => p.Departments)
                 .FirstOrDefaultAsync(p => p.ProjectId == id);
 
             if (project == null) return null;
@@ -98,21 +126,45 @@ namespace BarqTMS.API.Services
                 project.StartDate = updateDto.StartDate.Value;
             }
             
+            if (updateDto.Status.HasValue)
+            {
+                project.Status = updateDto.Status.Value;
+            }
+            
             project.DueDate = updateDto.EndDate;
 
-            // Update Team Leader
-            if (updateDto.TeamLeaderId.HasValue)
+            // Update Team Leaders
+            var teamLeaderIds = updateDto.TeamLeaderIds;
+            if (updateDto.TeamLeaderId.HasValue && !teamLeaderIds.Contains(updateDto.TeamLeaderId.Value))
+            {
+                teamLeaderIds.Add(updateDto.TeamLeaderId.Value);
+            }
+
+            if (teamLeaderIds.Any() || updateDto.TeamLeaderId == null) // If explicit null or new list provided
             {
                 _context.ProjectTeamLeaders.RemoveRange(project.TeamLeaders);
-                _context.ProjectTeamLeaders.Add(new ProjectTeamLeader
+                foreach (var tlId in teamLeaderIds)
                 {
-                    ProjectId = project.ProjectId,
-                    UserId = updateDto.TeamLeaderId.Value
-                });
+                    _context.ProjectTeamLeaders.Add(new ProjectTeamLeader
+                    {
+                        ProjectId = project.ProjectId,
+                        UserId = tlId
+                    });
+                }
             }
-            else if (updateDto.TeamLeaderId == null)
+
+            // Update Departments
+            if (updateDto.DepartmentIds != null)
             {
-                 _context.ProjectTeamLeaders.RemoveRange(project.TeamLeaders);
+                _context.ProjectDepartments.RemoveRange(project.Departments);
+                foreach (var deptId in updateDto.DepartmentIds)
+                {
+                    _context.ProjectDepartments.Add(new ProjectDepartment
+                    {
+                        ProjectId = project.ProjectId,
+                        DeptId = deptId
+                    });
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -132,7 +184,13 @@ namespace BarqTMS.API.Services
 
         private static ProjectDto MapToDto(Project p)
         {
-            var teamLeader = p.TeamLeaders.FirstOrDefault()?.TeamLeader;
+            var teamLeaders = p.TeamLeaders.Select(ptl => ptl.TeamLeader).ToList();
+            var departments = p.Departments.Select(pd => new DepartmentDto 
+            { 
+                DeptId = pd.Department.DeptId, 
+                DeptName = pd.Department.Name 
+            }).ToList();
+
             return new ProjectDto
             {
                 ProjectId = p.ProjectId,
@@ -140,11 +198,18 @@ namespace BarqTMS.API.Services
                 Description = p.Description,
                 ClientId = p.CompanyId,
                 ClientName = p.Company?.Name,
-                TeamLeaderId = teamLeader?.UserId,
-                TeamLeaderName = teamLeader?.FullName,
+                TeamLeaderId = teamLeaders.FirstOrDefault()?.UserId,
+                TeamLeaderName = teamLeaders.FirstOrDefault()?.FullName,
+                TeamLeaderIds = teamLeaders.Select(u => u.UserId).ToList(),
+                TeamLeaderNames = teamLeaders.Select(u => u.FullName).ToList(),
+                Departments = departments,
+                DepartmentIds = departments.Select(d => d.DeptId).ToList(),
                 StartDate = p.StartDate,
                 EndDate = p.DueDate,
-                TaskCount = p.Tasks.Count
+                TaskCount = p.Tasks.Count,
+                Status = p.Status,
+                StatusId = (int)p.Status,
+                StatusName = p.Status.ToString()
             };
         }
     }

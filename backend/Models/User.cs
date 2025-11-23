@@ -33,6 +33,9 @@ namespace BarqTMS.API.Models
         [StringLength(20)]
         public string? SecondaryPhone { get; set; }
 
+        [StringLength(100)]
+        public string? Position { get; set; }
+
         [StringLength(200)]
         public string? Address { get; set; }
 

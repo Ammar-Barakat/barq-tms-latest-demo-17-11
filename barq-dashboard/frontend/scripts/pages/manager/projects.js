@@ -4,6 +4,7 @@ auth.requireRole([USER_ROLES.MANAGER]);
 let projects = [];
 let clients = [];
 let teamLeaders = [];
+let departments = [];
 let currentEditId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -40,6 +41,9 @@ async function loadData() {
           }`.trim(),
       }));
 
+    // Load all departments
+    departments = await API.Departments.getAll().catch(() => []);
+
     populateDropdowns();
     renderProjects();
   } catch (error) {
@@ -59,11 +63,25 @@ function populateDropdowns() {
       .join("");
 
   const teamLeaderSelect = document.getElementById("teamLeaderId");
-  teamLeaderSelect.innerHTML =
-    '<option value="">Select Team Leader</option>' +
-    teamLeaders
+  teamLeaderSelect.innerHTML = teamLeaders
       .map((tl) => `<option value="${tl.UserId}">${tl.UserName}</option>`)
       .join("");
+
+  const departmentSelect = document.getElementById("departmentId");
+  departmentSelect.innerHTML = departments
+      .map((d) => `<option value="${d.DeptId}">${d.DeptName}</option>`)
+      .join("");
+}
+
+function getStatusBadge(statusId) {
+  const statuses = {
+    0: { name: "Planned", class: "badge-secondary" },
+    1: { name: "Active", class: "badge-success" },
+    2: { name: "Completed", class: "badge-primary" },
+    3: { name: "On Hold", class: "badge-warning" },
+  };
+  const status = statuses[statusId] || statuses[0];
+  return `<span class="badge ${status.class}">${status.name}</span>`;
 }
 
 function renderProjects() {
@@ -86,7 +104,16 @@ function renderProjects() {
 
   tbody.innerHTML = projects
     .map(
-      (project) => `
+      (project) => {
+        const teamLeaderNames = project.TeamLeaderNames && project.TeamLeaderNames.length > 0 
+          ? project.TeamLeaderNames.join(", ") 
+          : (project.TeamLeaderName || "Not assigned");
+        
+        const departmentNames = project.Departments && project.Departments.length > 0
+          ? project.Departments.map(d => d.DeptName).join(", ")
+          : "None";
+
+        return `
     <tr>
       <td><strong>${project.ProjectName || "Untitled"}</strong></td>
       <td>${utils.truncateText(
@@ -94,17 +121,14 @@ function renderProjects() {
         50
       )}</td>
       <td>${project.ClientName || "N/A"}</td>
-      <td>${project.TeamLeaderName || "Not assigned"}</td>
+      <td>${teamLeaderNames}</td>
+      <td>${departmentNames}</td>
       <td><span class="badge badge-info">${
         project.TaskCount || 0
       } tasks</span></td>
       <td>${utils.formatDate(project.StartDate)}</td>
       <td>${utils.formatDate(project.EndDate)}</td>
-      <td>${
-        project.StartDate
-          ? '<span class="badge badge-success">Active</span>'
-          : '<span class="badge badge-secondary">Pending</span>'
-      }</td>
+      <td>${getStatusBadge(project.StatusId || project.Status || 0)}</td>
       <td>
         <div class="table-actions">
           <button class="btn btn-sm btn-primary" onclick="editProject(${
@@ -120,7 +144,8 @@ function renderProjects() {
         </div>
       </td>
     </tr>
-  `
+  `;
+      }
     )
     .join("");
 }
@@ -149,6 +174,7 @@ function showCreateModal() {
   document.getElementById("modalTitle").textContent = "Create Project";
   document.getElementById("projectForm").reset();
   document.getElementById("projectId").value = "";
+  document.getElementById("statusGroup").style.display = "none";
   document.getElementById("projectModal").classList.remove("d-none");
 }
 
@@ -168,7 +194,24 @@ async function editProject(id) {
   document.getElementById("name").value = project.ProjectName || "";
   document.getElementById("description").value = project.Description || "";
   document.getElementById("clientId").value = project.ClientId || "";
-  document.getElementById("teamLeaderId").value = project.TeamLeaderId || "";
+  
+  // Set Team Leaders
+  const teamLeaderSelect = document.getElementById("teamLeaderId");
+  Array.from(teamLeaderSelect.options).forEach(option => {
+    option.selected = project.TeamLeaderIds && project.TeamLeaderIds.includes(parseInt(option.value));
+  });
+  // Fallback for single team leader if list is empty but single ID exists
+  if ((!project.TeamLeaderIds || project.TeamLeaderIds.length === 0) && project.TeamLeaderId) {
+     Array.from(teamLeaderSelect.options).forEach(option => {
+        if (parseInt(option.value) === project.TeamLeaderId) option.selected = true;
+     });
+  }
+
+  // Set Departments
+  const departmentSelect = document.getElementById("departmentId");
+  Array.from(departmentSelect.options).forEach(option => {
+    option.selected = project.DepartmentIds && project.DepartmentIds.includes(parseInt(option.value));
+  });
 
   if (project.StartDate) {
     const startDate = new Date(project.StartDate);
@@ -184,22 +227,43 @@ async function editProject(id) {
       .split("T")[0];
   }
 
+  // Set Status
+  document.getElementById("statusGroup").style.display = "block";
+  document.getElementById("status").value = project.StatusId || project.Status || 0;
+
   document.getElementById("projectModal").classList.remove("d-none");
 }
 
 async function handleSubmit(e) {
   e.preventDefault();
 
-  // API expects: ProjectName (required), Description, ClientId (required), TeamLeaderId, StartDate, EndDate
-  const teamLeaderValue = document.getElementById("teamLeaderId").value;
+  // Get selected team leaders
+  const teamLeaderSelect = document.getElementById("teamLeaderId");
+  const selectedTeamLeaders = Array.from(teamLeaderSelect.selectedOptions).map(opt => parseInt(opt.value));
+
+  // Get selected departments
+  const departmentSelect = document.getElementById("departmentId");
+  const selectedDepartments = Array.from(departmentSelect.selectedOptions).map(opt => parseInt(opt.value));
+
   const formData = {
     ProjectName: document.getElementById("name").value,
     Description: document.getElementById("description").value || null,
     ClientId: parseInt(document.getElementById("clientId").value),
-    TeamLeaderId: teamLeaderValue ? parseInt(teamLeaderValue) : null,
+    TeamLeaderIds: selectedTeamLeaders,
+    DepartmentIds: selectedDepartments,
     StartDate: document.getElementById("startDate").value || null,
     EndDate: document.getElementById("endDate").value || null,
   };
+
+  // Add status if editing
+  if (currentEditId) {
+    formData.Status = parseInt(document.getElementById("status").value);
+  }
+
+  // Legacy support for single TeamLeaderId
+  if (selectedTeamLeaders.length > 0) {
+    formData.TeamLeaderId = selectedTeamLeaders[0];
+  }
 
   try {
     utils.showLoading();

@@ -100,6 +100,7 @@ namespace BarqTMS.API.Services
                     Email = clientDto.Email,
                     Phone = clientDto.PhoneNumber,
                     Address = clientDto.Address,
+                    Country = clientDto.Country,
                     Type = "Client", // Default type
                     OwnerUserId = ownerId,
                     AccountManagerId = clientDto.AccountManagerId
@@ -130,6 +131,7 @@ namespace BarqTMS.API.Services
             company.Email = clientDto.Email;
             company.Phone = clientDto.PhoneNumber;
             company.Address = clientDto.Address;
+            company.Country = clientDto.Country;
             company.AccountManagerId = clientDto.AccountManagerId;
 
             await _context.SaveChangesAsync();
@@ -174,6 +176,7 @@ namespace BarqTMS.API.Services
                 Email = company.Email ?? string.Empty,
                 PhoneNumber = company.Phone,
                 Address = company.Address,
+                Country = company.Country,
                 ProjectCount = company.Projects.Count,
                 AccountManagerId = company.AccountManagerId,
                 AccountManagerName = company.AccountManager?.FullName,

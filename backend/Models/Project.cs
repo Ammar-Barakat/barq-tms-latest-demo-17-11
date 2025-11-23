@@ -5,7 +5,7 @@ using BarqTMS.API.Models.Enums;
 namespace BarqTMS.API.Models
 {
     public class Project
-    {
+    { 
         [Key]
         public int ProjectId { get; set; }
 

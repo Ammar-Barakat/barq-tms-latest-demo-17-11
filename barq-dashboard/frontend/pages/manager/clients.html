@@ -162,6 +162,7 @@
                     <th>Company</th>
                     <th>Owner</th>
                     <th>Contact</th>
+                    <th>Country</th>
                     <th>Account Manager</th>
                     <th>Projects</th>
                     <th>Actions</th>
@@ -169,7 +170,7 @@
                 </thead>
                 <tbody id="clientsBody">
                   <tr>
-                    <td colspan="5" class="text-center" style="padding: 40px">
+                    <td colspan="7" class="text-center" style="padding: 40px">
                       <div class="spinner"></div>
                     </td>
                   </tr>
@@ -283,6 +284,12 @@
                   id="phoneNumber"
                   name="phoneNumber"
                 />
+              </div>
+              <div class="form-group">
+                <label for="country">Country</label>
+                <select class="form-control" id="country" name="country">
+                  <option value="">Select Country</option>
+                </select>
               </div>
               <!-- Removed redundant Company field -->
               <div class="form-group">

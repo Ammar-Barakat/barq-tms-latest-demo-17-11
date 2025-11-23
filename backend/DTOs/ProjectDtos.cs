@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BarqTMS.API.Models.Enums;
 
 namespace BarqTMS.API.DTOs
 {
@@ -11,9 +12,16 @@ namespace BarqTMS.API.DTOs
         public string? ClientName { get; set; }
         public int? TeamLeaderId { get; set; }
         public string? TeamLeaderName { get; set; }
+        public List<int> TeamLeaderIds { get; set; } = new List<int>();
+        public List<string> TeamLeaderNames { get; set; } = new List<string>();
+        public List<DepartmentDto> Departments { get; set; } = new List<DepartmentDto>();
+        public List<int> DepartmentIds { get; set; } = new List<int>();
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int TaskCount { get; set; }
+        public ProjectStatus Status { get; set; }
+        public int StatusId { get; set; }
+        public string StatusName { get; set; } = string.Empty;
     }
 
     public class CreateProjectDto
@@ -27,6 +35,8 @@ namespace BarqTMS.API.DTOs
         
         public int? ClientId { get; set; }
         public int? TeamLeaderId { get; set; }
+        public List<int> TeamLeaderIds { get; set; } = new List<int>();
+        public List<int> DepartmentIds { get; set; } = new List<int>();
         
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -43,7 +53,10 @@ namespace BarqTMS.API.DTOs
         
         public int? ClientId { get; set; }
         public int? TeamLeaderId { get; set; }
+        public List<int> TeamLeaderIds { get; set; } = new List<int>();
+        public List<int> DepartmentIds { get; set; } = new List<int>();
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public ProjectStatus? Status { get; set; }
     }
 }

@@ -10,6 +10,7 @@ namespace BarqTMS.API.DTOs
         public string Name { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string? Email { get; set; }
+        public string? Phone { get; set; }
         public string? Position { get; set; }
         public UserRole Role { get; set; }
         public int RoleId { get; set; }
@@ -35,6 +36,9 @@ namespace BarqTMS.API.DTOs
         [EmailAddress]
         [StringLength(255)]
         public string? Email { get; set; }
+
+        [StringLength(20)]
+        public string? Phone { get; set; }
         
         [Required]
         [StringLength(100, MinimumLength = 6)]
@@ -69,6 +73,9 @@ namespace BarqTMS.API.DTOs
         [EmailAddress]
         [StringLength(255)]
         public string? Email { get; set; }
+
+        [StringLength(20)]
+        public string? Phone { get; set; }
         
         [StringLength(100)]
         public string? Position { get; set; }

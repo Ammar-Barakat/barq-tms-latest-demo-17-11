@@ -31,6 +31,9 @@ namespace BarqTMS.API.DTOs
         [StringLength(500)]
         public string? Address { get; set; }
 
+        [StringLength(50)]
+        public string? Country { get; set; }
+
         public int? AccountManagerId { get; set; }
         
         public int? OwnerUserId { get; set; }
@@ -55,6 +58,9 @@ namespace BarqTMS.API.DTOs
 
         [StringLength(500)]
         public string? Address { get; set; }
+
+        [StringLength(50)]
+        public string? Country { get; set; }
 
         public int? AccountManagerId { get; set; }
     }

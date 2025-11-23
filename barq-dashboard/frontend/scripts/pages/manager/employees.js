@@ -203,11 +203,17 @@ function handleRoleChange() {
   } else if (role === 4) {
     // Team Leader - show employee assignment
     managedEmployeesGroup.style.display = "block";
-    populateManagedEmployeesDropdown();
+    document.querySelector('label[for="managedEmployees"]').textContent = "Assign Employees";
+    populateManagedEmployeesDropdown(role);
   } else if (role === 3) {
     // Account Manager - show client assignment
     managedClientsGroup.style.display = "block";
     populateManagedClientsDropdown();
+  } else if (role === 2) {
+    // Assistant Manager - show account manager and team leader assignment
+    managedEmployeesGroup.style.display = "block";
+    document.querySelector('label[for="managedEmployees"]').textContent = "Assign Subordinates (Account Managers & Team Leaders)";
+    populateManagedEmployeesDropdown(role);
   }
 }
 
@@ -225,21 +231,32 @@ function populateTeamLeaderDropdown() {
 }
 
 // Populate managed employees dropdown
-function populateManagedEmployeesDropdown() {
+function populateManagedEmployeesDropdown(role) {
   const managedEmployeesSelect = document.getElementById("managedEmployees");
   managedEmployeesSelect.innerHTML = "";
 
-  // Get all employees (role 5) that don't have this team leader yet or have no team leader
-  const availableEmployees = employees.filter((emp) => {
-    const empRole = emp.Role || emp.RoleId;
-    const empId = emp.UserId || emp.Id;
-    return empRole === 5 && empId !== currentEditId; // Don't include self
-  });
+  let availableSubordinates = [];
 
-  availableEmployees.forEach((emp) => {
+  if (role === 4) {
+    // Team Leader manages Employees (Role 5)
+    availableSubordinates = employees.filter((emp) => {
+      const empRole = emp.Role || emp.RoleId;
+      const empId = emp.UserId || emp.Id;
+      return empRole === 5 && empId !== currentEditId; // Don't include self
+    });
+  } else if (role === 2) {
+    // Assistant Manager manages Account Managers (Role 3) and Team Leaders (Role 4)
+    availableSubordinates = employees.filter((emp) => {
+      const empRole = emp.Role || emp.RoleId;
+      const empId = emp.UserId || emp.Id;
+      return (empRole === 3 || empRole === 4) && empId !== currentEditId; // Don't include self
+    });
+  }
+
+  availableSubordinates.forEach((emp) => {
     const option = document.createElement("option");
     option.value = emp.UserId || emp.Id;
-    option.textContent = emp.Name || emp.Username;
+    option.textContent = `${emp.Name || emp.Username} (${getRoleName(emp.Role || emp.RoleId)})`;
     managedEmployeesSelect.appendChild(option);
   });
 }
@@ -267,8 +284,16 @@ async function editEmployee(id) {
   document.getElementById("name").value = employee.Name || "";
   document.getElementById("username").value = employee.Username || "";
   document.getElementById("email").value = employee.Email || "";
+  document.getElementById("phoneNumber").value = employee.Phone || "";
   document.getElementById("position").value = employee.Position || "";
   document.getElementById("role").value = employee.Role || employee.RoleId || 5;
+
+  // Set department
+  if (employee.Departments && employee.Departments.length > 0) {
+    document.getElementById("department").value = employee.Departments[0].DeptId;
+  } else {
+    document.getElementById("department").value = "";
+  }
 
   // Make password optional for editing
   const passwordInput = document.getElementById("password");
@@ -289,6 +314,16 @@ async function editEmployee(id) {
 
   // Set managed employees if team leader
   if ((employee.Role || employee.RoleId) === 4 && employee.ManagedEmployeeIds) {
+    const managedEmployeesSelect = document.getElementById("managedEmployees");
+    Array.from(managedEmployeesSelect.options).forEach((option) => {
+      option.selected = employee.ManagedEmployeeIds.includes(
+        parseInt(option.value)
+      );
+    });
+  }
+
+  // Set managed subordinates if assistant manager
+  if ((employee.Role || employee.RoleId) === 2 && employee.ManagedEmployeeIds) {
     const managedEmployeesSelect = document.getElementById("managedEmployees");
     Array.from(managedEmployeesSelect.options).forEach((option) => {
       option.selected = employee.ManagedEmployeeIds.includes(
@@ -322,6 +357,7 @@ async function handleSubmit(e) {
     Name: document.getElementById("name").value,
     Username: document.getElementById("username").value,
     Email: document.getElementById("email").value || null,
+    Phone: document.getElementById("phoneNumber").value || null,
     Position: document.getElementById("position").value || null,
     Role: role,
     DepartmentIds: departmentId ? [departmentId] : [],
@@ -348,6 +384,17 @@ async function handleSubmit(e) {
     ).map((option) => parseInt(option.value));
     if (selectedEmployees.length > 0) {
       formData.ManagedEmployeeIds = selectedEmployees;
+    }
+  }
+
+  // Add ManagedEmployeeIds for assistant managers (optional)
+  if (role === 2) {
+    const managedEmployeesSelect = document.getElementById("managedEmployees");
+    const selectedSubordinates = Array.from(
+      managedEmployeesSelect.selectedOptions
+    ).map((option) => parseInt(option.value));
+    if (selectedSubordinates.length > 0) {
+      formData.ManagedEmployeeIds = selectedSubordinates;
     }
   }
 

@@ -69,6 +69,7 @@ namespace BarqTMS.API.DTOs
         public string? PhoneNumber { get; set; }
         public string? Company { get; set; }
         public string? Address { get; set; }
+        public string? Country { get; set; }
         public int? AccountManagerId { get; set; }
         public string? AccountManagerName { get; set; }
         public int? OwnerUserId { get; set; }
